@@ -40,13 +40,15 @@ def update_user(user_dict, db, user_id=None):
     db.users.update({"_id":ObjectId(user_id)},{"$set":user_dict},upsert=False)
     return user_id
 
-def get_nearby_users(user_id, db):
+def get_nearby_users(user_id, radius, db):
     user = db.users.find_one({"_id":ObjectId(user_id)})
     if not user: return []
-    return db.users.find({
+    nearby_users = db.users.find({
         "location":{
             "$within":{
-                "$center":[user['location'], 6]}}})
+                "$center":[user['location'], radius]}}})
+    return [u for u in nearby_users
+        if u['activity']['name'] == user['activity']['name']]
 
 def get_user_data(user_id, attr_list, db):
     allowed_attrs = set([
@@ -82,7 +84,7 @@ def test():
         "facebook_token":"fb_dan",
         "apn_token":"apn_dan",
         "location":[20,20],
-        "activity":{"name":"walking","time":"30","distance":"3"},
+        "activity":{"name":"running","time":"30","distance":"3"},
         "picture_links":[]
     }
 
@@ -96,7 +98,7 @@ def test():
     print
 
     print "Testing get_nearby_users()"
-    for user in get_nearby_users(ricky_user_id,db): print user
+    for user in get_nearby_users(ricky_user_id,1000,db): print user
     print
 
 if __name__ == "__main__": test()
