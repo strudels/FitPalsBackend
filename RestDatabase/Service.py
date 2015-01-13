@@ -7,14 +7,19 @@ from bson.objectid import ObjectId
 def get_matchmaker_db():
     client = pymongo.MongoClient('localhost', 27017)
     db = client['fitpals_matchmaker']
+
+    #if database doesn't exist, setup indexes
+    if not "posts" in db.collection_names():
+        db.users.create_index([("loc", pymongo.GEO2D)])
     return db
 
 #generate new user id
 def new_user(db):
     user = {
+        "facebook_id":"",
         "facebook_token":"",
         "apn_token":"",
-        "coords":[],
+        "location":[],
         "activity":{},
         "picture_links":[]
     }
@@ -35,9 +40,17 @@ def update_user(user_dict, db, user_id=None):
     db.users.update({"_id":ObjectId(user_id)},{"$set":user_dict},upsert=False)
     return user_id
 
+def get_nearby_users(user_id, db):
+    user = db.users.find_one({"_id":ObjectId(user_id)})
+    if not user: return []
+    return db.users.find({
+        "location":{
+            "$within":{
+                "$center":[user['location'], 6]}}})
+
 def get_user_data(user_id, attr_list, db):
     allowed_attrs = set([
-        "coords",
+        "location",
         "activity",
         "picture_links"
     ])
@@ -48,20 +61,42 @@ def get_user_data(user_id, attr_list, db):
 def main():
     pass
 
-#This function should not be run unless testing, which would require
-# a separate driver program
+#This function replaces main() for testing.
 def test():
     db = get_matchmaker_db()
-    test_user = {
-        "facebook_token":"some facebook token",
-        "apn_token":"some apn_token",
-        "coords":[1,1],
+    ben_user = {
+        "facebook_token":"fb_ben",
+        "apn_token":"some apn_ben",
+        "location":[1,1],
+        "activity":{"name":"walking","time":"30","distance":"3"},
+        "picture_links":[]
+    }
+    ricky_user = {
+        "facebook_token":"fb_ricky",
+        "apn_token":"apn_ricky",
+        "location":[2,2],
+        "activity":{"name":"walking","time":"30","distance":"3"},
+        "picture_links":[]
+    }
+    dan_user = {
+        "facebook_token":"fb_dan",
+        "apn_token":"apn_dan",
+        "location":[20,20],
         "activity":{"name":"walking","time":"30","distance":"3"},
         "picture_links":[]
     }
 
-    test_user_id = update_user(test_user, db)
-    print get_user_data(test_user_id,
-        ["coords","activity","picture_links","facebook_token"], db)
+    ben_user_id = update_user(ben_user, db)
+    ricky_user_id = update_user(ricky_user, db)
+    dan_user_id = update_user(dan_user, db)
+
+    print "Testing get_user_data()"
+    print get_user_data(ben_user_id,
+        ["location","activity","picture_links","facebook_token"], db)
+    print
+
+    print "Testing get_nearby_users()"
+    for user in get_nearby_users(ricky_user_id,db): print user
+    print
 
 if __name__ == "__main__": test()
