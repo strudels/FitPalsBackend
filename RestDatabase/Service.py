@@ -29,15 +29,18 @@ def new_user(db):
 # If a user_id is not provided, then a new user will be created
 # with the attributes specified in user_dict
 def update_user(user_dict, db, user_id=None):
+    print db
     #validate that user_dict is of the correct format
     # possibly do this with a class
     pass
 
     # insert new user_id into db
     if not user_id: user_id = str(new_user(db))
+    print user_id
 
     #capture and log error if invalid "user_id"
     db.users.update({"_id":ObjectId(user_id)},{"$set":user_dict},upsert=False)
+    print 'i got here'
     return user_id
 
 def get_nearby_users(user_id, radius, db):
