@@ -16,7 +16,6 @@ def get_matchmaker_db():
 #generate new user id
 def new_user(db):
     user = {
-        "facebook_id":"",
         "facebook_token":"",
         "apn_token":"",
         "location":[],
@@ -31,7 +30,6 @@ def new_user(db):
 def update_user(user_dict, db, user_id=None):
     #validate that user_dict is of the correct format
     # possibly do this with a class
-    pass
 
     # insert new user_id into db
     if not user_id: user_id = str(new_user(db))
@@ -47,7 +45,7 @@ def get_nearby_users(user_id, radius, db):
         "location":{
             "$within":{
                 "$center":[user['location'], radius]}}})
-    return [u for u in nearby_users
+    return [str(u['_id']) for u in nearby_users
         if u['activity']['name'] == user['activity']['name']]
 
 def get_user_data(user_id, attr_list, db):
