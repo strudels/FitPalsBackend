@@ -17,7 +17,7 @@ def update_user():
     global db
     if not "user_info" in request.form.keys(): return "No Data given to update"
     if not "user_id" in request.form.keys():
-        return Service.update_user(request.form['user_info'],db)
+        return Service.update_user(json.loads(request.form['user_info']),db)
     return Service.update_user(json.loads(request.form['user_info']),
         db, request.form['user_id'])
 
