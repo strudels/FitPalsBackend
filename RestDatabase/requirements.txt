@@ -1,0 +1,13 @@
+aniso8601==0.92
+Flask==0.10.1
+Flask-RESTful==0.3.1
+itsdangerous==0.24
+Jinja2==2.7.3
+MarkupSafe==0.23
+pymongo==2.7.2
+pytz==2014.10
+requests==2.5.1
+simple-json==1.1
+simplejson==3.6.5
+six==1.9.0
+Werkzeug==0.9.6
