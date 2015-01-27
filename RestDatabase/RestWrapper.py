@@ -1,42 +1,107 @@
-import Service
+import database
 
 from flask import Flask
 from flask import request
+from flask.ext.restful import Resource, reqparse, Api
 import simplejson as json
 
 app=Flask(__name__)
-db = Service.get_matchmaker_db()
+api=Api(app)
 
-@app.route('/')
-def hello_world():
-    return 'Hello World!'
+@api.resource('/users')
+class UserListAPI(Resource):
+    def post(self):
+        parser = reqparse.RequestParser()
+        parser.add_argument('fb_id',
+            type=str, location='form', required=True)
+        args = parser.parse_args()
+        user_id = database.insert_user(args.fb_id)
+        return str(user_id)
 
-#Insert or Update a user in the matchmaking system
-@app.route('/update-user', methods=['POST'])
-def update_user():
-    global db
-    if not "user_info" in request.form.keys(): return "No Data given to update"
-    if not "user_id" in request.form.keys():
-        return Service.update_user(json.loads(request.form['user_info']),db)
-    return Service.update_user(json.loads(request.form['user_info']),
-        db, request.form['user_id'])
+@api.resource('/users/<user_id>')
+class UserAPI(Resource):
+    def get(self):
+        print 'ohai' + user_id
+        parser = reqparse.RequestParser()
+        parser.add_argument("attributes",
+            type=str, location='args', required=True, action="append")
+        args = parser.parse_args()
 
-@app.route('/search',methods=['GET'])
-def user_search():
-    global db
-    required_params = ["user_id","radius"]
-    if len(set(required_params).intersection(request.args.keys())) != 2:
-        return "Missing Parameters"
-    return json.dumps(Service.get_nearby_users(request.args.get("user_id",''),
-        int(request.args.get('radius','')),db))
+        #Get user from db
+        user = database.get_user(user_id, args.attributes)
 
-@app.route('/users',methods=['GET'])
-def get_user_data():
-    global db
-    if not "user_id" in request.args.keys(): return "No User Id Specified"
-    return json.dumps(Service.get_user_data(request.args["user_id"],
-        request.args.getlist('attributes'), db))
+        #Only allow certain attributes to be requested by clients
+        allowed_attrs = set(["location","activity","picture_links"])
+        return json.dumps(
+            {attr:user[attr] for attr in allowed_attrs.intersection(attr_list)}
+        )
+    
+    def put(self):
+        parser = reqparse.RequestParser()
+        parser.add_argument("fb_id",
+            type=str, location='form', required=True)
+        parser.add_argument("apn_tokens",
+            type=str, location='form', required=False, action="append")
+        parser.add_argument("location_x",
+            type=int, location='form', required=False)
+        parser.add_argument("location_y",
+            type=int, location='form', required=False)
+        parser.add_argument("pictures",
+            type=str, location='form', required=False, action="append")
+        parser.add_argument("about_me",
+            type=str, location='form', required=False, action="append")
+        args = parser.parse_args()
+
+        #get user to update from db
+        user = database.get_user(user_id)
+
+        #ensure user is valid by checking if fb_id is correct
+        if user["fb_id"] != args.fb_id: return "Invalid facebook id"
+
+        #update fields specified by client
+        if args.location_x and args.location_y:
+            user["location"] = [args.location_x,args.location_y]
+        if args.pictures: user["picture_links"] = args.pictures
+
+        return database.update_user(user_id,user)
+
+@api.resource('/users/<user_id>/activity')
+class ActivityAPI(Resource):
+    def put(self):
+        parser = reqparse.RequestParser()
+        parser.add_argument("fb_id",
+            type=str, location='form', required=True)
+        parser.add_argument("name",
+            type=str,location='form', required=False)
+        parser.add_argument("distance",
+            type=str,location='form', required=False)
+        parser.add_argument("time",
+            type=str,location='form', required=False)
+        args = parser.parse_args()
+
+        #get user to update from db
+        user = database.get_user(user_id)
+
+        #ensure user is valid by checking if fb_id is correct
+        if user["fb_id"] != args.fb_id: return "Invalid facebook id"
+
+        #update activity fields specified by client
+        if args.name: user['activity']["name"] = args.name
+        if args.distance: user['activity']["distance"] = args.distance
+        if args.time: user["activity"]["time"] = args.time
+        
+        return databasatabasatabasatabasatabasatabasatabasatabasatabase.update_user(user_id,user)
+    
 
 
+@api.resource('/users/<user_id>/matches')
+class UserMatchAPI(Resource):
+    def get(self):
+        parser = reqparse.RequestParser()
+        parser.add_argument("radius",
+            type=float, location='args', required=True)
+        args = parser.parse_args()
+        return json.dumps(database.get_nearby_users(user_id,args.radius))
+        
 if __name__=='__main__':
     app.run(host='0.0.0.0')

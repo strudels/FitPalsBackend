@@ -9,21 +9,34 @@ user = {
     "picture_links":[]
 }
 
-print "Test 1:"
-resp = requests.post("http://localhost:5000/update-user",
-    data={'user_info':json.dumps(user)})
+print "Test 1: Create User"
+resp = requests.post("http://localhost:5000/users",
+    data={"fb_id":"fb9001"})
 print resp.text
 print
 
-print "Test 2:"
+print "Test 2: Read User Data"
+user_id = resp.text[1:-1]
+resp = requests.get("http://localhost:5000/users/" + user_id,
+    params={'attributes':'location'})
+print resp.text
+print
+
+print "Test 3: Update User Data"
+resp = requests.put("http://localhost:5000/users/" + user_id,
+    data={'fb_id':'fb9001','location_x':4, 'location_y':5})
+print resp.text
+print
+
+print "Test 4: Update User Activity"
+resp = requests.post("http://localhost:5000/users/%s/activity" % user_id,
+    data={"fb_id":"fb9001","name":"running","distance":9000,"time":5})
+print resp.text
+print
+
+print "Test 5: Read User Data Again"
 user_id = resp.text
-resp = requests.get("http://localhost:5000/search",
-    params={'user_id':user_id, 'radius':100})
-print resp.text
-print
-
-print "Test 3:"
-resp = requests.get("http://localhost:5000/users",
-    params={"user_id":user_id, "attributes":["location","activity"]})
+resp = requests.get("http://localhost:5000/users/%s" % user_id,
+    params={'attributes':'location,activity'})
 print resp.text
 print
