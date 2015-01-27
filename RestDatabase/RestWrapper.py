@@ -1,4 +1,5 @@
 import database
+from response import Response
 
 from flask import Flask
 from flask.ext.restful import Resource, reqparse, Api
@@ -15,7 +16,7 @@ class UserListAPI(Resource):
             type=str, location='form', required=True)
         args = parser.parse_args()
         user_id = database.insert_user(args.fb_id)
-        return str(user_id)
+        return Response(status=201, value=str(user_id)).__dict__
 
 @api.resource('/users/<user_id>')
 class UserAPI(Resource):
@@ -30,9 +31,9 @@ class UserAPI(Resource):
 
         #Only allow certain attributes to be requested by clients
         allowed_attrs = set(["location","activity","picture_links"])
-        return json.dumps(
+        value =\
             {attr:user[attr] for attr in allowed_attrs.intersection(args.attributes)}
-        )
+        return Response(status=200,value=value).__dict__
     
     def put(self, user_id):
         parser = reqparse.RequestParser()
@@ -61,7 +62,8 @@ class UserAPI(Resource):
             user["location"] = [args.location_x,args.location_y]
         if args.pictures: user["picture_links"] = args.pictures
 
-        return database.update_user(user_id,user)
+        update_status = database.update_user(user_id,user)
+        return Response(status=202 if update_status["ok"]==1 else 400).__dict__ 
 
 @api.resource('/users/<user_id>/activity')
 class ActivityAPI(Resource):
@@ -88,9 +90,8 @@ class ActivityAPI(Resource):
         if args.distance: user['activity']["distance"] = args.distance
         if args.time: user["activity"]["time"] = args.time
         
-        return database.update_user(user_id,user)
-    
-
+        update_status = database.update_user(user_id,user)
+        return Response(status=202 if update_status["ok"]==1 else 400).__dict__ 
 
 @api.resource('/users/<user_id>/matches')
 class UserMatchAPI(Resource):
@@ -100,7 +101,8 @@ class UserMatchAPI(Resource):
             type=float, location='args', required=True)
         args = parser.parse_args()
         matches = database.get_nearby_users(user_id,args.radius)
-        return json.dumps(matches)
+        value = json.dumps(matches)
+        return Response(status=200,value=user_id).__dict__
         
 if __name__=='__main__':
     app.run(host='0.0.0.0')
