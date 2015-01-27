@@ -1,4 +1,5 @@
 import pymongo
+from bson import ObjectId
 
 client = pymongo.MongoClient('localhost', 27017)
 db = client['fitpals_matchmaker']
@@ -26,17 +27,31 @@ def insert_user(fb_id):
 # with the attributes specified in user_dict
 def update_user(user_id,user_dict):
     #capture and log error if invalid "user_id"
-    return db.users.update({"_id":ObjectId(user_id)},{"$set":user_dict},upsert=False)
+    return db.users.update({"_id":ObjectId(user_id)},
+        {"$set":user_dict},upsert=False)
 
+#radius specified in miles
 def get_nearby_users(user_id, radius):
     user = db.users.find_one({"_id":ObjectId(user_id)})
     if not user: return []
-    nearby_users = db.users.find({
+    nearby_users = list(db.users.find({
         "location":{
-            "$within":{
-                "$center":[user['location'], radius]}}})
+            "$geoWithin":{
+                #3959 == approximate radius of the earth in miles
+                # This number is used so that the radius can
+                # be specified in miles
+                "$centerSphere":[user['location'], radius / 3959]}}}))
+    #map distance and time to show distance between user values
+    for u in nearby_users:
+        u['activity']['distance'] =\
+            abs(u['activity']['distance'] - user['activity']['distance'])
+        u['activity']['time'] =\
+            abs(u['activity']['time'] - user['activity']['time'])
+    nearby_users.sort(key=lambda x:x['activity']['distance'])
+    nearby_users.sort(key=lambda x:x['activity']['time'])
     return [str(u['_id']) for u in nearby_users
-        if u['activity']['name'] == user['activity']['name']]
+        if u['activity']['name'] == user['activity']['name']
+            and u['_id'] != user['_id']]
 
 def get_user(user_id):
     user = db.users.find_one({"_id":ObjectId(user_id)})

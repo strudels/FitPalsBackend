@@ -29,14 +29,19 @@ print resp.text
 print
 
 print "Test 4: Update User Activity"
-resp = requests.post("http://localhost:5000/users/%s/activity" % user_id,
+resp = requests.put("http://localhost:5000/users/%s/activity" % user_id,
     data={"fb_id":"fb9001","name":"running","distance":9000,"time":5})
 print resp.text
 print
 
 print "Test 5: Read User Data Again"
-user_id = resp.text
 resp = requests.get("http://localhost:5000/users/%s" % user_id,
-    params={'attributes':'location,activity'})
+    params={'attributes':['activity','location']})
+print resp.text
+print
+
+print "Test 6: Find Matches"
+resp = requests.get("http://localhost:5000/users/%s/matches" % user_id,
+    params={"radius":9000})
 print resp.text
 print
