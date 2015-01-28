@@ -141,6 +141,8 @@ class UserMatchAPI(Resource):
             type=int, location="args", required=False)
         parser.add_argument("index",
             type=int, location="args", required=False)
+        parser.add_argument("last_updated",
+            type=int, location="args", required=False)
         args = parser.parse_args()
 
         #ensure radius is greater than 0
@@ -148,7 +150,12 @@ class UserMatchAPI(Resource):
             return Response(status=400,message="Invalid radius")
 
         #return user_id's for nearby users
-        try: matches = database.get_nearby_users(user_id,args.radius)
+        try:
+            #if last_updated is specified, pass it to the query
+            if args.last_updated:
+                matches = database.get_nearby_users(user_id,
+                    args.radius,args.last_updated)
+            else: matches = database.get_nearby_users(user_id,args.radius)
         except: return Response(status=400,message="Invalid user id.").__dict__
         if args.limit!=None and args.index!=None:
             return Response(status=200,message="Matches found.",

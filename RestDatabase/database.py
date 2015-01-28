@@ -1,8 +1,13 @@
 import pymongo
+from datetime import datetime
 from bson import ObjectId
 
 client = pymongo.MongoClient('localhost', 27017)
 db = client['fitpals_matchmaker']
+
+#get number of seconds since utc epoch
+def _now():
+    return int(datetime.utcnow().strftime("%s"))
 
 #initialize database
 def init_db():
@@ -22,7 +27,8 @@ def insert_user(fb_id):
         "location":[],
         "activity":{},
         "primary_picture":"",
-        "secondary_pictures":[]
+        "secondary_pictures":[],
+        "last_updated":_now()
     }
     return db.users.insert(user)
 
@@ -30,12 +36,13 @@ def insert_user(fb_id):
 # If a user_id is not provided, then a new user will be created
 # with the attributes specified in user_dict
 def update_user(user_id,user_dict):
+    user_dict["last_updated"] = _now()
     #capture and log error if invalid "user_id"
     return db.users.update({"_id":ObjectId(user_id)},
         {"$set":user_dict},upsert=False)
 
 #radius specified in miles
-def get_nearby_users(user_id, radius):
+def get_nearby_users(user_id, radius, last_updated=_now()):
     user = db.users.find_one({"_id":ObjectId(user_id)})
     if not user: return []
     nearby_users = list(db.users.find({
@@ -52,6 +59,7 @@ def get_nearby_users(user_id, radius):
             abs(u['activity']['time'] - user['activity']['time'])
     nearby_users.sort(key=lambda x:x['activity']['distance'])
     nearby_users.sort(key=lambda x:x['activity']['time'])
+    nearby_users = filter(lambda x:x['last_updated']<last_updated, nearby_users)
     return [str(u['_id']) for u in nearby_users
         if u['activity']['name'] == user['activity']['name']
             and u['_id'] != user['_id']]
