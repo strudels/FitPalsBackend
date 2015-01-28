@@ -137,6 +137,10 @@ class UserMatchAPI(Resource):
         parser = reqparse.RequestParser()
         parser.add_argument("radius",
             type=float, location='args', required=True)
+        parser.add_argument("limit",
+            type=int, location="args", required=False)
+        parser.add_argument("index",
+            type=int, location="args", required=False)
         args = parser.parse_args()
 
         #ensure radius is greater than 0
@@ -146,7 +150,11 @@ class UserMatchAPI(Resource):
         #return user_id's for nearby users
         try: matches = database.get_nearby_users(user_id,args.radius)
         except: return Response(status=400,message="Invalid user id.").__dict__
-        return Response(status=200,message="Matches found.",value=matches).__dict__
+        if args.limit!=None and args.index!=None:
+            return Response(status=200,message="Matches found.",
+                value={"matches":matches[args.index:args.limit]}).__dict__
+        return Response(status=200,message="Matches found.",
+            value={"matches":matches}).__dict__
         
 if __name__=='__main__':
     app.run(host='0.0.0.0')
