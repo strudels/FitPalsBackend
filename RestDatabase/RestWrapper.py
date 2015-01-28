@@ -17,7 +17,7 @@ class UserListAPI(Resource):
         args = parser.parse_args()
         try:
             user_id = database.insert_user(args.fb_id)
-            return Response(status=201, value=str(user_id)).__dict__
+            return Response(status=201, value={"user_id":str(user_id)}).__dict__
         except:
             return Response(status=400, 
                 message="Could not create user").__dict__
@@ -37,8 +37,8 @@ class UserAPI(Resource):
 
         #Only allow certain attributes to be requested by clients
         allowed_attrs = set(["location","activity","picture_links"])
-        value = {
-            attr:user[attr] for attr in allowed_attrs.intersection(args.attributes)
+        value = {attr:user[attr]\
+            for attr in allowed_attrs.intersection(args.attributes)
         }
         return Response(status=200,value=value).__dict__
     

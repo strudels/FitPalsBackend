@@ -16,7 +16,7 @@ print resp.text
 print
 
 print "Test 2: Read User Data"
-user_id = json.loads(resp.text)["value"]
+user_id = json.loads(resp.text)["value"]["user_id"]
 resp = requests.get("http://localhost:5000/users/" + user_id,
     params={'attributes':'location'})
 print resp.text
