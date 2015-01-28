@@ -9,6 +9,10 @@ def init_db():
     if not "posts" in db.collection_names():
         db.users.create_index([("loc", pymongo.GEO2D)])
 
+#lookup user_id for a given fb_id
+def find_user_id(fb_id):
+    return db.users.find_one({"fb_id":fb_id})["_id"]
+
 #generate new user id
 def insert_user(fb_id):
     user = {
@@ -41,7 +45,6 @@ def get_nearby_users(user_id, radius):
                 # This number is used so that the radius can
                 # be specified in miles
                 "$centerSphere":[user['location'], radius / 3959]}}}))
-    #map distance and time to show distance between user values
     for u in nearby_users:
         u['activity']['distance'] =\
             abs(u['activity']['distance'] - user['activity']['distance'])

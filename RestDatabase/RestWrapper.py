@@ -15,9 +15,19 @@ class UserListAPI(Resource):
         parser.add_argument('fb_id',
             type=str, location='form', required=True)
         args = parser.parse_args()
+
+        #return user_id if user already exists
+        try:
+            user_id = database.find_user_id(args.fb_id)
+            return Response(status=200,message="User found.",
+                value={"user_id":str(user_id)}).__dict__
+        except: pass
+
+        #create new user and return it's new user_id
         try:
             user_id = database.insert_user(args.fb_id)
-            return Response(status=201, value={"user_id":str(user_id)}).__dict__
+            return Response(status=201,message="User created.",
+                value={"user_id":str(user_id)}).__dict__
         except:
             return Response(status=400, 
                 message="Could not create user").__dict__
@@ -40,7 +50,7 @@ class UserAPI(Resource):
         value = {attr:user[attr]\
             for attr in allowed_attrs.intersection(args.attributes)
         }
-        return Response(status=200,value=value).__dict__
+        return Response(status=200,message="User found.",value=value).__dict__
     
     def put(self, user_id):
         parser = reqparse.RequestParser()
@@ -64,7 +74,8 @@ class UserAPI(Resource):
             return Response(status=400,message="Invalid user id.").__dict__
 
         #ensure user is valid by checking if fb_id is correct
-        if user["fb_id"] != args.fb_id: return Response(status=401).__dict__
+        if user["fb_id"] != args.fb_id:
+            return Response(status=401,message="Incorrect fb_id.").__dict__
 
         #update fields specified by client
         if args.location_x and args.location_y:
@@ -74,9 +85,11 @@ class UserAPI(Resource):
         #Update database and return whether or not the update was a success
         try:
             update_status = database.update_user(user_id,user)
-            if update_status["ok"]==1: return Response(status=202).__dict__
-            else: return Response(status=400,
-                message="User update failed.").__dict__
+            if update_status["ok"]==1:
+                return Response(status=202,message="User updated").__dict__
+            else:
+                return Response(status=400,
+                    message="User update failed.").__dict__
         except:
             return Response(status=400,message="Invalid user data.").__dict__
 
@@ -100,7 +113,8 @@ class ActivityAPI(Resource):
             return Response(status=400,message="Invalid user id.").__dict__
 
         #ensure user is valid by checking if fb_id is correct
-        if user["fb_id"] != args.fb_id: return Response(status=401).__dict__
+        if user["fb_id"] != args.fb_id:
+            return Response(status=401,message="Incorrect fb_id.").__dict__
 
         #update activity fields specified by client
         if args.name: user['activity']["name"] = args.name
@@ -110,7 +124,8 @@ class ActivityAPI(Resource):
         #Update database and return whether or not the update was a success
         try:
             update_status = database.update_user(user_id,user)
-            if update_status["ok"]==1: return Response(status=202).__dict__
+            if update_status["ok"]==1:
+                return Response(status=202,message="User updated").__dict__
             else: return Response(status=400,
                 message="User update failed.").__dict
         except:
@@ -131,7 +146,7 @@ class UserMatchAPI(Resource):
         #return user_id's for nearby users
         try: matches = database.get_nearby_users(user_id,args.radius)
         except: return Response(status=400,message="Invalid user id.").__dict__
-        return Response(status=200,value=matches).__dict__
+        return Response(status=200,message="Matches found.",value=matches).__dict__
         
 if __name__=='__main__':
     app.run(host='0.0.0.0')
