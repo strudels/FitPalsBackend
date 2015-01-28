@@ -45,3 +45,9 @@ resp = requests.get("http://localhost:5000/users/%s/matches" % user_id,
     params={"radius":9000})
 print resp.text
 print
+
+print "Test 7: Find First 25 Matches"
+resp = requests.get("http://localhost:5000/users/%s/matches" % user_id,
+    params={"radius":9000,"index":0,"limit":20})
+print resp.text
+print
