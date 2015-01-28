@@ -1,59 +1,151 @@
 import requests
 import simplejson as json
+from datetime import datetime
+import time
 
-user = {
-    "facebook_token":"fb_ben",
-    "apn_token":"some apn_ben",
-    "location":[1,1],
-    "activity":{"name":"walking","time":"30","distance":"3"},
-    "picture_links":[]
+def get_dob_stamp(dob_str):
+    dob = datetime.strptime(dob_str,"%m/%d/%Y")
+    return int(time.mktime(dob.timetuple()))
+
+ben_fb_id = "fb9001"
+ben_update = {
+    "fb_id":"fb9001",
+    "latitude":27.924475,
+    "longitude":-82.319645,
+    "available":True,
+    "about_me":"I go fast.",
+    "dob":get_dob_stamp("01/30/1992")
+}
+ben_activity = {
+    "fb_id":"fb9001",
+    "name":"running",
+    "distance":2,
+    "time":30
 }
 
-print "Test 1: Create User"
+ricky_fb_id = "fb9002"
+ricky_update = {
+    "fb_id":"fb9002",
+    "latitude":28.065674,
+    "longitude":-82.381193,
+    "available":True,
+    "about_me":"I go fast.",
+    "dob":get_dob_stamp("12/12/1991")
+}
+ricky_activity = {
+    "fb_id":"fb9002",
+    "name":"running",
+    "distance":2,
+    "time":30
+}
+
+attributes = [
+    "location",
+    "about_me",
+    "dob",
+    "last_updated",
+    "activity",
+    "primary_picture",
+    "secondary_pictures",
+    "available",
+]
+
+print "Test 1: Create Ben"
 resp = requests.post("http://localhost:5000/users",
-    data={"fb_id":"fb9001"})
+    data={"fb_id":ben_fb_id})
 print resp.text
 print
 
-print "Test 2: Read User Data"
+print "Test 2: Read Ben's User Data"
 user_id = json.loads(resp.text)["value"]["user_id"]
 resp = requests.get("http://localhost:5000/users/" + user_id,
-    params={'attributes':'location'})
+    params={'attributes':attributes})
 print resp.text
 print
 
-print "Test 3: Update User Data"
+print "Test 3: Update Ben's User Data"
 resp = requests.put("http://localhost:5000/users/" + user_id,
-    data={'fb_id':'fb9001','location_x':4, 'location_y':5, "available":True})
+    data=ben_update)
 print resp.text
 print
 
-print "Test 4: Update User Activity"
+print "Test 4: Update Ben's Activity"
 resp = requests.put("http://localhost:5000/users/%s/activity" % user_id,
-    data={"fb_id":"fb9001","name":"running","distance":9000,"time":5})
+    data=ben_activity)
 print resp.text
 print
 
-print "Test 5: Read User Data Again"
+print "Test 5: Read Ben's User Data Again"
 resp = requests.get("http://localhost:5000/users/%s" % user_id,
     params={'attributes':['activity','location']})
 print resp.text
 print
 
-print "Test 6: Find Matches"
-resp = requests.get("http://localhost:5000/users/%s/matches" % user_id,
-    params={"radius":9000})
+print "Test 6: Create Ricky"
+resp = requests.post("http://localhost:5000/users",
+    data={"fb_id":ricky_fb_id})
 print resp.text
 print
 
-print "Test 7: Find First 25 Matches"
-resp = requests.get("http://localhost:5000/users/%s/matches" % user_id,
-    params={"radius":9000,"index":0,"limit":20})
+print "Test 7: Read Ricky's User Data"
+user_id = json.loads(resp.text)["value"]["user_id"]
+resp = requests.get("http://localhost:5000/users/" + user_id,
+    params={'attributes':attributes})
 print resp.text
 print
 
-print "Test 8: Find First 25 Matches Before certain time"
+print "Test 8: Update Ricky's User Data"
+resp = requests.put("http://localhost:5000/users/" + user_id,
+    data=ricky_update)
+print resp.text
+print
+
+print "Test 9: Update Ricky's Activity"
+resp = requests.put("http://localhost:5000/users/%s/activity" % user_id,
+    data=ricky_activity)
+print resp.text
+print
+
+print "Test 10: Read Ricky's User Data Again"
+resp = requests.get("http://localhost:5000/users/%s" % user_id,
+    params={'attributes':attributes})
+print resp.text
+print
+
+last_updated = json.loads(resp.text)["value"]["last_updated"]
+
+print "Test 11: Find Ricky's Matches"
 resp = requests.get("http://localhost:5000/users/%s/matches" % user_id,
-    params={"radius":9000,"index":0,"limit":20,"last_updated":1422434778})
+    params={"radius":11})
+print resp.text
+print
+
+print "Test 12: Find Ricky's First 25 Matches"
+resp = requests.get("http://localhost:5000/users/%s/matches" % user_id,
+    params={"radius":11,"index":0,"limit":20})
+print resp.text
+print
+
+print "Test 13: Find Ricky's First 25 Matches Before certain time"
+resp = requests.get("http://localhost:5000/users/%s/matches" % user_id,
+    params={"radius":11,"index":0,"limit":20,"last_updated":last_updated})
+print resp.text
+print
+
+print "Test 14: Find Ricky's First 25 Matches Before certain time, ages 23-25"
+resp = requests.get("http://localhost:5000/users/%s/matches" % user_id,
+    params={"radius":11,"index":0,"limit":20,"last_updated":last_updated, "min_age":23, "max_age":25})
+print resp.text
+print
+
+print "Test 15: Find Ricky's First 25 Matches Before certain time, ages 22-25"
+resp = requests.get("http://localhost:5000/users/%s/matches" % user_id,
+    params={"radius":11,"index":0,"limit":20,"last_updated":last_updated, "min_age":22, "max_age":25})
+print resp.text
+print
+
+print "Test 16: Find Ricky's Matches in small radius"
+resp = requests.get("http://localhost:5000/users/%s/matches" % user_id,
+    params={"radius":10,"index":0,"limit":20,"last_updated":last_updated, "min_age":22, "max_age":25})
 print resp.text
 print

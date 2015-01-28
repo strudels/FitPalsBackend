@@ -4,6 +4,9 @@ from response import Response
 from flask import Flask
 from flask.ext.restful import Resource, reqparse, Api
 import simplejson as json
+from datetime import datetime
+from dateutil.relativedelta import relativedelta
+import time
 
 app=Flask(__name__)
 api=Api(app)
@@ -46,7 +49,17 @@ class UserAPI(Resource):
             return Response(status=400,message="Invalid user id.").__dict__
 
         #Only allow certain attributes to be requested by clients
-        allowed_attrs = set(["location","activity","picture_links"])
+        allowed_attrs = set([
+            "location",
+            "activity",
+            "primary_picture",
+            "secondary_pictures",
+            "about_me",
+            "dob",
+            "location",
+            "available",
+            "last_updated"
+        ])
         value = {attr:user[attr]\
             for attr in allowed_attrs.intersection(args.attributes)
         }
@@ -58,16 +71,20 @@ class UserAPI(Resource):
             type=str, location='form', required=True)
         parser.add_argument("apn_tokens",
             type=str, location='form', required=False, action="append")
-        parser.add_argument("location_x",
-            type=int, location='form', required=False)
-        parser.add_argument("location_y",
-            type=int, location='form', required=False)
-        parser.add_argument("pictures",
+        parser.add_argument("longitude",
+            type=float, location='form', required=False)
+        parser.add_argument("latitude",
+            type=float, location='form', required=False)
+        parser.add_argument("primary_picture",
+            type=str, location='form', required=False, action="append")
+        parser.add_argument("secondary_pictures",
             type=str, location='form', required=False, action="append")
         parser.add_argument("about_me",
             type=str, location='form', required=False, action="append")
         parser.add_argument("available",
             type=bool, location='form', required=False)
+        parser.add_argument("dob",
+            type=int, location='form', required=False)
         args = parser.parse_args()
 
         #get user to update from db
@@ -80,11 +97,14 @@ class UserAPI(Resource):
             return Response(status=401,message="Incorrect fb_id.").__dict__
 
         #update fields specified by client
-        if args.location_x and args.location_y:
-            user["location"] = [args.location_x,args.location_y]
-        if args.pictures: user["picture_links"] = args.pictures
+        if args.longitude and args.latitude:
+            user["location"] = [args.longitude,args.latitude]
+        if args.primary_picture: user["primary_picture"] = args.primary_picture
+        if args.secondary_pictures:
+            user["secondary_pictures"] = args.secondary_pictures
         if args.about_me: user["about_me"] = args.about_me
         if args.available: user["available"] = args.available
+        if args.dob: user["dob"] = args.dob
 
         #Update database and return whether or not the update was a success
         try:
@@ -137,6 +157,10 @@ class ActivityAPI(Resource):
 
 @api.resource('/users/<user_id>/matches')
 class UserMatchAPI(Resource):
+    def _age_to_day(self,age):
+        day = datetime.now().date() - relativedelta(years=age)
+        return int(time.mktime(day.timetuple()))
+        
     def get(self, user_id):
         parser = reqparse.RequestParser()
         parser.add_argument("radius",
@@ -147,25 +171,36 @@ class UserMatchAPI(Resource):
             type=int, location="args", required=False)
         parser.add_argument("last_updated",
             type=int, location="args", required=False)
+        parser.add_argument("min_age",
+            type=int, location="args", required=False)
+        parser.add_argument("max_age",
+            type=int, location="args", required=False)
         args = parser.parse_args()
 
-        #ensure radius is greater than 0
+        #ensure radius specified is greater than 0
         if args.radius <= 0:
             return Response(status=400,message="Invalid radius")
 
-        #return user_id's for nearby users
-        try:
-            #if last_updated is specified, pass it to the query
-            if args.last_updated:
-                matches = database.get_nearby_users(user_id,
-                    args.radius,args.last_updated)
-            else: matches = database.get_nearby_users(user_id,args.radius)
+        #get nearby users
+        try: matches = database.get_nearby_users(user_id, args.radius)
         except: return Response(status=400,message="Invalid user id.").__dict__
+
+        #apply filters specified by user to matches
+        if args.last_updated:
+            matches = [m for m in matches\
+                if m["last_updated"] <= args.last_updated]
+        if args.min_age:
+            matches = [m for m in matches\
+                if m["dob"] <= self._age_to_day(args.min_age)]
+        if args.max_age:
+            matches = [m for m in matches\
+                if m["dob"] >= self._age_to_day(args.max_age)]
         if args.limit!=None and args.index!=None:
-            return Response(status=200,message="Matches found.",
-                value={"matches":matches[args.index:args.limit]}).__dict__
+            matches = matches[args.index:args.index+args.limit]
+
+        #return matches' user_ids
         return Response(status=200,message="Matches found.",
-            value={"matches":matches}).__dict__
+            value={"matches":[str(m["_id"]) for m in matches]}).__dict__
         
 if __name__=='__main__':
     app.run(host='0.0.0.0')
