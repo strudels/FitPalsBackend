@@ -28,7 +28,8 @@ def insert_user(fb_id):
         "activity":{},
         "primary_picture":"",
         "secondary_pictures":[],
-        "last_updated":_now()
+        "last_updated":_now(),
+        "available":False
     }
     return db.users.insert(user)
 
@@ -60,6 +61,8 @@ def get_nearby_users(user_id, radius, last_updated=_now()):
     nearby_users.sort(key=lambda x:x['activity']['distance'])
     nearby_users.sort(key=lambda x:x['activity']['time'])
     nearby_users = filter(lambda x:x['last_updated']<last_updated, nearby_users)
+    nearby_users = filter(lambda x:x["available"]==True, nearby_users)
+    print nearby_users
     return [str(u['_id']) for u in nearby_users
         if u['activity']['name'] == user['activity']['name']
             and u['_id'] != user['_id']]

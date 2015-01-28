@@ -11,7 +11,7 @@ user = {
 
 print "Test 1: Create User"
 resp = requests.post("http://localhost:5000/users",
-    data={"fb_id":"fb9002"})
+    data={"fb_id":"fb9001"})
 print resp.text
 print
 
@@ -24,13 +24,13 @@ print
 
 print "Test 3: Update User Data"
 resp = requests.put("http://localhost:5000/users/" + user_id,
-    data={'fb_id':'fb9002','location_x':4, 'location_y':5})
+    data={'fb_id':'fb9001','location_x':4, 'location_y':5, "available":True})
 print resp.text
 print
 
 print "Test 4: Update User Activity"
 resp = requests.put("http://localhost:5000/users/%s/activity" % user_id,
-    data={"fb_id":"fb9002","name":"running","distance":9000,"time":5})
+    data={"fb_id":"fb9001","name":"running","distance":9000,"time":5})
 print resp.text
 print
 
@@ -54,6 +54,6 @@ print
 
 print "Test 8: Find First 25 Matches Before certain time"
 resp = requests.get("http://localhost:5000/users/%s/matches" % user_id,
-    params={"radius":9000,"index":0,"limit":20,"last_updated":1422433579})
+    params={"radius":9000,"index":0,"limit":20,"last_updated":1422434778})
 print resp.text
 print

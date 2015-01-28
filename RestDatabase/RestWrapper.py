@@ -66,6 +66,8 @@ class UserAPI(Resource):
             type=str, location='form', required=False, action="append")
         parser.add_argument("about_me",
             type=str, location='form', required=False, action="append")
+        parser.add_argument("available",
+            type=bool, location='form', required=False)
         args = parser.parse_args()
 
         #get user to update from db
@@ -81,6 +83,8 @@ class UserAPI(Resource):
         if args.location_x and args.location_y:
             user["location"] = [args.location_x,args.location_y]
         if args.pictures: user["picture_links"] = args.pictures
+        if args.about_me: user["about_me"] = args.about_me
+        if args.available: user["available"] = args.available
 
         #Update database and return whether or not the update was a success
         try:
@@ -127,7 +131,7 @@ class ActivityAPI(Resource):
             if update_status["ok"]==1:
                 return Response(status=202,message="User updated").__dict__
             else: return Response(status=400,
-                message="User update failed.").__dict
+                message="User update failed.").__dict__
         except:
             return Response(status=400,message="Invalid user data.").__dict__
 
