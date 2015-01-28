@@ -33,7 +33,7 @@ class UserAPI(Resource):
         #Get user from db
         try: user = database.get_user(user_id)
         except:
-            return Response(status=400,message="User id invalid").__dict__
+            return Response(status=400,message="Invalid user id.").__dict__
 
         #Only allow certain attributes to be requested by clients
         allowed_attrs = set(["location","activity","picture_links"])
@@ -61,7 +61,7 @@ class UserAPI(Resource):
         #get user to update from db
         try: user = database.get_user(user_id)
         except:
-            return Response(status=400,message="User id invalid").__dict__
+            return Response(status=400,message="Invalid user id.").__dict__
 
         #ensure user is valid by checking if fb_id is correct
         if user["fb_id"] != args.fb_id: return Response(status=401).__dict__
@@ -97,7 +97,7 @@ class ActivityAPI(Resource):
         #get user to update from db
         try: user = database.get_user(user_id)
         except:
-            return Response(status=400,message="User id invalid").__dict__
+            return Response(status=400,message="Invalid user id.").__dict__
 
         #ensure user is valid by checking if fb_id is correct
         if user["fb_id"] != args.fb_id: return Response(status=401).__dict__
@@ -123,8 +123,14 @@ class UserMatchAPI(Resource):
         parser.add_argument("radius",
             type=float, location='args', required=True)
         args = parser.parse_args()
+
+        #ensure radius is greater than 0
+        if args.radius <= 0:
+            return Response(status=400,message="Invalid radius")
+
+        #return user_id's for nearby users
         try: matches = database.get_nearby_users(user_id,args.radius)
-        except: return Response(status=400,message="to be written").__dict__
+        except: return Response(status=400,message="Invalid user id.").__dict__
         return Response(status=200,value=matches).__dict__
         
 if __name__=='__main__':
