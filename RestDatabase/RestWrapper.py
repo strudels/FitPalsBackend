@@ -15,8 +15,12 @@ class UserListAPI(Resource):
         parser.add_argument('fb_id',
             type=str, location='form', required=True)
         args = parser.parse_args()
-        user_id = database.insert_user(args.fb_id)
-        return Response(status=201, value=str(user_id)).__dict__
+        try:
+            user_id = database.insert_user(args.fb_id)
+            return Response(status=201, value=str(user_id)).__dict__
+        except:
+            return Response(status=400, 
+                message="Could not create user").__dict__
 
 @api.resource('/users/<user_id>')
 class UserAPI(Resource):
@@ -27,12 +31,15 @@ class UserAPI(Resource):
         args = parser.parse_args()
 
         #Get user from db
-        user = database.get_user(user_id)
+        try: user = database.get_user(user_id)
+        except:
+            return Response(status=400,message="User id invalid").__dict__
 
         #Only allow certain attributes to be requested by clients
         allowed_attrs = set(["location","activity","picture_links"])
-        value =\
-            {attr:user[attr] for attr in allowed_attrs.intersection(args.attributes)}
+        value = {
+            attr:user[attr] for attr in allowed_attrs.intersection(args.attributes)
+        }
         return Response(status=200,value=value).__dict__
     
     def put(self, user_id):
@@ -52,18 +59,26 @@ class UserAPI(Resource):
         args = parser.parse_args()
 
         #get user to update from db
-        user = database.get_user(user_id)
+        try: user = database.get_user(user_id)
+        except:
+            return Response(status=400,message="User id invalid").__dict__
 
         #ensure user is valid by checking if fb_id is correct
-        if user["fb_id"] != args.fb_id: return "Invalid facebook id"
+        if user["fb_id"] != args.fb_id: return Response(status=401).__dict__
 
         #update fields specified by client
         if args.location_x and args.location_y:
             user["location"] = [args.location_x,args.location_y]
         if args.pictures: user["picture_links"] = args.pictures
 
-        update_status = database.update_user(user_id,user)
-        return Response(status=202 if update_status["ok"]==1 else 400).__dict__ 
+        #Update database and return whether or not the update was a success
+        try:
+            update_status = database.update_user(user_id,user)
+            if update_status["ok"]==1: return Response(status=202).__dict__
+            else: return Response(status=400,
+                message="User update failed.").__dict__
+        except:
+            return Response(status=400,message="Invalid user data.").__dict__
 
 @api.resource('/users/<user_id>/activity')
 class ActivityAPI(Resource):
@@ -80,18 +95,26 @@ class ActivityAPI(Resource):
         args = parser.parse_args()
 
         #get user to update from db
-        user = database.get_user(user_id)
+        try: user = database.get_user(user_id)
+        except:
+            return Response(status=400,message="User id invalid").__dict__
 
         #ensure user is valid by checking if fb_id is correct
-        if user["fb_id"] != args.fb_id: return "Invalid facebook id"
+        if user["fb_id"] != args.fb_id: return Response(status=401).__dict__
 
         #update activity fields specified by client
         if args.name: user['activity']["name"] = args.name
         if args.distance: user['activity']["distance"] = args.distance
         if args.time: user["activity"]["time"] = args.time
         
-        update_status = database.update_user(user_id,user)
-        return Response(status=202 if update_status["ok"]==1 else 400).__dict__ 
+        #Update database and return whether or not the update was a success
+        try:
+            update_status = database.update_user(user_id,user)
+            if update_status["ok"]==1: return Response(status=202).__dict__
+            else: return Response(status=400,
+                message="User update failed.").__dict
+        except:
+            return Response(status=400,message="Invalid user data.").__dict__
 
 @api.resource('/users/<user_id>/matches')
 class UserMatchAPI(Resource):
@@ -100,9 +123,9 @@ class UserMatchAPI(Resource):
         parser.add_argument("radius",
             type=float, location='args', required=True)
         args = parser.parse_args()
-        matches = database.get_nearby_users(user_id,args.radius)
-        value = json.dumps(matches)
-        return Response(status=200,value=user_id).__dict__
+        try: matches = database.get_nearby_users(user_id,args.radius)
+        except: return Response(status=400,message="to be written").__dict__
+        return Response(status=200,value=matches).__dict__
         
 if __name__=='__main__':
     app.run(host='0.0.0.0')
