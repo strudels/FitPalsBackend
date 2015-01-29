@@ -84,6 +84,7 @@ def insert_user(fb_id):
 # with the attributes specified in user_dict
 def update_user(user_id,user_dict):
     user_dict["last_updated"] = _now()
+    del user_dict["_id"]
     #capture and log error if invalid "user_id"
     return db.users.update({"_id":ObjectId(user_id)},
         {"$set":user_dict},upsert=False)
