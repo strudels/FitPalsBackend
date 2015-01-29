@@ -28,17 +28,17 @@ class UserListAPI(Resource):
                 "password":user["fb_id"]
             }
             return Response(status=200,message="User found.",
-                value=value).__dict__
+                value=value).__dict__,200
         except: pass
 
         #create new user and return it's new user_id, jabber_id, and password
         try:
             new_user = database.insert_user(args.fb_id)
             return Response(status=201,message="User created.",
-                value=new_user).__dict__
+                value=new_user).__dict__,201
         except:
             return Response(status=400, 
-                message="Could not create user").__dict__
+                message="Could not create user").__dict__,400
 
 @api.resource('/users/<user_id>')
 class UserAPI(Resource):
@@ -52,7 +52,7 @@ class UserAPI(Resource):
         #Get user from db
         try: user = database.get_user(user_id)
         except:
-            return Response(status=400,message="Invalid user id.").__dict__
+            return Response(status=400,message="Invalid user id.").__dict__,400
 
         #Only allow certain attributes to be requested by clients
         allowed_attrs = set([
@@ -70,7 +70,8 @@ class UserAPI(Resource):
         value = {attr:user[attr]\
             for attr in allowed_attrs.intersection(args.attributes)
         }
-        return Response(status=200,message="User found.",value=value).__dict__
+        return Response(status=200,
+            message="User found.",value=value).__dict__,200
     
     def put(self, user_id):
         parser = reqparse.RequestParser()
@@ -97,11 +98,11 @@ class UserAPI(Resource):
         #get user to update from db
         try: user = database.get_user(user_id)
         except:
-            return Response(status=400,message="Invalid user id.").__dict__
+            return Response(status=400,message="Invalid user id.").__dict__,400
 
         #ensure user is valid by checking if fb_id is correct
         if user["fb_id"] != args.fb_id:
-            return Response(status=401,message="Incorrect fb_id.").__dict__
+            return Response(status=401,message="Incorrect fb_id.").__dict__,401
 
         #update fields specified by client
         if args.longitude and args.latitude:
@@ -117,12 +118,13 @@ class UserAPI(Resource):
         try:
             update_status = database.update_user(user_id,user)
             if update_status["ok"]==1:
-                return Response(status=202,message="User updated").__dict__
+                return Response(status=202,message="User updated").__dict__,202
             else:
                 return Response(status=400,
-                    message="User update failed.").__dict__
+                    message="User update failed.").__dict__,400
         except:
-            return Response(status=400,message="Invalid user data.").__dict__
+            return Response(status=400,
+                message="Invalid user data.").__dict__,400
 
 @api.resource('/users/<user_id>/activity')
 class ActivityAPI(Resource):
@@ -141,11 +143,11 @@ class ActivityAPI(Resource):
         #get user to update from db
         try: user = database.get_user(user_id)
         except:
-            return Response(status=400,message="Invalid user id.").__dict__
+            return Response(status=400,message="Invalid user id.").__dict__,400
 
         #ensure user is valid by checking if fb_id is correct
         if user["fb_id"] != args.fb_id:
-            return Response(status=401,message="Incorrect fb_id.").__dict__
+            return Response(status=401,message="Incorrect fb_id.").__dict__,401
 
         #update activity fields specified by client
         if args.name: user['activity']["name"] = args.name
@@ -156,11 +158,12 @@ class ActivityAPI(Resource):
         try:
             update_status = database.update_user(user_id,user)
             if update_status["ok"]==1:
-                return Response(status=202,message="User updated").__dict__
+                return Response(status=202,message="User updated").__dict__,202
             else: return Response(status=400,
-                message="User update failed.").__dict__
+                message="User update failed.").__dict__, 400
         except:
-            return Response(status=400,message="Invalid user data.").__dict__
+            return Response(status=400,
+                message="Invalid user data.").__dict__,400
 
 @api.resource('/users/<user_id>/matches')
 class UserMatchAPI(Resource):
@@ -186,11 +189,12 @@ class UserMatchAPI(Resource):
 
         #ensure radius specified is greater than 0
         if args.radius <= 0:
-            return Response(status=400,message="Invalid radius")
+            return Response(status=400,message="Invalid radius"),400
 
         #get nearby users
         try: matches = database.get_nearby_users(user_id, args.radius)
-        except: return Response(status=400,message="Invalid user id.").__dict__
+        except: 
+            return Response(status=400,message="Invalid user id.").__dict__,400
 
         #apply filters specified by user to matches
         if args.last_updated:
@@ -207,7 +211,7 @@ class UserMatchAPI(Resource):
 
         #return matches' user_ids
         return Response(status=200,message="Matches found.",
-            value={"matches":[str(m["_id"]) for m in matches]}).__dict__
+            value={"matches":[str(m["_id"]) for m in matches]}).__dict__,200
         
 if __name__=='__main__':
     app.run(host='0.0.0.0')
