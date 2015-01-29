@@ -7,6 +7,10 @@ import simplejson as json
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
 import time
+from ConfigParser import ConfigParser
+
+config = ConfigParser()
+config.read(["fitpals_api.cfg"])
 
 app=Flask(__name__)
 api=Api(app)
@@ -214,4 +218,5 @@ class UserMatchAPI(Resource):
             value={"matches":[str(m["_id"]) for m in matches]}).__dict__,200
         
 if __name__=='__main__':
-    app.run(host='0.0.0.0', port=5000)
+    app.run(host=config.get("api_server","bind_addr"),
+        port=config.getint("api_server","port"))

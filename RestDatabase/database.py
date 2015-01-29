@@ -3,10 +3,23 @@ import time
 from datetime import datetime
 from bson import ObjectId
 import MySQLdb as mysql
+from ConfigParser import ConfigParser
 
-client = pymongo.MongoClient('localhost', 27017)
-db = client['fitpals_matchmaker']
-jabber_db = mysql.connect("hostname","username","password","dbname")
+#open config file
+config = ConfigParser()
+config.read(["fitpals_api.cfg"])
+
+#make connections according to config
+client = pymongo.MongoClient(config.get("mongo","hostname"),
+    config.getint("mongo","port"))
+db = client[config.get("mongo","dbname")]
+jabber_db = mysql.connect(
+    host=config.get("tigase","hostname"),
+    user=config.get("tigase","username"),
+    passwd=config.get("tigase","password"),
+    db=config.get("tigase","dbname"),
+    port=config.getint("tigase","port")
+)
 
 #get number of seconds since utc epoch
 def _now():
@@ -16,7 +29,7 @@ def _today():
     return int(time.mktime(datetime.now().date().timetuple()))
 
 def _generate_jabber_id(user_id):
-    return user_id + "@jabber.hostname"
+    return user_id + "@" + config.get("jabber","hostname")
 
 #initialize database
 def init_db():
