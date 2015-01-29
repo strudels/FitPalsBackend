@@ -19,18 +19,23 @@ class UserListAPI(Resource):
             type=str, location='form', required=True)
         args = parser.parse_args()
 
-        #return user_id if user already exists
+        #return user_id, jabber_id, and password if user already exists
         try:
-            user_id = database.find_user_id(args.fb_id)
+            user = database.find_user_by_fb_id(args.fb_id)
+            value = {
+                "user_id":str(user["_id"]),
+                "jabber_id":user["jabber_id"],
+                "password":user["fb_id"]
+            }
             return Response(status=200,message="User found.",
-                value={"user_id":str(user_id)}).__dict__
+                value=value).__dict__
         except: pass
 
-        #create new user and return it's new user_id
+        #create new user and return it's new user_id, jabber_id, and password
         try:
-            user_id = database.insert_user(args.fb_id)
+            new_user = database.insert_user(args.fb_id)
             return Response(status=201,message="User created.",
-                value={"user_id":str(user_id)}).__dict__
+                value=new_user).__dict__
         except:
             return Response(status=400, 
                 message="Could not create user").__dict__
@@ -38,6 +43,7 @@ class UserListAPI(Resource):
 @api.resource('/users/<user_id>')
 class UserAPI(Resource):
     def get(self, user_id):
+       
         parser = reqparse.RequestParser()
         parser.add_argument("attributes",
             type=str, location='args', required=True, action="append")
@@ -58,7 +64,8 @@ class UserAPI(Resource):
             "dob",
             "location",
             "available",
-            "last_updated"
+            "last_updated",
+            "jabber_id"
         ])
         value = {attr:user[attr]\
             for attr in allowed_attrs.intersection(args.attributes)

@@ -2,9 +2,11 @@ import pymongo
 import time
 from datetime import datetime
 from bson import ObjectId
+import MySQLdb as mysql
 
 client = pymongo.MongoClient('localhost', 27017)
 db = client['fitpals_matchmaker']
+jabber_db = mysql.connect("hostname","username","password","dbname")
 
 #get number of seconds since utc epoch
 def _now():
@@ -13,17 +15,21 @@ def _now():
 def _today():
     return int(time.mktime(datetime.now().date().timetuple()))
 
+def _generate_jabber_id(user_id):
+    return user_id + "@jabber.hostname"
+
 #initialize database
 def init_db():
     if not "posts" in db.collection_names():
         db.users.create_index([("loc", pymongo.GEO2D)])
 
 #lookup user_id for a given fb_id
-def find_user_id(fb_id):
-    return db.users.find_one({"fb_id":fb_id})["_id"]
+def find_user_by_fb_id(fb_id):
+    return db.users.find_one({"fb_id":fb_id})
 
-#generate new user id
+#generate skeleton user with user_id, jabber_id, and password
 def insert_user(fb_id):
+    #create user in users database
     user = {
         "fb_id":fb_id,
         "apn_tokens":[],
@@ -34,9 +40,31 @@ def insert_user(fb_id):
         "secondary_pictures":[],
         "last_updated":_now(),
         "dob":_today(),
-        "available":False
+        "available":False,
+        "jabber_id":""
     }
-    return db.users.insert(user)
+    user_id = str(db.users.insert(user))
+
+    #create jabber account to be paired with user account
+    jabber_id = _generate_jabber_id(user_id)
+    cursor = jabber_db.cursor()
+    #CATCH THIS EXCEPTION!!!!!!!!!!!
+    # if this fails, the user that was created must be deleted from the db
+    cursor.callproc("TigAddUserPlainPw", [jabber_id,fb_id])
+    cursor.close()
+    jabber_db.commit()
+
+    #update user's jabber_id
+    #CATCH THIS EXCEPTION AS WELL
+    # WILL NEED TO DELETE BOTH ACCOUNTS IF THIS FAILS
+    update_user(user_id,{"jabber_id":jabber_id})
+
+    return {
+        "user_id":user_id,
+        "jabber_id":jabber_id,
+        "password":fb_id
+    }
+    
 
 #Updates a user's info, specified by user_dict
 # If a user_id is not provided, then a new user will be created
