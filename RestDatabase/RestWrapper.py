@@ -214,4 +214,4 @@ class UserMatchAPI(Resource):
             value={"matches":[str(m["_id"]) for m in matches]}).__dict__,200
         
 if __name__=='__main__':
-    app.run(host='0.0.0.0')
+    app.run(host='0.0.0.0', port=5000)
