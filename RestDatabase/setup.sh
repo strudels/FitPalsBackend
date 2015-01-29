@@ -1,5 +1,8 @@
 #!/bin/bash
 
+#install python dev libraries
+sudo apt-get install python-dev
+
 #install pip
 sudo apt-get install -y python-pip
 

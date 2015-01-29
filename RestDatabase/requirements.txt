@@ -4,6 +4,7 @@ Flask-RESTful==0.3.1
 itsdangerous==0.24
 Jinja2==2.7.3
 MarkupSafe==0.23
+MySQL-python==1.2.5
 pymongo==2.7.2
 python-dateutil==2.4.0
 pytz==2014.10
