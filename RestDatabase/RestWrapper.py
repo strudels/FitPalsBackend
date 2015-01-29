@@ -66,10 +66,9 @@ class UserAPI(Resource):
         del user["apn_tokens"]
 
         #if attributes were specified, only return specified attributes
-        if not args.attributes:
+        if args.attributes:
             user = {attr:user[attr]\
-                for attr in args.attributes\
-                    if attr not in unallowed_attrs and attr in user.keys()
+                for attr in args.attributes if attr in user.keys()
             }
         return Response(status=200,
             message="User found.",value=user).__dict__,200

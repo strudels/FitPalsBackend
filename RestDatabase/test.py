@@ -89,8 +89,7 @@ print
 
 print "Test 7: Read Ricky's User Data"
 user_id = json.loads(resp.text)["value"]["user_id"]
-resp = requests.get("http://localhost:5000/users/" + user_id,
-    params={'attributes':attributes})
+resp = requests.get("http://localhost:5000/users/" + user_id)
 print resp.text
 print
 
