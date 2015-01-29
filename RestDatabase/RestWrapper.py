@@ -50,7 +50,7 @@ class UserAPI(Resource):
        
         parser = reqparse.RequestParser()
         parser.add_argument("attributes",
-            type=str, location='args', required=True, action="append")
+            type=str, location='args', required=False, action="append")
         args = parser.parse_args()
 
         #Get user from db
@@ -58,24 +58,21 @@ class UserAPI(Resource):
         except:
             return Response(status=400,message="Invalid user id.").__dict__,400
 
-        #Only allow certain attributes to be requested by clients
-        allowed_attrs = set([
-            "location",
-            "activity",
-            "primary_picture",
-            "secondary_pictures",
-            "about_me",
-            "dob",
-            "location",
-            "available",
-            "last_updated",
-            "jabber_id"
-        ])
-        value = {attr:user[attr]\
-            for attr in allowed_attrs.intersection(args.attributes)
-        }
+        #cast id from ObjectId() to str()
+        user["_id"] = str(user["_id"])
+
+        #don't allow user to get secrets of other users
+        del user["fb_id"]
+        del user["apn_tokens"]
+
+        #if attributes were specified, only return specified attributes
+        if not args.attributes:
+            user = {attr:user[attr]\
+                for attr in args.attributes\
+                    if attr not in unallowed_attrs and attr in user.keys()
+            }
         return Response(status=200,
-            message="User found.",value=value).__dict__,200
+            message="User found.",value=user).__dict__,200
     
     def put(self, user_id):
         parser = reqparse.RequestParser()

@@ -90,7 +90,7 @@ print
 print "Test 7: Read Ricky's User Data"
 user_id = json.loads(resp.text)["value"]["user_id"]
 resp = requests.get("https://strudelcakes.sytes.net:31337/users/" + user_id,
-    params={'attributes':attributes},verify=False)
+    verify=False)
 print resp.text
 print
 
