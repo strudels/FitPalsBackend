@@ -57,6 +57,7 @@ def insert_user(fb_id):
         "jabber_id":""
     }
     user_id = str(db.users.insert(user))
+    user = db.users.find_one({"_id":ObjectId(user_id)})
 
     #create jabber account to be paired with user account
     jabber_id = _generate_jabber_id(user_id)
@@ -70,7 +71,8 @@ def insert_user(fb_id):
     #update user's jabber_id
     #CATCH THIS EXCEPTION AS WELL
     # WILL NEED TO DELETE BOTH ACCOUNTS IF THIS FAILS
-    update_user(user_id,{"jabber_id":jabber_id})
+    user["jabber_id"] = jabber_id
+    update_user(user_id,user)
 
     return {
         "user_id":user_id,
