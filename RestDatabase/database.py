@@ -95,7 +95,9 @@ def insert_user(fb_id):
         "last_updated":_now(),
         "dob":_today(),
         "available":False,
-        "jabber_id":""
+        "jabber_id":"",
+        "approved_users":[],
+        "denied_users":[]
     }
     user_id = str(db.users.insert(user))
     user = db.users.find_one({"_id":ObjectId(user_id)})
@@ -127,7 +129,8 @@ def insert_user(fb_id):
 # with the attributes specified in user_dict
 def update_user(user_id,user_dict):
     user_dict["last_updated"] = _now()
-    del user_dict["user_id"]
+    #MAKE SURE THIS HACK IS ALRIGHT
+    if "user_id" in user_dict.keys(): del user_dict["user_id"]
     #capture and log error if invalid "user_id"
     return db.users.update({"_id":ObjectId(user_id)},
         {"$set":user_dict},upsert=False)

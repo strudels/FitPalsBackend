@@ -242,10 +242,12 @@ class ActivityAPI(Resource):
 
 @api.resource('/users/<user_id>/matches')
 class UserMatchAPI(Resource):
-    def put(self, user_id):
+    def post(self, user_id):
         parser = reqparse.RequestParser()
         parser.add_argument("match_id",
             type=str, location="form", required=True)
+        parser.add_argument("approved",
+            type=bool, location="form", required=False)
         args = parser.parse_args()
 
         #get users from database
@@ -253,14 +255,23 @@ class UserMatchAPI(Resource):
         match = database.get_user(args.match_id)
 
         #add match to user's matches
-        user[""] = user[""].append(match_id)
-        database.update_user(user_id,user)
+        if args.approved:
+            user["approved_users"].append(args.match_id)
+        else: user["denied_users"].append(args.match_id)
+        try: update_status = database.update_user(user_id,user)
+        except: return Response(status=400,
+            message="Matches update failed.").__dict__, 400
 
-        #add user to match's remote matches
-        match[""] = match[""].append(user_id)
-        database.update_user(match_id,match)
+        #ensure no error's from db
+        if update_status["ok"]!=1:
+            return Response(status=400,
+            message="User update failed.").__dict__, 400
 
+        #send push notification to both users that match was found
+        if args.approved and user_id in match["approved_users"]:
+            pass
 
+        return Response(status=202,message="User updated").__dict__,202
 
 @api.resource("/users/<owner_id>/messages/<other_id>")
 class UserMessagesAPI(Resource):

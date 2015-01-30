@@ -7,6 +7,7 @@ import time
 if len(sys.argv)==2 and sys.argv[1]=="remote":
     host_url = "https://strudelcakes.sytes.net:31337"
 else: host_url = "http://localhost:5000"
+print "Testing on " + host_url
 
 def get_dob_stamp(dob_str):
     dob = datetime.strptime(dob_str,"%m/%d/%Y")
@@ -62,26 +63,26 @@ print resp.text
 print
 
 print "Test 2: Read Ben's User Data"
-user_id = json.loads(resp.text)["value"]["user_id"]
-resp = requests.get(host_url + "/users/" + user_id,
+ben_user_id = json.loads(resp.text)["value"]["user_id"]
+resp = requests.get(host_url + "/users/" + ben_user_id,
     params={'attributes':attributes},verify=False)
 print resp.text
 print
 
 print "Test 3: Update Ben's User Data"
-resp = requests.put(host_url + "/users/" + user_id,
+resp = requests.put(host_url + "/users/" + ben_user_id,
     data=ben_update,verify=False)
 print resp.text
 print
 
 print "Test 4: Update Ben's Activity"
-resp = requests.put(host_url + "/users/%s/activity" % user_id,
+resp = requests.put(host_url + "/users/%s/activity" % ben_user_id,
     data=ben_activity,verify=False)
 print resp.text
 print
 
 print "Test 5: Read Ben's User Data Again"
-resp = requests.get(host_url + "/users/%s" % user_id,
+resp = requests.get(host_url + "/users/%s" % ben_user_id,
     params={'attributes':['activity','location']},verify=False)
 print resp.text
 print
@@ -93,26 +94,26 @@ print resp.text
 print
 
 print "Test 7: Read Ricky's User Data"
-user_id = json.loads(resp.text)["value"]["user_id"]
-resp = requests.get(host_url + "/users/" + user_id,
+ricky_user_id = json.loads(resp.text)["value"]["user_id"]
+resp = requests.get(host_url + "/users/" + ricky_user_id,
     verify=False)
 print resp.text
 print
 
 print "Test 8: Update Ricky's User Data"
-resp = requests.put(host_url + "/users/" + user_id,
+resp = requests.put(host_url + "/users/" + ricky_user_id,
     data=ricky_update,verify=False)
 print resp.text
 print
 
 print "Test 9: Update Ricky's Activity"
-resp = requests.put(host_url + "/users/%s/activity" % user_id,
+resp = requests.put(host_url + "/users/%s/activity" % ricky_user_id,
     data=ricky_activity,verify=False)
 print resp.text
 print
 
 print "Test 10: Read Ricky's User Data Again"
-resp = requests.get(host_url + "/users/%s" % user_id,
+resp = requests.get(host_url + "/users/%s" % ricky_user_id,
     params={'attributes':attributes},verify=False)
 print resp.text
 print
@@ -199,19 +200,30 @@ print
 
 print "Test 17: Get Messages For Ben User"
 resp = requests.get(host_url + "/users/%s/messages/%s" %\
-    ("54c994db1d41c897d3ab872d","54c994db1d41c897d3ab872e"), verify=False)
+    (ben_user_id,ricky_user_id), verify=False)
 print resp.text
 print
 
 print "Test 18: Delete Messages For Ben User"
 resp = requests.delete(host_url + "/users/%s/messages/%s" %\
-    ("54c994db1d41c897d3ab872d","54c994db1d41c897d3ab872e"), verify=False)
+    (ben_user_id,ricky_user_id), verify=False)
 print resp.text
 print
 
 print "Test 19: Get Messages For Ben User After Deletion"
 resp = requests.get(host_url + "/users/%s/messages/%s" %\
-    ("54c994db1d41c897d3ab872d","54c994db1d41c897d3ab872e"), verify=False)
+    (ben_user_id,ricky_user_id), verify=False)
 print resp.text
 print
 
+print "Test 20: POST Match For Ben"
+resp = requests.post(host_url + "/users/%s/matches" % ben_user_id,
+    data={"match_id":ricky_user_id,"approved":True}, verify=False)
+print resp.text
+print
+
+print "Test 21: POST Another Match For Ben"
+resp = requests.post(host_url + "/users/%s/matches" % ben_user_id,
+    data={"match_id":ricky_user_id}, verify=False)
+print resp.text
+print
