@@ -49,7 +49,7 @@ ricky_update = {
     "apn_tokens":[test_token]
 }
 ricky_activity = {
-    "fb_id":ben_fb_id,
+    "fb_id":ricky_fb_id,
     "name":"running",
     "distance":2,
     "time":30
