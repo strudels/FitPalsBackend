@@ -1,3 +1,6 @@
 RestDatabase/venv/
+RestDatabase/certs/
+RestDatabase/twistd.log
+RestDatabase/twistd.pid
 *.swp
 *.pyc
