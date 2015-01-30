@@ -131,6 +131,7 @@ def update_user(user_id,user_dict):
     user_dict["last_updated"] = _now()
     #MAKE SURE THIS HACK IS ALRIGHT
     if "user_id" in user_dict.keys(): del user_dict["user_id"]
+    if "_id" in user_dict.keys(): del user_dict["_id"]
     #capture and log error if invalid "user_id"
     return db.users.update({"_id":ObjectId(user_id)},
         {"$set":user_dict},upsert=False)
