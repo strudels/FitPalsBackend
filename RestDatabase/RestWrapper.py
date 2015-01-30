@@ -248,11 +248,18 @@ class UserMatchAPI(Resource):
             type=str, location="form", required=True)
         parser.add_argument("approved",
             type=bool, location="form", required=False)
+        parser.add_argument("fb_id",
+            type=str, location="form", required=True)
         args = parser.parse_args()
 
         #get users from database
         user = database.get_user(user_id)
         match = database.get_user(args.match_id)
+
+        #ensure user is authorized
+        if user["fb_id"] != args.fb_id:
+            return Response(status=401,
+                message="Invalid fb_id").__dict__, 401
 
         #add match to user's matches
         if args.approved:

@@ -218,12 +218,12 @@ print
 
 print "Test 20: POST Match For Ben"
 resp = requests.post(host_url + "/users/%s/matches" % ben_user_id,
-    data={"match_id":ricky_user_id,"approved":True}, verify=False)
+    data={"match_id":ricky_user_id,"fb_id":"fb9001","approved":True}, verify=False)
 print resp.text
 print
 
 print "Test 21: POST Another Match For Ben"
 resp = requests.post(host_url + "/users/%s/matches" % ben_user_id,
-    data={"match_id":ricky_user_id}, verify=False)
+    data={"match_id":ricky_user_id,"fb_id":"fb9001"}, verify=False)
 print resp.text
 print
