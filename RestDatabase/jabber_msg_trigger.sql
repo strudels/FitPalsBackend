@@ -8,30 +8,45 @@ BEGIN
 END;
 //
 delimiter ;
+    SET sender_tig = jid_to_tig_id(sender);
 */
 
+DROP FUNCTION IF EXISTS `jid_to_tig_id`;
 delimiter //
-CREATE FUNCTION IF NOT EXISTS `jid_to_tig_id` (jabber_id VARCHAR(2049))
+CREATE FUNCTION `jid_to_tig_id` (jabber_id VARCHAR(2049))
     RETURNS BIGINT(20) UNSIGNED
 BEGIN
-DECLARE tig_id BIGINT(20) UNSIGNED;
-SELECT jid_id INTO tig_id FROM tig_ma_jids WHERE jid=jabber_id;
-RETURN tig_id
+    DECLARE tig_id BIGINT(20) UNSIGNED;
+    SELECT jid_id INTO tig_id FROM tig_ma_jids WHERE jid=jabber_id;
+    RETURN tig_id;
 END //
 delimiter ;
 
+DROP PROCEDURE IF EXISTS `get_messages`;
 delimiter //
-CREATE PROCEDURE IF NOT EXISTS `get_messages`(
+CREATE PROCEDURE `get_messages`(
     IN sender VARCHAR(2049), IN receiver VARCHAR(2049), IN time TIMESTAMP)
 BEGIN
-    DECLARE sender_tig; 
-    DECLARE receiver_tig; 
+    DECLARE sender_tig BIGINT(20) UNSIGNED; 
+    DECLARE receiver_tig BIGINT(20) UNSIGNED; 
     SET sender_tig = jid_to_tig_id(sender);
     SET receiver_tig = jid_to_tig_id(receiver);
     SELECT msg FROM tig_ma_msgs
-        WHERE ((owner_id=sender_tig AND buddy_id=receiver_tig)
-                OR (owner_id=receiver_tig AND buddy_id=sender_tig))
-            AND ts > time
-        ORDER BY TIMESTAMP;
+        WHERE owner_id=sender_tig AND buddy_id=receiver_tig AND ts > time
+        ORDER BY ts;
+END //
+delimiter ;
+
+DROP PROCEDURE IF EXISTS `delete_messages`;
+delimiter //
+CREATE PROCEDURE `delete_messages`(
+    IN sender VARCHAR(2049), IN receiver VARCHAR(2049))
+BEGIN
+    DECLARE sender_tig BIGINT(20) UNSIGNED; 
+    DECLARE receiver_tig BIGINT(20) UNSIGNED; 
+    SET sender_tig = jid_to_tig_id(sender);
+    SET receiver_tig = jid_to_tig_id(receiver);
+    DELETE FROM tig_ma_msgs
+        WHERE owner_id=sender_tig AND buddy_id=receiver_tig;
 END //
 delimiter ;
