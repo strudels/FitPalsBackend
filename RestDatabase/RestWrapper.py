@@ -8,12 +8,23 @@ from datetime import datetime
 from dateutil.relativedelta import relativedelta
 import time
 from ConfigParser import ConfigParser
+from pyapns import configure, provision, notify
 
+#get config file
 config = ConfigParser()
 config.read(["fitpals_api.cfg"])
 
+#run flask app
 app=Flask(__name__)
 api=Api(app)
+
+#setup apple push notifications
+configure({"HOST": "http://localhost:7077/"})
+provision("uhsome.Fitpals", open("certs/apns_cert.pem").read(), "sandbox")
+
+#sends apple push notification
+def send_apn(device_token, data_dict):
+    notify("uhsome.Fitpals", device_token, {"aps":data_dict})
 
 def _age_to_day(age):
     day = datetime.now().date() - relativedelta(years=age)
@@ -188,6 +199,7 @@ class UserAPI(Resource):
         if args.about_me: user["about_me"] = args.about_me
         if args.available: user["available"] = args.available
         if args.dob: user["dob"] = args.dob
+        if args.apn_tokens: user["apn_tokens"] = args.apn_tokens
 
         #Update database and return whether or not the update was a success
         try:
@@ -276,7 +288,8 @@ class UserMatchAPI(Resource):
 
         #send push notification to both users that match was found
         if args.approved and user_id in match["approved_users"]:
-            pass
+            for token in user["apn_tokens"]: send_apn(token, {"alert":"Match!"})
+            for token in match["apn_tokens"]: send_apn(token, {"alert":"Match!"})
 
         return Response(status=202,message="User updated").__dict__,202
 

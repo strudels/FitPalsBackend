@@ -9,6 +9,8 @@ if len(sys.argv)==2 and sys.argv[1]=="remote":
 else: host_url = "http://localhost:5000"
 print "Testing on " + host_url
 
+test_token = "91e0eee8f8ae9e4f5334bd5f2a07df5fc6fcb0a0b2fce99219918abe2ccd430f"
+
 def get_dob_stamp(dob_str):
     dob = datetime.strptime(dob_str,"%m/%d/%Y")
     return int(time.mktime(dob.timetuple()))
@@ -20,7 +22,8 @@ ben_update = {
     "longitude":-82.319645,
     "available":True,
     "about_me":"I go fast.",
-    "dob":get_dob_stamp("01/30/1992")
+    "dob":get_dob_stamp("01/30/1992"),
+    "apn_tokens":[test_token]
 }
 ben_activity = {
     "fb_id":"fb9001",
@@ -36,7 +39,8 @@ ricky_update = {
     "longitude":-82.381193,
     "available":True,
     "about_me":"I go fast.",
-    "dob":get_dob_stamp("12/12/1991")
+    "dob":get_dob_stamp("12/12/1991"),
+    "apn_tokens":[test_token]
 }
 ricky_activity = {
     "fb_id":"fb9002",
@@ -222,8 +226,8 @@ resp = requests.post(host_url + "/users/%s/matches" % ben_user_id,
 print resp.text
 print
 
-print "Test 21: POST Another Match For Ben"
-resp = requests.post(host_url + "/users/%s/matches" % ben_user_id,
-    data={"match_id":ricky_user_id,"fb_id":"fb9001"}, verify=False)
+print "Test 21: POST Match For Ricky"
+resp = requests.post(host_url + "/users/%s/matches" % ricky_user_id,
+    data={"match_id":ben_user_id,"fb_id":"fb9002","approved":True}, verify=False)
 print resp.text
 print
