@@ -1,17 +1,8 @@
-Test: Get Messages For Ben User
-{"status": 200, "message": "Messages found.", "value": {"messages": []}}
-
-Test: Delete Messages For Ben User
-{"status": 200, "message": "Messages deleted.", "value": null}
-
-Test: Get Messages For Ben User After Deletion
-{"status": 200, "message": "Messages found.", "value": {"messages": []}}
-
 Test 1: Create Ben
 {"status": 200, "message": "User found.", "value": {"password": "fb9001", "jabber_id": "54c994db1d41c897d3ab872d@strudelcakes.sytes.net", "user_id": "54c994db1d41c897d3ab872d"}}
 
 Test 2: Read Ben's User Data
-{"status": 200, "message": "User found.", "value": {"available": true, "last_updated": 1422609633, "primary_picture": "", "dob": 696747600, "secondary_pictures": [], "about_me": ["I go fast."], "location": [-82.319645, 27.924475], "activity": {"distance": 2, "name": "running", "time": 30}}}
+{"status": 200, "message": "User found.", "value": {"available": true, "last_updated": 1422616511, "primary_picture": "", "dob": 696747600, "secondary_pictures": [], "about_me": ["I go fast."], "location": [-82.319645, 27.924475], "activity": {"distance": 2, "name": "running", "time": 30}}}
 
 Test 3: Update Ben's User Data
 {"status": 202, "message": "User updated", "value": null}
@@ -26,7 +17,7 @@ Test 6: Create Ricky
 {"status": 200, "message": "User found.", "value": {"password": "fb9002", "jabber_id": "54c994db1d41c897d3ab872e@strudelcakes.sytes.net", "user_id": "54c994db1d41c897d3ab872e"}}
 
 Test 7: Read Ricky's User Data
-{"status": 200, "message": "User found.", "value": {"available": true, "jabber_id": "54c994db1d41c897d3ab872e@strudelcakes.sytes.net", "last_updated": 1422609633, "primary_picture": "", "dob": 692514000, "secondary_pictures": [], "about_me": ["I go fast."], "location": [-82.381193, 28.065674], "activity": {"distance": 2, "name": "running", "time": 30}, "_id": "54c994db1d41c897d3ab872e"}}
+{"status": 200, "message": "User found.", "value": {"available": true, "jabber_id": "54c994db1d41c897d3ab872e@strudelcakes.sytes.net", "last_updated": 1422616511, "primary_picture": "", "dob": 692514000, "secondary_pictures": [], "about_me": ["I go fast."], "location": [-82.381193, 28.065674], "activity": {"distance": 2, "name": "running", "time": 30}, "_id": "54c994db1d41c897d3ab872e"}}
 
 Test 8: Update Ricky's User Data
 {"status": 202, "message": "User updated", "value": null}
@@ -35,23 +26,32 @@ Test 9: Update Ricky's Activity
 {"status": 202, "message": "User updated", "value": null}
 
 Test 10: Read Ricky's User Data Again
-{"status": 200, "message": "User found.", "value": {"available": true, "last_updated": 1422609897, "primary_picture": "", "dob": 692514000, "secondary_pictures": [], "about_me": ["I go fast."], "location": [-82.381193, 28.065674], "activity": {"distance": 2, "name": "running", "time": 30}}}
+{"status": 200, "message": "User found.", "value": {"available": true, "last_updated": 1422616780, "primary_picture": "", "dob": 692514000, "secondary_pictures": [], "about_me": ["I go fast."], "location": [-82.381193, 28.065674], "activity": {"distance": 2, "name": "running", "time": 30}}}
 
 Test 11: Find Ricky's Matches
-{"status": 200, "message": "Matches found.", "value": {"matches": ["54c994db1d41c897d3ab872d"]}}
+{"status": 200, "message": "Matches found.", "value": {"matches": ["54c994db1d41c897d3ab872d", "54c994db1d41c897d3ab872e"]}}
 
 Test 12: Find Ricky's First 25 Matches
-{"status": 200, "message": "Matches found.", "value": {"matches": ["54c994db1d41c897d3ab872d"]}}
+{"status": 200, "message": "Matches found.", "value": {"matches": ["54c994db1d41c897d3ab872d", "54c994db1d41c897d3ab872e"]}}
 
 Test 13: Find Ricky's First 25 Matches Before certain time
-{"status": 200, "message": "Matches found.", "value": {"matches": ["54c994db1d41c897d3ab872d"]}}
+{"status": 200, "message": "Matches found.", "value": {"matches": ["54c994db1d41c897d3ab872d", "54c994db1d41c897d3ab872e"]}}
 
 Test 14: Find Ricky's First 25 Matches Before certain time, ages 23-25
-{"status": 200, "message": "Matches found.", "value": {"matches": []}}
+{"status": 200, "message": "Matches found.", "value": {"matches": ["54c994db1d41c897d3ab872d", "54c994db1d41c897d3ab872e"]}}
 
 Test 15: Find Ricky's First 25 Matches Before certain time, ages 22-25
-{"status": 200, "message": "Matches found.", "value": {"matches": ["54c994db1d41c897d3ab872d"]}}
+{"status": 200, "message": "Matches found.", "value": {"matches": ["54c994db1d41c897d3ab872d", "54c994db1d41c897d3ab872e"]}}
 
 Test 16: Find Ricky's Matches in small radius
-{"status": 200, "message": "Matches found.", "value": {"matches": []}}
+{"status": 200, "message": "Matches found.", "value": {"matches": ["54c994db1d41c897d3ab872e"]}}
+
+Test 17: Get Messages For Ben User
+{"status": 200, "message": "Messages found.", "value": {"messages": []}}
+
+Test 18: Delete Messages For Ben User
+{"status": 200, "message": "Messages deleted.", "value": null}
+
+Test 19: Get Messages For Ben User After Deletion
+{"status": 200, "message": "Messages found.", "value": {"messages": []}}
 
