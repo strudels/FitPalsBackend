@@ -51,8 +51,7 @@ def delete_messages(owner_id, other_id):
 
     #delete message from jabber database
     cursor = jabber_db.cursor()
-    try:cursor.callproc("delete_messages",[owner_id,other_id])
-    except Exception as e: print "Exception: ", e
+    cursor.callproc("delete_messages",[owner_id,other_id])
     cursor.close()
     jabber_db.commit()
 
