@@ -91,7 +91,7 @@ class UserListAPI(Resource):
 
         #return matches' user_ids
         return Response(status=200,message="Matches found.",
-            value={"matches":[str(m["_id"]) for m in matches]}).__dict__,200
+            value={"matches":[str(m["user_id"]) for m in matches]}).__dict__,200
 
     def post(self):
         parser = reqparse.RequestParser()
@@ -103,7 +103,7 @@ class UserListAPI(Resource):
         try:
             user = database.find_user_by_fb_id(args.fb_id)
             value = {
-                "user_id":str(user["_id"]),
+                "user_id":str(user["user_id"]),
                 "jabber_id":user["jabber_id"],
                 "password":user["fb_id"]
             }
@@ -134,7 +134,7 @@ class UserAPI(Resource):
             return Response(status=400,message="Invalid user id.").__dict__,400
 
         #cast id from ObjectId() to str()
-        user["_id"] = str(user["_id"])
+        user["user_id"] = str(user["user_id"])
 
         #don't allow user to get secrets of other users
         del user["fb_id"]

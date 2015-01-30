@@ -76,7 +76,10 @@ def init_db():
 
 #lookup user_id for a given fb_id
 def find_user_by_fb_id(fb_id):
-    return db.users.find_one({"fb_id":fb_id})
+    user = db.users.find_one({"fb_id":fb_id})
+    user["user_id"] = user["_id"]
+    del user["_id"]
+    return user
 
 #generate skeleton user with user_id, jabber_id, and password
 def insert_user(fb_id):
@@ -124,7 +127,7 @@ def insert_user(fb_id):
 # with the attributes specified in user_dict
 def update_user(user_id,user_dict):
     user_dict["last_updated"] = _now()
-    del user_dict["_id"]
+    del user_dict["user_id"]
     #capture and log error if invalid "user_id"
     return db.users.update({"_id":ObjectId(user_id)},
         {"$set":user_dict},upsert=False)
@@ -132,12 +135,17 @@ def update_user(user_id,user_dict):
 def get_user(user_id):
     user = db.users.find_one({"_id":ObjectId(user_id)})
     if not user: return {}
+    user["user_id"] = user["_id"]
+    del user["_id"]
     return user
 
 def get_users():
     users = db.users.find()
     for user in users:
-        for attr in private_attrs: del user[attr]
+        for attr in private_attrs:
+            del user[attr]
+            user["user_id"] = user["_id"]
+            del user["_id"]
     return users
 
 #radius specified in miles
@@ -149,4 +157,7 @@ def get_nearby_users(longitude, latitude, radius):
                 # This number is used so that the radius can
                 # be specified in miles
                 "$centerSphere":[[longitude,latitude], radius / 3959]}}}))
+    for user in nearby_users:
+        user["user_id"] = user["_id"]
+        del user["_id"]
     return filter(lambda x:x["available"]==True, nearby_users)
