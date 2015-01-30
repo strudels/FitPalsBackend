@@ -50,6 +50,27 @@ attributes = [
     "available",
 ]
 
+print "Test: Get Messages For Ben User"
+resp = requests.get("http://localhost:5000/users/%s/messages/%s" %\
+    ("54c994db1d41c897d3ab872d",
+    "54c994db1d41c897d3ab872e"))
+print resp.text
+print
+
+print "Test: Delete Messages For Ben User"
+resp = requests.delete("http://localhost:5000/users/%s/messages/%s" %\
+    ("54c994db1d41c897d3ab872d",
+    "54c994db1d41c897d3ab872e"))
+print resp.text
+print
+
+print "Test: Get Messages For Ben User After Deletion"
+resp = requests.get("http://localhost:5000/users/%s/messages/%s" %\
+    ("54c994db1d41c897d3ab872d",
+    "54c994db1d41c897d3ab872e"))
+print resp.text
+print
+
 print "Test 1: Create Ben"
 resp = requests.post("http://localhost:5000/users",
     data={"fb_id":ben_fb_id})

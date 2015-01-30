@@ -25,14 +25,14 @@ delimiter ;
 DROP PROCEDURE IF EXISTS `get_messages`;
 delimiter //
 CREATE PROCEDURE `get_messages`(
-    IN sender VARCHAR(2049), IN receiver VARCHAR(2049), IN time TIMESTAMP)
+    IN sender VARCHAR(2049), IN receiver VARCHAR(2049))
 BEGIN
     DECLARE sender_tig BIGINT(20) UNSIGNED; 
     DECLARE receiver_tig BIGINT(20) UNSIGNED; 
     SET sender_tig = jid_to_tig_id(sender);
     SET receiver_tig = jid_to_tig_id(receiver);
     SELECT msg FROM tig_ma_msgs
-        WHERE owner_id=sender_tig AND buddy_id=receiver_tig AND ts > time
+        WHERE owner_id=sender_tig AND buddy_id=receiver_tig
         ORDER BY ts;
 END //
 delimiter ;

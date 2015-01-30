@@ -31,6 +31,30 @@ def _today():
 def _generate_jabber_id(user_id):
     return user_id + "@" + config.get("jabber","hostname")
 
+def get_messages(owner_id, other_id):
+    #map id's to jabber id's
+    owner_id = _generate_jabber_id(owner_id)
+    other_id = _generate_jabber_id(other_id)
+
+    #get messages from jabber database
+    cursor = jabber_db.cursor()
+    results = cursor.callproc("get_messages",[owner_id,other_id])
+    results = [r[0] for r in cursor.fetchall()]
+    cursor.close()
+    return results
+
+def delete_messages(owner_id, other_id):
+    #map id's to jabber id's
+    owner_id = _generate_jabber_id(owner_id)
+    other_id = _generate_jabber_id(other_id)
+
+    #delete message from jabber database
+    cursor = jabber_db.cursor()
+    try:cursor.callproc("delete_messages",[owner_id,other_id])
+    except Exception as e: print "Exception: ", e
+    cursor.close()
+    jabber_db.commit()
+
 #initialize database
 def init_db():
     if not "posts" in db.collection_names():

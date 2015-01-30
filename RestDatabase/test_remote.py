@@ -50,6 +50,29 @@ attributes = [
     "available",
 ]
 
+print "Test: Get Messages For Ben User"
+resp = requests.get("https://strudelcakes.sytes.net:31337/users/%s/messages/%s" %\
+    ("54c994db1d41c897d3ab872d",
+    "54c994db1d41c897d3ab872e"))
+print resp.text
+print
+
+print "Test: Delete Messages For Ben User"
+resp = requests.delete("https://strudelcakes.sytes.net:31337/users/%s/messages/%s" %\
+    ("54c994db1d41c897d3ab872d",
+    "54c994db1d41c897d3ab872e"))
+print resp.text
+print
+
+print "Test: Get Messages For Ben User After Deletion"
+resp = requests.get("https://strudelcakes.sytes.net:31337/users/%s/messages/%s" %\
+    ("54c994db1d41c897d3ab872d",
+    "54c994db1d41c897d3ab872e"))
+print resp.text
+print
+
+
+
 print "Test 1: Create Ben"
 resp = requests.post("https://strudelcakes.sytes.net:31337/users",
     data={"fb_id":ben_fb_id},verify=False)
