@@ -52,22 +52,19 @@ attributes = [
 
 print "Test: Get Messages For Ben User"
 resp = requests.get("https://strudelcakes.sytes.net:31337/users/%s/messages/%s" %\
-    ("54c994db1d41c897d3ab872d",
-    "54c994db1d41c897d3ab872e"))
+    ("54c994db1d41c897d3ab872d","54c994db1d41c897d3ab872e"), verify=False)
 print resp.text
 print
 
 print "Test: Delete Messages For Ben User"
 resp = requests.delete("https://strudelcakes.sytes.net:31337/users/%s/messages/%s" %\
-    ("54c994db1d41c897d3ab872d",
-    "54c994db1d41c897d3ab872e"))
+    ("54c994db1d41c897d3ab872d","54c994db1d41c897d3ab872e"), verify=False)
 print resp.text
 print
 
 print "Test: Get Messages For Ben User After Deletion"
 resp = requests.get("https://strudelcakes.sytes.net:31337/users/%s/messages/%s" %\
-    ("54c994db1d41c897d3ab872d",
-    "54c994db1d41c897d3ab872e"))
+    ("54c994db1d41c897d3ab872d","54c994db1d41c897d3ab872e"), verify=False)
 print resp.text
 print
 

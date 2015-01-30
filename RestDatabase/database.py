@@ -41,6 +41,7 @@ def get_messages(owner_id, other_id):
     results = cursor.callproc("get_messages",[owner_id,other_id])
     results = [r[0] for r in cursor.fetchall()]
     cursor.close()
+    jabber_db.commit()
     return results
 
 def delete_messages(owner_id, other_id):
