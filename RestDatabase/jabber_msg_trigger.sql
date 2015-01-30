@@ -1,16 +1,3 @@
-/*
-delimiter //
-CREATE TRIGGER msg_apn AFTER INSERT ON tig_ma_msgs
-FOR EACH ROW
-BEGIN
-    SET cmd = CONCAT('python /var/lib/mysql/scripts/msg_apn.py ', NEW.msg)
-    SET result = sys_exec(cmd);
-END;
-//
-delimiter ;
-    SET sender_tig = jid_to_tig_id(sender);
-*/
-
 DROP FUNCTION IF EXISTS `jid_to_tig_id`;
 delimiter //
 CREATE FUNCTION `jid_to_tig_id` (jabber_id VARCHAR(2049))
