@@ -3,6 +3,8 @@ import simplejson as json
 from datetime import datetime
 import sys
 import time
+import random
+import string
 
 if len(sys.argv)==2 and sys.argv[1]=="remote":
     host_url = "https://strudelcakes.sytes.net:31337"
@@ -11,13 +13,17 @@ print "Testing on " + host_url
 
 test_token = "91e0eee8f8ae9e4f5334bd5f2a07df5fc6fcb0a0b2fce99219918abe2ccd430f"
 
+def get_random_fb_id():
+    return ''.join(random.choice(string.digits) for _ in range(32))
+
 def get_dob_stamp(dob_str):
     dob = datetime.strptime(dob_str,"%m/%d/%Y")
     return int(time.mktime(dob.timetuple()))
 
-ben_fb_id = "fb9001"
+ben_fb_id = get_random_fb_id()
+print ben_fb_id
 ben_update = {
-    "fb_id":"fb9001",
+    "fb_id":ben_fb_id,
     "latitude":27.924475,
     "longitude":-82.319645,
     "available":True,
@@ -26,15 +32,15 @@ ben_update = {
     "apn_tokens":[test_token]
 }
 ben_activity = {
-    "fb_id":"fb9001",
+    "fb_id":ben_fb_id,
     "name":"running",
     "distance":2,
     "time":30
 }
 
-ricky_fb_id = "fb9002"
+ricky_fb_id = get_random_fb_id()
 ricky_update = {
-    "fb_id":"fb9002",
+    "fb_id":ricky_fb_id,
     "latitude":28.065674,
     "longitude":-82.381193,
     "available":True,
@@ -43,7 +49,7 @@ ricky_update = {
     "apn_tokens":[test_token]
 }
 ricky_activity = {
-    "fb_id":"fb9002",
+    "fb_id":ben_fb_id,
     "name":"running",
     "distance":2,
     "time":30
@@ -222,12 +228,12 @@ print
 
 print "Test 20: POST Match For Ben"
 resp = requests.post(host_url + "/users/%s/matches" % ben_user_id,
-    data={"match_id":ricky_user_id,"fb_id":"fb9001","approved":True}, verify=False)
+    data={"match_id":ricky_user_id,"fb_id":ben_fb_id,"approved":True}, verify=False)
 print resp.text
 print
 
 print "Test 21: POST Match For Ricky"
 resp = requests.post(host_url + "/users/%s/matches" % ricky_user_id,
-    data={"match_id":ben_user_id,"fb_id":"fb9002","approved":True}, verify=False)
+    data={"match_id":ben_user_id,"fb_id":ricky_fb_id,"approved":True}, verify=False)
 print resp.text
 print
