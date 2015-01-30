@@ -15,8 +15,84 @@ config.read(["fitpals_api.cfg"])
 app=Flask(__name__)
 api=Api(app)
 
+def _age_to_day(age):
+    day = datetime.now().date() - relativedelta(years=age)
+    return int(time.mktime(day.timetuple()))
+
 @api.resource('/users')
 class UserListAPI(Resource):
+    def get(self):
+        parser = reqparse.RequestParser()
+        parser.add_argument("longitude",
+            type=float, location='args', required=False)
+        parser.add_argument("latitude",
+            type=float, location='args', required=False)
+        parser.add_argument("radius",
+            type=float, location='args', required=False)
+        parser.add_argument("limit",
+            type=int, location="args", required=False)
+        parser.add_argument("index",
+            type=int, location="args", required=False)
+        parser.add_argument("last_updated",
+            type=int, location="args", required=False)
+        parser.add_argument("min_age",
+            type=int, location="args", required=False)
+        parser.add_argument("max_age",
+            type=int, location="args", required=False)
+        parser.add_argument("activity_name",
+            type=str, location="args", required=False)
+        parser.add_argument("activity_distance",
+            type=int, location="args", required=False)
+        parser.add_argument("activity_time",
+            type=int, location="args", required=False)
+        args = parser.parse_args()
+
+        #apply filters specified by user to matches
+        if not (args.radius and args.longitude and args.latitude):
+            matches = database.get_users()
+        else: 
+            #ensure GPS parameters are valid
+            if (args.radius <= 0) or not (-180 <= args.longitude <= 180)\
+                or not (-90 <= args.latitude <= 90):
+                return Response(status=400,message="Invalid GPS parameters"),400
+            matches = database.get_nearby_users(args.longitude,
+                args.latitude, args.radius)
+
+        if args.last_updated:
+            matches = [m for m in matches\
+                if m["last_updated"] <= args.last_updated]
+
+        if args.min_age:
+            matches = [m for m in matches\
+                if m["dob"] <= _age_to_day(args.min_age)]
+
+        if args.max_age:
+            matches = [m for m in matches\
+                if m["dob"] >= _age_to_day(args.max_age)]
+
+        if args.activity_name:
+            matches = [m for m in matches
+                if m['activity']['name'] == args.activity_name]
+
+        if args.activity_distance:
+            for m in matches:
+                m['activity']['distance'] =\
+                    abs(m['activity']['distance'] - args.activity_distance)
+            matches.sort(key=lambda x:x['activity']['distance'])
+
+        if args.activity_time:
+            for m in matches:
+                m['activity']['time'] =\
+                    abs(m['activity']['time'] - user['activity']['time'])
+            matches.sort(key=lambda x:x['activity']['time'])
+
+        if args.limit!=None and args.index!=None:
+            matches = matches[args.index:args.index+args.limit]
+
+        #return matches' user_ids
+        return Response(status=200,message="Matches found.",
+            value={"matches":[str(m["_id"]) for m in matches]}).__dict__,200
+
     def post(self):
         parser = reqparse.RequestParser()
         parser.add_argument('fb_id',
@@ -47,7 +123,6 @@ class UserListAPI(Resource):
 @api.resource('/users/<user_id>')
 class UserAPI(Resource):
     def get(self, user_id):
-       
         parser = reqparse.RequestParser()
         parser.add_argument("attributes",
             type=str, location='args', required=False, action="append")
@@ -167,51 +242,25 @@ class ActivityAPI(Resource):
 
 @api.resource('/users/<user_id>/matches')
 class UserMatchAPI(Resource):
-    def _age_to_day(self,age):
-        day = datetime.now().date() - relativedelta(years=age)
-        return int(time.mktime(day.timetuple()))
-        
-    def get(self, user_id):
+    def put(self, user_id):
         parser = reqparse.RequestParser()
-        parser.add_argument("radius",
-            type=float, location='args', required=True)
-        parser.add_argument("limit",
-            type=int, location="args", required=False)
-        parser.add_argument("index",
-            type=int, location="args", required=False)
-        parser.add_argument("last_updated",
-            type=int, location="args", required=False)
-        parser.add_argument("min_age",
-            type=int, location="args", required=False)
-        parser.add_argument("max_age",
-            type=int, location="args", required=False)
+        parser.add_argument("match_id",
+            type=str, location="form", required=True)
         args = parser.parse_args()
 
-        #ensure radius specified is greater than 0
-        if args.radius <= 0:
-            return Response(status=400,message="Invalid radius"),400
+        #get users from database
+        user = database.get_user(user_id)
+        match = database.get_user(args.match_id)
 
-        #get nearby users
-        try: matches = database.get_nearby_users(user_id, args.radius)
-        except: 
-            return Response(status=400,message="Invalid user id.").__dict__,400
+        #add match to user's matches
+        user[""] = user[""].append(match_id)
+        database.update_user(user_id,user)
 
-        #apply filters specified by user to matches
-        if args.last_updated:
-            matches = [m for m in matches\
-                if m["last_updated"] <= args.last_updated]
-        if args.min_age:
-            matches = [m for m in matches\
-                if m["dob"] <= self._age_to_day(args.min_age)]
-        if args.max_age:
-            matches = [m for m in matches\
-                if m["dob"] >= self._age_to_day(args.max_age)]
-        if args.limit!=None and args.index!=None:
-            matches = matches[args.index:args.index+args.limit]
+        #add user to match's remote matches
+        match[""] = match[""].append(user_id)
+        database.update_user(match_id,match)
 
-        #return matches' user_ids
-        return Response(status=200,message="Matches found.",
-            value={"matches":[str(m["_id"]) for m in matches]}).__dict__,200
+
 
 @api.resource("/users/<owner_id>/messages/<other_id>")
 class UserMessagesAPI(Resource):
@@ -224,7 +273,6 @@ class UserMessagesAPI(Resource):
             value={"messages":messages}).__dict__, 200
         
     def delete(self, owner_id, other_id):
-        print "did i get here"
         #delete messages via database.py
         try: database.delete_messages(owner_id, other_id)
         except: return Response(status=500,

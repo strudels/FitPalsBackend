@@ -21,6 +21,20 @@ jabber_db = mysql.connect(
     port=config.getint("tigase","port")
 )
 
+#user attributes
+private_attrs = ["fb_id","apn_tokens","approved_users","denied_users"]
+public_attrs = [
+    "about_me",
+    "location",
+    "activity",
+    "primary_picture",
+    "secondary_pictures",
+    "last_updated",
+    "dob",
+    "available",
+    "jabber_id"
+]
+
 #get number of seconds since utc epoch
 def _now():
     return int(datetime.utcnow().strftime("%s"))
@@ -115,31 +129,24 @@ def update_user(user_id,user_dict):
     return db.users.update({"_id":ObjectId(user_id)},
         {"$set":user_dict},upsert=False)
 
-#radius specified in miles
-def get_nearby_users(user_id, radius):
+def get_user(user_id):
     user = db.users.find_one({"_id":ObjectId(user_id)})
-    if not user: return []
+    if not user: return {}
+    return user
+
+def get_users():
+    users = db.users.find()
+    for user in users:
+        for attr in private_attrs: del user[attr]
+    return users
+
+#radius specified in miles
+def get_nearby_users(longitude, latitude, radius):
     nearby_users = list(db.users.find({
         "location":{
             "$geoWithin":{
                 #3959 == approximate radius of the earth in miles
                 # This number is used so that the radius can
                 # be specified in miles
-                "$centerSphere":[user['location'], radius / 3959]}}}))
-    for u in nearby_users:
-        u['activity']['distance'] =\
-            abs(u['activity']['distance'] - user['activity']['distance'])
-        u['activity']['time'] =\
-            abs(u['activity']['time'] - user['activity']['time'])
-    nearby_users.sort(key=lambda x:x['activity']['distance'])
-    nearby_users.sort(key=lambda x:x['activity']['time'])
-    nearby_users = filter(lambda x:x["available"]==True, nearby_users)
-
-    return [u for u in nearby_users
-        if u['activity']['name'] == user['activity']['name']
-            and u['_id'] != user['_id']]
-
-def get_user(user_id):
-    user = db.users.find_one({"_id":ObjectId(user_id)})
-    if not user: return {}
-    return user
+                "$centerSphere":[[longitude,latitude], radius / 3959]}}}))
+    return filter(lambda x:x["available"]==True, nearby_users)
