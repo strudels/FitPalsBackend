@@ -14,9 +14,8 @@ def get_device_tokens(msg):
     jabber_id = BeautifulSoup(msg).find("message")["to"].split('/')[0];
     api_host = "https://strudelcakes.sytes.net:31337"
 
-    client = pymongo.MongoClient(config.get("mongo","hostname"),
-        config.getint("mongo","port"))
-    db = client[config.get("mongo","dbname")]
+    client = pymongo.MongoClient("localhost",27017)
+    db = client["fitpals_matchmaker"]
 
     return db.users.find({"jabber_id":jabber_id})["apn_tokens"]
 
