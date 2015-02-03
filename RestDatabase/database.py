@@ -117,24 +117,20 @@ def insert_user(fb_id):
     user["jabber_id"] = jabber_id
     update_user(user_id,user)
 
-    return {
-        "user_id":user_id,
-        "jabber_id":jabber_id,
-        "password":fb_id
-    }
-    
+    user["user_id"] = user_id
+    return user
 
 #Updates a user's info, specified by user_dict
 # If a user_id is not provided, then a new user will be created
 # with the attributes specified in user_dict
 def update_user(user_id,user_dict):
     user_dict["last_updated"] = _now()
-    #MAKE SURE THIS HACK IS ALRIGHT
-    if "user_id" in user_dict.keys(): del user_dict["user_id"]
-    if "_id" in user_dict.keys(): del user_dict["_id"]
+    #ensure user_id is not specified without altering dictionary passed
+    new_dict = {attr:user_dict[attr] for attr in user_dict.keys()\
+        if attr!="_id" and attr!="user_id"}
     #capture and log error if invalid "user_id"
     return db.users.update({"_id":ObjectId(user_id)},
-        {"$set":user_dict},upsert=False)
+        {"$set":new_dict},upsert=False)
 
 #returns True if delete succeeds, false if fails
 def delete_user(user_id):
