@@ -17,7 +17,7 @@ def get_device_tokens(msg):
     client = pymongo.MongoClient("localhost",27017)
     db = client["fitpals_matchmaker"]
 
-    return db.users.find({"jabber_id":jabber_id})["apn_tokens"]
+    return db.users.find_one({"jabber_id":jabber_id})["apn_tokens"]
 
 if __name__ == "__main__": 
     apn_tokens = get_device_tokens(sys.stdin.read())
