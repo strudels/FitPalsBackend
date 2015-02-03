@@ -56,6 +56,8 @@ class UserListAPI(Resource):
             type=int, location="args", required=False)
         parser.add_argument("activity_time",
             type=int, location="args", required=False)
+        parser.add_argument("jabber_id",
+            type=str, location="args", required=False)
         args = parser.parse_args()
 
         #apply filters specified by user to matches
@@ -85,6 +87,10 @@ class UserListAPI(Resource):
             matches = [m for m in matches
                 if m['activity']['name'] == args.activity_name]
 
+        if args.jabber_id:
+            matches = [m for m in matches
+                if m['jabber_id'] == args.jabber_id]
+
         if args.activity_distance:
             for m in matches:
                 m['activity']['distance'] =\
@@ -102,7 +108,7 @@ class UserListAPI(Resource):
 
         #return matches' user_ids
         return Response(status=200,message="Matches found.",
-            value={"matches":[str(m["user_id"]) for m in matches]}).__dict__,200
+            value={"users":[str(m["user_id"]) for m in matches]}).__dict__,200
 
     def post(self):
         parser = reqparse.RequestParser()
