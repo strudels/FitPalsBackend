@@ -228,12 +228,12 @@ print
 
 print "Test 20: Delete Ben"
 resp = requests.delete(host_url + "/users/%s" % ben_user_id,
-    data={"fb_id":ben_fb_id})
+    data={"fb_id":ben_fb_id}, verify=False)
 print resp.text
 print
 
 print "Test 21: Delete Ricky"
 resp = requests.delete(host_url + "/users/%s" % ricky_user_id,
-    data={"fb_id":ricky_fb_id})
+    data={"fb_id":ricky_fb_id}, verify=False)
 print resp.text
 print
