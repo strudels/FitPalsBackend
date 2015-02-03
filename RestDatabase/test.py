@@ -237,3 +237,15 @@ resp = requests.post(host_url + "/users/%s/matches" % ricky_user_id,
     data={"match_id":ben_user_id,"fb_id":ricky_fb_id,"approved":True}, verify=False)
 print resp.text
 print
+
+print "Test 22: Delete Ben"
+resp = requests.delete(host_url + "/users/%s" % ben_user_id,
+    data={"fb_id":ben_fb_id})
+print resp.text
+print
+
+print "Test 23: Delete Ricky"
+resp = requests.delete(host_url + "/users/%s" % ricky_user_id,
+    data={"fb_id":ricky_fb_id})
+print resp.text
+print

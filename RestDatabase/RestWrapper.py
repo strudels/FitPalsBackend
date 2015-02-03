@@ -213,6 +213,24 @@ class UserAPI(Resource):
             return Response(status=400,
                 message="Invalid user data.").__dict__,400
 
+    def delete(self, user_id):
+        parser = reqparse.RequestParser()
+        parser.add_argument("fb_id",
+            type=str, location='form', required=True)
+        args = parser.parse_args()
+
+        #ensure user is authorized to delete
+        user = database.get_user(user_id) 
+        if user["fb_id"] != args.fb_id:
+            return Response(status=401,
+                message="Incorrect fb_id.").__dict__,401
+            
+        #Delete user
+        if not database.delete_user(user_id):
+            return Response(status=500,
+                message="User not deleted.").__dict__,500
+        return Response(status=200, message="User deleted.").__dict__,200
+
 @api.resource('/users/<user_id>/activity')
 class ActivityAPI(Resource):
     def put(self, user_id):

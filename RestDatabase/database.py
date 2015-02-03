@@ -136,6 +136,27 @@ def update_user(user_id,user_dict):
     return db.users.update({"_id":ObjectId(user_id)},
         {"$set":user_dict},upsert=False)
 
+#returns True if delete succeeds, false if fails
+def delete_user(user_id):
+    #delete from jabber
+    try:
+        jabber_id = _generate_jabber_id(user_id);
+        cursor = jabber_db.cursor()
+        cursor.callproc("TigRemoveUser",[jabber_id])
+        cursor.close()
+    except:
+        return False
+
+    #delete from mongo
+    try: db.users.remove({"_id":ObjectId(user_id)})
+    except:
+        jabber_db.rollback()
+        return False
+
+    jabber_db.commit()
+    return True
+
+
 def get_user(user_id):
     user = db.users.find_one({"_id":ObjectId(user_id)})
     if not user: return {}
