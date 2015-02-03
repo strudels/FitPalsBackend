@@ -2,6 +2,7 @@ import sys
 from BeautifulSoup import BeautifulSoup
 from pyapns import configure, provision, notify
 import simplejson as json
+import pymongo
 
 configure({"HOST": "http://localhost:7077/"})
 provision("uhsome.Fitpals", open("certs/apns_cert.pem").read(), "sandbox")
