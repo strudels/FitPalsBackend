@@ -2,8 +2,8 @@ from flask import Flask
 from flask.ext.sqlalchemy import SQLAlchemy
 from flask.ext.restful import Api
 
-from app.models import *
-from app.controllers import *
+from models import *
+from controllers import *
 
 app = Flask(__name__)
 app.config["SQLALCHEMY_DATABASE_URI"] =\
