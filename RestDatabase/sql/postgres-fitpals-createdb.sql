@@ -1,14 +1,16 @@
 CREATE EXTENSION IF NOT EXISTS postgis;
 CREATE TABLE IF NOT EXISTS users (
     user_id SERIAL PRIMARY KEY,
-    fb_id VARCHAR(2048) UNIQUE NOT NULL,
+    fb_id VARCHAR(2048) NOT NULL,
     location GEOMETRY,
     about_me TEXT,
     primary_picture VARCHAR(2048),
     last_updated TIMESTAMP,
     dob BIGINT,
     available BOOLEAN,
-    jabber_id VARCHAR(2048) UNIQUE NOT NULL,
+    jabber_id VARCHAR(2048) NOT NULL,
+    CONSTRAINT unique_fb_id UNIQUE (fb_id),
+    CONSTRAINT unique_jabber_id UNIQUE (jabber_id)
 );
 
 DROP INDEX IF EXISTS geolocation_index;
@@ -53,8 +55,9 @@ CREATE TYPE activity_name AS ENUM('running','walking','jogging','strolling');
 CREATE TABLE IF NOT EXISTS activities (
     activity_id SERIAL PRIMARY KEY,
     user_id INTEGER NOT NULL,
-    name activity_name UNIQUE NOT NULL,
+    name activity_name NOT NULL,
     miles DOUBLE PRECISION, 
-    seconds INTEGER
-    FOREIGN KEY(user_id) REFERENCES users(user_id)
+    seconds INTEGER,
+    FOREIGN KEY(user_id) REFERENCES users(user_id),
+    CONSTRAINT unique_fb_id UNIQUE (fb_id)
 );
