@@ -2,8 +2,9 @@ from flask import Flask
 from flask.ext.sqlalchemy import SQLAlchemy
 from flask.ext.restful import Api
 
-from app.models import *
-from app.controllers import *
+from models import User
+
+it_works = User(0, 1, 1)
 
 app = Flask(__name__)
 app.config["SQLALCHEMY_DATABASE_URI"] =\

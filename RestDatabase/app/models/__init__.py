@@ -1,20 +1,16 @@
 from sqlalchemy import ForeignKey, DateTime
+import geoalchemy2
 from geoalchemy2.types import Geography
 from geoalchemy2.elements import WKTElement
 from flask import Flask
 from flask.ext.sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import relationship, backref
-import app
-print "model: ", dir(app)
 
-"""
 app = Flask(__name__)
 app.config["SQLALCHEMY_DATABASE_URI"] =\
     "postgresql://fitpals:Bb0ffline!@192.168.1.12/fitpals_db"
 db = SQLAlchemy(app)
-"""
 
-"""
 class User(db.Model):
     __tablename__ = "users"
     id = db.Column(db.Integer, primary_key=True)
@@ -111,4 +107,3 @@ class Activity(db.Model):
         self.name = name
         if miles: self.miles = miles
         if seconds: self.seconds = seconds
-"""
