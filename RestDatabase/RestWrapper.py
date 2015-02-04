@@ -137,7 +137,7 @@ class UserListAPI(Resource):
             user = database.find_user_by_fb_id(args.fb_id)
             user["user_id"] = str(user["user_id"])
             return Response(status=200,message="User found.",
-                value=user_id).__dict__,200
+                value=user).__dict__,200
         except: pass
 
         #create new user and return it's new user_id, jabber_id, and password
