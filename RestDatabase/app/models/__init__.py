@@ -25,7 +25,7 @@ class User(db.Model):
     match_decisions = relationship("MatchDecision",
         primaryjoin="User.id==MatchDecision.user_id")
     apn_tokens = relationship("APNToken")
-    activities = relationship("Activity")
+    activity_settings = relationship("ActivitySetting")
 
     @hybrid_property
     def jabber_id(self):
@@ -33,7 +33,7 @@ class User(db.Model):
 
     def __init__(self,fb_id,longitude=None,latitude=None,about_me=None,
         primary_picture=None,secondary_pictures=[], dob=None, available=False,
-        apn_tokens=[],activities=[]):
+        apn_tokens=[]):
 
         self.fb_id = fb_id
         self.password = fb_id
@@ -46,8 +46,6 @@ class User(db.Model):
         if dob: self.dob = dob
         self.available = available
         self.apn_tokens = apn_tokens
-        self.activities = activities
-
 
 class SecondaryPicture(db.Model):
     __tablename__ = "secondary_pictures"
@@ -86,17 +84,34 @@ class APNToken(db.Model):
 class Activity(db.Model):
     __tablename__ = "activities"
     id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(64), nullable=False)
+    questions = relationship("Question")
+
+    def __init__(self, name, questions=[]):
+        self.name = name
+        self.questions = questions
+
+class ActivitySetting(db.Model):
+    __tablename__ = "activity_settings"
+    id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, ForeignKey("users.id"))
     user = relationship("User",foreign_keys=[user_id])
-    name = db.Column(db.Enum("running", "walking", "biking", "strolling",
-        name="activity_names"))
-    miles = db.Column(db.Float)
-    seconds = db.Column(db.Integer)
-    last_updated =\
-        db.Column(db.DateTime, default=db.func.now(), onupdate=db.func.now())
+    activity_id = db.Column(db.Integer, ForeignKey("activities.id"))
+    activity = relationship("Activity", foreign_keys=[activity_id])
+    question_id = db.Column(db.Integer, ForeignKey("activity_questions.id"))
+    question = relationship("Question", foreign_keys=[question_id])
+    answer = db.Column(db.Float)
 
-    def __init__(self, user, name, miles=None, seconds=None):
+    def __init__(self, user, activity ,question, answer=None):
         self.user = user
-        self.name = name
-        if miles: self.miles = miles
-        if seconds: self.seconds = seconds
+        self.activity = activity
+        self.question = question
+        if self.answer: self.answer = answer
+
+class Question(db.Model):
+    __tablename__ = "activity_questions"
+    id = db.Column(db.Integer, primary_key=True)
+    question = db.Column(db.String(2048), nullable=False)
+
+    def __init__(self, question_string):
+        self.question = question_string

@@ -7,3 +7,5 @@ app.config["SQLALCHEMY_DATABASE_URI"] =\
     "postgresql://fitpals:Bb0ffline!@192.168.1.12/fitpals_db"
 api = Api(app)
 db = SQLAlchemy(app)
+
+from models import *
