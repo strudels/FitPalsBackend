@@ -7,7 +7,7 @@ from flask.ext.sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import relationship, backref
 from sqlalchemy.ext.hybrid import hybrid_property
 
-from app import db
+from app import db, jabber_db
 
 class User(db.Model):
     __tablename__ = "users"
