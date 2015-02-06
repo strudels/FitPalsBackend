@@ -12,16 +12,19 @@ from app.utils.Response import Response
 @api.resource('/users/<user_id>')
 class UserAPI(Resource):
     def get(self, user_id):
-        user_id = int(user_id)
         parser = reqparse.RequestParser()
         parser.add_argument("attributes",
             type=str, location='args', required=False, action="append")
         args = parser.parse_args()
+        
+        try: user_id = int(user_id)
+        except: 
+            return Response(status=400,message="Invalid user id.").__dict__,400
 
         #Get user from db
-        try: user = User.query.filter(User.id==user_id)
-        except:
-            return Response(status=400,message="Invalid user id.").__dict__,400
+        user = User.query.filter(User.id==user_id)
+        if not user:
+            return Response(status=400,message="User not found.").__dict__,400
 
         #apply any attribute filters specified
         user_dict = user.dict_repr()
@@ -54,37 +57,39 @@ class UserAPI(Resource):
             type=int, location='form', required=False)
         args = parser.parse_args()
 
-        #get user to update from db
-        try: user = database.get_user(user_id)
-        except:
+        try: user_id = int(user_id)
+        except: 
             return Response(status=400,message="Invalid user id.").__dict__,400
 
+        #get user to update from db
+        user = User.query.filter(User.id=user_id).first
+        if not user:
+            return Response(status=400,message="Could not find user.").__dict__,400
+
         #ensure user is valid by checking if fb_id is correct
-        if user["fb_id"] != args.fb_id:
+        if user.fb_id != args.fb_id:
             return Response(status=401,message="Incorrect fb_id.").__dict__,401
 
         #update fields specified by client
         if args.longitude and args.latitude:
-            user["location"] = [args.longitude,args.latitude]
-        if args.primary_picture: user["primary_picture"] = args.primary_picture
+            user.location =\
+                WKTElement("POINT(%f %f)"%(args.longitude,args.latitude))
+        if args.primary_picture: user.primary_picture = args.primary_picture
+        if args.about_me: user.about_me = args.about_me
+        if args.available: user.available = args.available
+        if args.dob: user.dob = args.dob
+        """
         if args.secondary_pictures:
             user["secondary_pictures"] = args.secondary_pictures
-        if args.about_me: user["about_me"] = args.about_me
-        if args.available: user["available"] = args.available
-        if args.dob: user["dob"] = args.dob
         if args.apn_tokens: user["apn_tokens"] = args.apn_tokens
+        """
 
         #Update database and return whether or not the update was a success
-        try:
-            update_status = database.update_user(user_id,user)
-            if update_status["ok"]==1:
-                return Response(status=202,message="User updated").__dict__,202
-            else:
-                return Response(status=400,
-                    message="User update failed.").__dict__,400
-        except:
-            return Response(status=400,
-                message="Invalid user data.").__dict__,400
+        try: db.session.commit()
+        except: return Response(status=400,
+            message="User update failed.").__dict__, 400
+
+        return Response(status=202,message="User updated").__dict__,202
 
     def delete(self, user_id):
         parser = reqparse.RequestParser()
@@ -92,14 +97,25 @@ class UserAPI(Resource):
             type=str, location='form', required=True)
         args = parser.parse_args()
 
+        #cast user_id to int type
+        try: user_id = int(user_id)
+        except: 
+            return Response(status=400,message="Invalid user id.").__dict__,400
+
+        #get user from database
+        user = User.query.filter(User.id==user_id).first()
+        if not user:
+            return Response(status=400,
+                message="Could not find user.").__dict__,400
+
         #ensure user is authorized to delete
-        user = database.get_user(user_id) 
-        if user["fb_id"] != args.fb_id:
+        if user.fb_id != args.fb_id:
             return Response(status=401,
                 message="Incorrect fb_id.").__dict__,401
             
         #Delete user
-        if not database.delete_user(user_id):
-            return Response(status=500,
-                message="User not deleted.").__dict__,500
+        try:db.session.delete(user)
+        except:
+            return Response(status=500,message="User not deleted.").__dict__,500
+
         return Response(status=200, message="User deleted.").__dict__,200
