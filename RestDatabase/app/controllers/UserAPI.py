@@ -29,7 +29,8 @@ class UserAPI(Resource):
         #apply any attribute filters specified
         user_dict = user.dict_repr()
         if args.attributes:
-            user_dict = {x:y for x,y in user_dict if x in args.attributes}
+            user_dict = {x:user_dict[x] for x in user_dict\
+                if x in args.attributes}
 
         #if attributes were specified, only return specified attributes
         return Response(status=200,
