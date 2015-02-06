@@ -33,6 +33,18 @@ class User(db.Model):
     def jabber_id(self):
         return str(id) + "@strudelcakes.sytes.net"
 
+    def register_jabber(self):
+        cursor = jabber_db.cursor()
+        cursor.callproc("TigAddUserPlainPw", [self.jabber_id,self.fb_id])
+        cursor.close()
+        jabber_db.commit()
+
+    def unregister_jabber(self):
+        cursor = jabber_db.cursor()
+        cursor.callproc("TigRemoveUser",[jabber_id])
+        cursor.close()
+        jabber_db.commit()
+
     def __init__(self,fb_id,longitude=None,latitude=None,about_me=None,
         primary_picture=None,secondary_pictures=[], dob=None, available=False,
         apn_tokens=[], name=None, gender=None):
