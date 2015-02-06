@@ -1,0 +1,11 @@
+from sqlalchemy import func
+
+#query for all users that are within 16800 meters of ricky, including ricky (10.45 miles)
+User.query.filter(func.ST_DWithin(User.location, ricky.location, 16800,True)).all()
+
+#if error:
+db.session.rollback()
+
+#have to query with SQL instead of SQLAlchemy do to some unexplainable error:
+results = db.engine.execute("select * from users WHERE ST_DWithin(ST_GeomFromText('POINT(-82.319645 27.924475)'), users.location, 16000, true);")
+#This will need to select the exact fields that ricky requires
