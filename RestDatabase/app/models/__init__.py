@@ -111,7 +111,10 @@ class ActivitySetting(db.Model):
 class Question(db.Model):
     __tablename__ = "activity_questions"
     id = db.Column(db.Integer, primary_key=True)
+    activity_id = db.Column(db.Integer, ForeignKey("activities.id"))
+    activity = relationship("Activity", foreign_keys=[activity_id])
     question = db.Column(db.String(2048), nullable=False)
 
-    def __init__(self, question_string):
+    def __init__(self, activity, question_string):
         self.question = question_string
+        self.activity = activity
