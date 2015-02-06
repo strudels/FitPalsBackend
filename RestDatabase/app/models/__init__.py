@@ -64,12 +64,10 @@ class User(db.Model):
         self.name=name
         self.gender=gender
 
-    def dict_repr(self):
-        return {
+    def dict_repr(self,public=True):
+        dict_repr = {
             "id":self.id,
-            "fb_id":self.fb_id,
             "jabber_id":self.jabber_id,
-            "password":self.password,
             "about_me":self.about_me,
             "primary_picture":self.primary_picture,
             "dob":self.dob,
@@ -77,6 +75,11 @@ class User(db.Model):
             "name":self.name,
             "gender":self.gender
         }
+        if not public:
+            dict_repr["fb_id"] = self.fb_id
+            dict_repr["password"] = self.password,
+        return dict_repr
+
 
 class SecondaryPicture(db.Model):
     __tablename__ = "secondary_pictures"

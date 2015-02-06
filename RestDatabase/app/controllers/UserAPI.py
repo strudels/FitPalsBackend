@@ -12,30 +12,25 @@ from app.utils.Response import Response
 @api.resource('/users/<user_id>')
 class UserAPI(Resource):
     def get(self, user_id):
+        user_id = int(user_id)
         parser = reqparse.RequestParser()
         parser.add_argument("attributes",
             type=str, location='args', required=False, action="append")
         args = parser.parse_args()
 
         #Get user from db
-        try: user = database.get_user(user_id)
+        try: user = User.query.filter(User.id==user_id)
         except:
             return Response(status=400,message="Invalid user id.").__dict__,400
 
-        #cast id from ObjectId() to str()
-        user["user_id"] = str(user["user_id"])
-
-        #don't allow user to get secrets of other users
-        del user["fb_id"]
-        del user["apn_tokens"]
+        #apply any attribute filters specified
+        user_dict = user.dict_repr()
+        if args.attributes:
+            user_dict = {x:y for x,y in user_dict if x in args.attributes}
 
         #if attributes were specified, only return specified attributes
-        if args.attributes:
-            user = {attr:user[attr]\
-                for attr in args.attributes if attr in user.keys()
-            }
         return Response(status=200,
-            message="User found.",value=user).__dict__,200
+            message="User found.",value=user_dict).__dict__,200
     
     def put(self, user_id):
         parser = reqparse.RequestParser()

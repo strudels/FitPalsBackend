@@ -134,7 +134,8 @@ class UserListAPI(Resource):
         user = User.query.filter(User.fb_id==args.fb_id).first()
         if user:
             return Response(status=200,
-                message="User found.",value=user.dict_repr()).__dict__,200
+                message="User found.",
+                value=user.dict_repr(public=False)).__dict__,200
 
         #create new user
         new_user = User(
@@ -160,4 +161,5 @@ class UserListAPI(Resource):
 
         #return json for new user
         return Response(status=201,
-            message="User created.", value=new_user.dict_repr()).__dict__,201
+            message="User created.",
+            value=new_user.dict_repr(public=False)).__dict__,201
