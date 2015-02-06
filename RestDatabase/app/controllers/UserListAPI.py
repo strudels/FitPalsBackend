@@ -46,7 +46,7 @@ class UserListAPI(Resource):
         args = parser.parse_args()
 
         #apply filters specified by user to matches
-        query_args = []
+        query = Users.query
         if (args.radius and args.longitude and args.latitude):
             #ensure GPS parameters are valid
             if (args.radius <= 0) or not (-180 <= args.longitude <= 180)\
@@ -54,14 +54,14 @@ class UserListAPI(Resource):
                 return Response(status=400,message="Invalid GPS parameters"),400
             point = func.ST_GeomFromText('POINT(-82.319645 27.924475)') 
             arg = func.ST_DWithin(point, User.location, args.radius, True)
-            query_args.append(arg)
+            query = query.filter(arg)
 
         #args.last_updated probably needs to be converted to a datetime
         if args.last_updated:
-            query_args.append(User.last_updated<=args.last_updated)
+            query = query.filter(User.last_update<=args.last_updated)
 
         if args.jabber_id:
-            query_args.append(User.jabber_id==args.jabber_id)
+            query = query.filter(User.last_update==args.jabber_id)
 
         #currently the database does not hold age information
         """
@@ -93,8 +93,6 @@ class UserListAPI(Resource):
                     abs(m['activity']['time'] - user['activity']['time'])
             matches.sort(key=lambda x:x['activity']['time'])
         """
-        query = reduce(lambda x,y : y.filter(x), query_args, User.query)
-
         if args.offset != None: query = query.offset(args.offset)
 
         if args.limit != None: users = query.limit(args.limit)
