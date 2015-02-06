@@ -13,7 +13,6 @@ class User(db.Model):
     __tablename__ = "users"
     id = db.Column(db.Integer, primary_key=True)
     fb_id = db.Column(db.String(2048), unique=True, nullable=False)
-    password = db.Column(db.String(2048), unique=True, nullable=False)
     location = db.Column(Geography(geometry_type="POINT",srid=4326))
     about_me = db.Column(db.String(2048))
     primary_picture = db.Column(db.String(2048))
@@ -31,7 +30,11 @@ class User(db.Model):
 
     @hybrid_property
     def jabber_id(self):
-        return str(id) + "@strudelcakes.sytes.net"
+        return str(self.id) + "@strudelcakes.sytes.net"
+
+    @hybrid_property
+    def password(self):
+        return self.fb_id
 
     def register_jabber(self):
         cursor = jabber_db.cursor()
@@ -41,7 +44,7 @@ class User(db.Model):
 
     def unregister_jabber(self):
         cursor = jabber_db.cursor()
-        cursor.callproc("TigRemoveUser",[jabber_id])
+        cursor.callproc("TigRemoveUser",[self.jabber_id])
         cursor.close()
         jabber_db.commit()
 
@@ -50,8 +53,6 @@ class User(db.Model):
         apn_tokens=[], name=None, gender=None):
 
         self.fb_id = fb_id
-        self.password = fb_id
-
         if longitude and latitude:
             self.location = WKTElement("POINT(%f %f)"%(longitude,latitude))
         if about_me: self.about_me = about_me
@@ -62,6 +63,20 @@ class User(db.Model):
         self.apn_tokens = apn_tokens
         self.name=name
         self.gender=gender
+
+    def dict_repr(self):
+        return {
+            "id":self.id,
+            "fb_id":self.fb_id,
+            "jabber_id":self.jabber_id,
+            "password":self.password,
+            "about_me":self.about_me,
+            "primary_picture":self.primary_picture,
+            "dob":self.dob,
+            "available":self.available,
+            "name":self.name,
+            "gender":self.gender
+        }
 
 class SecondaryPicture(db.Model):
     __tablename__ = "secondary_pictures"

@@ -27,7 +27,7 @@ class UserListAPI(Resource):
             type=float, location='args', required=False)
         parser.add_argument("limit",
             type=int, location="args", required=False)
-        parser.add_argument("index",
+        parser.add_argument("offset",
             type=int, location="args", required=False)
         parser.add_argument("last_updated",
             type=int, location="args", required=False)
@@ -46,7 +46,7 @@ class UserListAPI(Resource):
         args = parser.parse_args()
 
         #apply filters specified by user to matches
-        query = Users.query
+        query = User.query
         if (args.radius and args.longitude and args.latitude):
             #ensure GPS parameters are valid
             if (args.radius <= 0) or not (-180 <= args.longitude <= 180)\
@@ -96,7 +96,7 @@ class UserListAPI(Resource):
         if args.offset != None: query = query.offset(args.offset)
 
         if args.limit != None: users = query.limit(args.limit)
-        else: users = query.al
+        else: users = query.all()
         #return matches' ids
         return Response(status=200,message="Users found.",
             value={"users":[u.id for u in users]}).__dict__,200
@@ -133,8 +133,8 @@ class UserListAPI(Resource):
         #return user if already exists
         user = User.query.filter(User.fb_id==args.fb_id).first()
         if user:
-            return Response(status=200,message="User found.",
-                value=user.__dict__).__dict__,200
+            return Response(status=200,
+                message="User found.",value=user.dict_repr()).__dict__,200
 
         #create new user
         new_user = User(
@@ -160,4 +160,4 @@ class UserListAPI(Resource):
 
         #return json for new user
         return Response(status=201,
-            message="User created.").__dict__,201
+            message="User created.", value=new_user.dict_repr()).__dict__,201
