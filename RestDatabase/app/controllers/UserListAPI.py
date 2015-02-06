@@ -1,5 +1,3 @@
-from response import Response
-
 from flask import Flask
 from flask.ext.restful import Resource, reqparse, Api
 import simplejson as json
@@ -9,6 +7,7 @@ import time
 
 from app import db, api
 from app.models import *
+from app.utils.Response import Response
 
 @api.resource('/users')
 class UserListAPI(Resource):
