@@ -9,3 +9,4 @@ api = Api(app)
 db = SQLAlchemy(app)
 
 from models import *
+from controllers import *
