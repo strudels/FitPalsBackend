@@ -1,3 +1,4 @@
+from sqlalchemy import func
 from flask import Flask
 from flask.ext.restful import Resource, reqparse, Api
 import simplejson as json
@@ -21,6 +22,7 @@ class UserListAPI(Resource):
             type=float, location='args', required=False)
         parser.add_argument("latitude",
             type=float, location='args', required=False)
+        #radius in meters
         parser.add_argument("radius",
             type=float, location='args', required=False)
         parser.add_argument("limit",
@@ -44,20 +46,25 @@ class UserListAPI(Resource):
         args = parser.parse_args()
 
         #apply filters specified by user to matches
-        if not (args.radius and args.longitude and args.latitude):
-            matches = database.get_users()
-        else: 
+        query_args = []
+        if (args.radius and args.longitude and args.latitude):
             #ensure GPS parameters are valid
             if (args.radius <= 0) or not (-180 <= args.longitude <= 180)\
                 or not (-90 <= args.latitude <= 90):
                 return Response(status=400,message="Invalid GPS parameters"),400
-            matches = database.get_nearby_users(args.longitude,
-                args.latitude, args.radius)
+            point = func.ST_GeomFromText('POINT(-82.319645 27.924475)') 
+            arg = func.ST_DWithin(point, User.location, args.radius, True)
+            query_args.append(arg)
 
+        #args.last_updated probably needs to be converted to a datetime
         if args.last_updated:
-            matches = [m for m in matches\
-                if m["last_updated"] <= args.last_updated]
+            query_args.append(User.last_updated<=args.last_updated)
 
+        if args.jabber_id:
+            query_args.append(User.jabber_id==args.jabber_id)
+
+        #currently the database does not hold age information
+        """
         if args.min_age:
             matches = [m for m in matches\
                 if m["dob"] <= self._age_to_day(args.min_age)]
@@ -65,14 +72,14 @@ class UserListAPI(Resource):
         if args.max_age:
             matches = [m for m in matches\
                 if m["dob"] >= self._age_to_day(args.max_age)]
+        """
 
+        #Skipping activity filtering for now
+        """
         if args.activity_name:
+            query_args.append()
             matches = [m for m in matches
                 if m['activity']['name'] == args.activity_name]
-
-        if args.jabber_id:
-            matches = [m for m in matches
-                if m['jabber_id'] == args.jabber_id]
 
         if args.activity_distance:
             for m in matches:
@@ -85,13 +92,17 @@ class UserListAPI(Resource):
                 m['activity']['time'] =\
                     abs(m['activity']['time'] - user['activity']['time'])
             matches.sort(key=lambda x:x['activity']['time'])
+        """
+        query = reduce(lambda x,y : y.filter(x), query_args, User.query)
 
-        if args.limit!=None and args.index!=None:
-            matches = matches[args.index:args.index+args.limit]
+        if args.offset != None: query = query.offset(args.offset)
 
-        #return matches' user_ids
-        return Response(status=200,message="Matches found.",
-            value={"users":[str(m["user_id"]) for m in matches]}).__dict__,200
+        if args.limit != None: users = query.limit(args.limit)
+        else: users = query.all()
+
+        #return matches' ids
+        return Response(status=200,message="Users found.",
+            value={"users":[u.id for u in users]}).__dict__,200
 
     def post(self):
         parser = reqparse.RequestParser()
