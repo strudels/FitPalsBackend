@@ -154,7 +154,8 @@ class UserListAPI(Resource):
 
         #register jabber user
         try: new_user.register_jabber()
-        except:
+        except Exception as e:
+            print "Exception: ", e
             db.session.delete(new_user)
             return Response(status=400,
                message="Could not create user.").__dict__,400 

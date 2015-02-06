@@ -22,7 +22,7 @@ class UserAPI(Resource):
             return Response(status=400,message="Invalid user id.").__dict__,400
 
         #Get user from db
-        user = User.query.filter(User.id==user_id)
+        user = User.query.filter(User.id==user_id).first()
         if not user:
             return Response(status=400,message="User not found.").__dict__,400
 
@@ -62,7 +62,7 @@ class UserAPI(Resource):
             return Response(status=400,message="Invalid user id.").__dict__,400
 
         #get user to update from db
-        user = User.query.filter(User.id=user_id).first
+        user = User.query.filter(User.id==user_id).first()
         if not user:
             return Response(status=400,message="Could not find user.").__dict__,400
 
@@ -114,7 +114,9 @@ class UserAPI(Resource):
                 message="Incorrect fb_id.").__dict__,401
             
         #Delete user
-        try:db.session.delete(user)
+        try:
+            db.session.delete(user)
+            db.session.commit()
         except:
             return Response(status=500,message="User not deleted.").__dict__,500
 
