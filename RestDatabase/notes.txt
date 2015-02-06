@@ -9,3 +9,6 @@ db.session.rollback()
 #have to query with SQL instead of SQLAlchemy do to some unexplainable error:
 results = db.engine.execute("select * from users WHERE ST_DWithin(ST_GeomFromText('POINT(-82.319645 27.924475)'), users.location, 16000, true);")
 #This will need to select the exact fields that ricky requires
+
+#This is how to query by a point
+User.query.filter(func.ST_DWithin(func.ST_GeomFromText('POINT(-82.319645 27.924475)'), User.location, 16000, True)).all()

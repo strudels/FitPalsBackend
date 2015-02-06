@@ -17,6 +17,8 @@ class User(db.Model):
     location = db.Column(Geography(geometry_type="POINT",srid=4326))
     about_me = db.Column(db.String(2048))
     primary_picture = db.Column(db.String(2048))
+    name = db.Column(db.String(256))
+    gender = db.Column(db.String(32))
     secondary_pictures = relationship("SecondaryPicture")
     last_updated =\
         db.Column(db.DateTime, default=db.func.now(), onupdate=db.func.now())
@@ -33,7 +35,7 @@ class User(db.Model):
 
     def __init__(self,fb_id,longitude=None,latitude=None,about_me=None,
         primary_picture=None,secondary_pictures=[], dob=None, available=False,
-        apn_tokens=[]):
+        apn_tokens=[], name=None, gender=None):
 
         self.fb_id = fb_id
         self.password = fb_id
@@ -46,6 +48,8 @@ class User(db.Model):
         if dob: self.dob = dob
         self.available = available
         self.apn_tokens = apn_tokens
+        self.name=name
+        self.gender=gender
 
 class SecondaryPicture(db.Model):
     __tablename__ = "secondary_pictures"
