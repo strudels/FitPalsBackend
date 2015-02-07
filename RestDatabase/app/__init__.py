@@ -25,4 +25,4 @@ jabber_db = mysql.connect(
 )
 
 from models import *
-from controllers import UserListAPI,UserAPI,MessagesAPI
+from controllers import UserListAPI,UserAPI,MessagesAPI,ActivityAPI

@@ -60,29 +60,24 @@ class UserActivitiesAPI(Resource):
         if user.fb_id != args.fb_id:
             return Response(status=401,message="Incorrect fb_id.").__dict__,401
 
-        #cast acitivity_id to int
-        try: activity_id = int(activity_id)
-        except:
-            return Response(status=400,message="Invalid activity id.").__dict__,
-                400
-
-        #get activity via activity_id
-        activity = Activity.query.filter(Activity.id==activity_id)
-        if not activity:
-            return Response(status=400, message="Activity not found.").__dict__,
-                400
-
         #ensure questions and answers can be zipped
         if not len(args.question_ids)==len(args.answers):
             return Response(status=400,
-                message="Inequal numbers of questions and answers.").__dict__,
-                400
+                message="Inequal numbers of questions and answers.")\
+                .__dict__,400
+
+        #get activity via activity_id
+        activity = Activity.query.filter(Activity.id==args.activity_id).first()
+        if not activity:
+            return Response(status=400,
+                message="Activity not found.").__dict__,400
 
         #add activity_setting for each question-answer pair
         for q_id,answer in zip(args.question_ids, args.answers):
-            question =\
-                activity.questions.query.filter(Question.id==q_id).first()
-            if not question:
+            try:
+                question =\
+                    activity.questions.filter(Question.id==q_id)[0]
+            except:
                 return Response(status=400,
                     message="Activity question not found.").__dict__, 400
 
@@ -216,8 +211,8 @@ class UserActivityAPI(Resource):
 
         #delete specific questions if specified
         query = user.activity_settings\
-            .filter(ActivitySetting.activity_id==activity_id)\
-        for q_id in question_ids:
+            .filter(ActivitySetting.activity_id==activity_id)
+        for q_id in args.question_ids:
             query = query.filter(ActivitySetting.question_id==q_id)
         for setting in query.all(): user.acivity_settings.remove(setting)
         return Response(status=200,

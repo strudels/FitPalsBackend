@@ -134,11 +134,10 @@ class Activity(db.Model):
     __tablename__ = "activities"
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(64), nullable=False)
-    questions = relationship("Question")
+    questions = relationship("Question", lazy="dynamic")
 
-    def __init__(self, name, questions=[]):
+    def __init__(self, name):
         self.name = name
-        self.questions = questions
 
     def dict_repr(self):
         return {
