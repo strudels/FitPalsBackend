@@ -48,6 +48,21 @@ class User(db.Model):
         cursor.close()
         jabber_db.commit()
 
+    def get_messages(self, other_user):
+        cursor = jabber_db.cursor()
+        results = cursor.callproc("get_messages",
+            [self.jabber_id,other_user.jabber_id])
+        results = [r[0] for r in cursor.fetchall()]
+        cursor.close()
+        return results
+
+    def del_messages(self, other_user):
+        cursor = jabber_db.cursor()
+        cursor.callproc("delete_messages",
+            [self.jabber_id,other_user.jabber_id])
+        cursor.close()
+        jabber_db.commit()
+
     def __init__(self,fb_id,longitude=None,latitude=None,about_me=None,
         primary_picture=None,secondary_pictures=[], dob=None, available=False,
         apn_tokens=[], name=None, gender=None):

@@ -113,9 +113,10 @@ class UserAPI(Resource):
         if user.fb_id != args.fb_id:
             return Response(status=401,
                 message="Incorrect fb_id.").__dict__,401
-            
+
         #Delete user
         try:
+            user.unregister_jabber()
             db.session.delete(user)
             db.session.commit()
         except:
