@@ -140,6 +140,13 @@ class Activity(db.Model):
         self.name = name
         self.questions = questions
 
+    def dict_repr(self):
+        return {
+            "id":self.id,
+            "name":self.name,
+            "questions":[q.dict_repr() for q in self.questions]
+        }
+
 class ActivitySetting(db.Model):
     __tablename__ = "activity_settings"
     id = db.Column(db.Integer, primary_key=True)
@@ -157,6 +164,15 @@ class ActivitySetting(db.Model):
         self.question = question
         if self.answer: self.answer = answer
 
+    def dict_repr(self):
+        return {
+            "user_id":self.user_id,
+            "activity_id":self.activity_id,
+            "question_id":self.question_id,
+            "question":self.question.question,
+            "answer":self.answer
+        }
+
 class Question(db.Model):
     __tablename__ = "activity_questions"
     id = db.Column(db.Integer, primary_key=True)
@@ -167,3 +183,9 @@ class Question(db.Model):
     def __init__(self, activity, question_string):
         self.question = question_string
         self.activity = activity
+
+    def dict_repr(self):
+        return {
+            "id":self.id,
+            "question":self.question
+        }
