@@ -15,15 +15,22 @@ class MessagesAPI(Resource):
             message="Invalid user ids.").__dict__, 400
 
         #get owner user
-        user = User.query.filter(User.id==owner_id).first()
-        if not user:
+        owner = User.query.filter(User.id==owner_id).first()
+        if not owner:
             return Response(status=400,
                 message="User %d not found" % owner_id).__dict__, 400
 
+        #get other user
+        other_user = User.query.filter(User.id==other_id).first()
+        if not other_user:
+            return Response(status=400,
+                message="User %d not found" % other_id).__dict__, 400
+
         #get owner's messages from other user
-        try: messages = user.get_messages(other_id)
-        except: return Response(status=500,
-            message="Message lookup failed.").__dict__, 500
+        try: messages = owner.get_messages(other_user)
+        except:
+            return Response(status=500,
+                message="Message lookup failed.").__dict__, 500
 
         #return the messages
         return Response(status=200,message="Messages found.",
@@ -38,13 +45,19 @@ class MessagesAPI(Resource):
             message="Invalid user ids.").__dict__, 400
 
         #get owner user
-        user = User.query.filter(User.id==owner_id).first()
-        if not user:
+        owner = User.query.filter(User.id==owner_id).first()
+        if not owner:
             return Response(status=400,
                 message="User %d not found" % owner_id).__dict__, 400
 
+        #get other user
+        other_user = User.query.filter(User.id==other_id).first()
+        if not other_user:
+            return Response(status=400,
+                message="User %d not found" % other_id).__dict__, 400
+
         #delete user's messages to and from other user
-        try: user.del_messages(other_id)
+        try: owner.del_messages(other_user)
         except: return Response(status=500,
             message="Messages not deleted.").__dict__, 500
 
