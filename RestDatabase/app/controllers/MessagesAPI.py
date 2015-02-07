@@ -5,7 +5,7 @@ from app.models import *
 from app.utils.Response import Response
 
 @api.resource("/users/<owner_id>/messages/<other_id>")
-class UserMessagesAPI(Resource):
+class MessagesAPI(Resource):
     def get(self, owner_id, other_id):
         #ensure user_id's are both ints
         try:
