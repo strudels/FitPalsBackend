@@ -120,6 +120,7 @@ class UserActivityAPI(Resource):
         parser = reqparse.RequestParser()
         parser.add_argument("question_id",
             type=int, location="args", required=False)
+        args = parser.parse_args()
         #cast user_id to int
         try: user_id = int(user_id)
         except:

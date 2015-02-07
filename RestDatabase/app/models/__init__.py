@@ -26,7 +26,7 @@ class User(db.Model):
     match_decisions = relationship("MatchDecision",
         primaryjoin="User.id==MatchDecision.user_id")
     apn_tokens = relationship("APNToken")
-    activity_settings = relationship("ActivitySetting")
+    activity_settings = relationship("ActivitySetting", lazy="dynamic")
 
     @hybrid_property
     def jabber_id(self):
