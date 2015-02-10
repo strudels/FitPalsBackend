@@ -37,7 +37,7 @@ class UserMatchAPI(Resource):
         if args.liked != None: query = query.filter(MatchDecision.liked==liked)
 
         return Response(status=200, message="Matches retrieved.",
-            value=[m.decision_id for m in query.all()]).__dict__,400
+            value=[m.dict_repr() for m in query.all()]).__dict__,400
 
     def post(self, user_id):
         parser = reqparse.RequestParser()

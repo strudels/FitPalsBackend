@@ -25,7 +25,7 @@ class PicturesAPI(Resource):
                 message="Could not find user.").__dict__,400
 
         return Response(status=200, message="Pictures retrieved.",
-            value=[p.picture for p in user.secondary_pictures.all()])\
+            value=[p.dict_repr() for p in user.secondary_pictures.all()])\
             .__dict__, 200
 
     #add a picture for a user
