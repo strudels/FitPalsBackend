@@ -18,7 +18,7 @@ class User(db.Model):
     primary_picture = db.Column(db.String(2048))
     name = db.Column(db.String(256))
     gender = db.Column(db.String(32))
-    secondary_pictures = relationship("SecondaryPicture")
+    secondary_pictures = relationship("Picture")
     last_updated =\
         db.Column(db.DateTime, default=db.func.now(), onupdate=db.func.now())
     dob = db.Column(db.Integer)
@@ -96,15 +96,15 @@ class User(db.Model):
         return dict_repr
 
 
-class SecondaryPicture(db.Model):
+class Picture(db.Model):
     __tablename__ = "secondary_pictures"
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, ForeignKey("users.id"))
     user = relationship("User",foreign_keys=[user_id])
     picture = db.Column(db.String(2048), nullable=False)
 
-    def __init__(self, user_id, picture):
-        self.user_id = user_id
+    def __init__(self, user, picture):
+        self.user = user
         self.picture = picture
 
 class MatchDecision(db.Model):
@@ -128,8 +128,8 @@ class APNToken(db.Model):
     user = relationship("User",foreign_keys=[user_id])
     token = db.Column(db.String(2048), nullable=False)
 
-    def __init__(self, user_id, token):
-        self.user_id = user_id
+    def __init__(self, user, token):
+        self.user = user
         self.token = token
 
 class Activity(db.Model):
