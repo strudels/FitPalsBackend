@@ -18,14 +18,14 @@ class User(db.Model):
     primary_picture = db.Column(db.String(2048))
     name = db.Column(db.String(256))
     gender = db.Column(db.String(32))
-    secondary_pictures = relationship("Picture")
+    secondary_pictures = relationship("Picture", lazy="dynamic")
     last_updated =\
         db.Column(db.DateTime, default=db.func.now(), onupdate=db.func.now())
     dob = db.Column(db.Integer)
     available = db.Column(db.Boolean, default=False)
     match_decisions = relationship("MatchDecision",
-        primaryjoin="User.id==MatchDecision.user_id")
-    apn_tokens = relationship("APNToken")
+        primaryjoin="User.id==MatchDecision.user_id", lazy="dynamic")
+    apn_tokens = relationship("APNToken", lazy="dynamic")
     activity_settings = relationship("ActivitySetting", lazy="dynamic")
 
     @hybrid_property
@@ -86,7 +86,7 @@ class User(db.Model):
             "about_me":self.about_me,
             "primary_picture":self.primary_picture,
             "secondary_pictures":\
-                [p.dict_repr() for p in self.secondary_pictures]
+                [p.dict_repr() for p in self.secondary_pictures],
             "dob":self.dob,
             "available":self.available,
             "name":self.name,
@@ -134,7 +134,7 @@ class MatchDecision(db.Model):
     def dict_repr(self):
         return {
             "id":self.id,
-            "user_id":self.user_id
+            "user_id":self.user_id,
             "decision_user_id":self.decision_user_id,
             "liked":self.liked
         }

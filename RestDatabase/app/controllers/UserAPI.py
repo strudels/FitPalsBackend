@@ -4,7 +4,7 @@ import simplejson as json
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
 import time
-from sqlalchemy import or_
+from sqlalchemy import func,or_
 
 from app import db, api
 from app.models import *

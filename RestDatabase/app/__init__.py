@@ -31,5 +31,13 @@ configure({"HOST": "http://localhost:7077/"})
 provision("uhsome.Fitpals", open("certs/apns_cert.pem").read(), "sandbox")
 """
 
+#import all models
 from models import *
-from controllers import UserListAPI,UserAPI,MessagesAPI,ActivityAPI
+
+#import all controllers
+from controllers.UserAPI import *
+from controllers.ActivityAPI import *
+from controllers.APNTokensAPI import *
+from controllers.MatchAPI import *
+from controllers.MessagesAPI import *
+from controllers.PicturesAPI import *
