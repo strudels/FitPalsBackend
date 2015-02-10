@@ -77,7 +77,7 @@ class UsersAPI(Resource):
         else: users = query.all()
         #return matches' ids
         return Response(status=200,message="Users found.",
-            value={"users":[u.id for u in users]}).__dict__,200
+            value={"users":[u.dict_repr() for u in users]}).__dict__,200
 
     def post(self):
         parser = reqparse.RequestParser()
