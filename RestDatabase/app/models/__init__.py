@@ -116,8 +116,10 @@ class MatchDecision(db.Model):
     decision_user = relationship("User",foreign_keys=[decision_user_id])
     liked = db.Column(db.Boolean, index=True, nullable=False)
 
-    def __init__(self, user, liked):
+    def __init__(self, user, decision_user,liked=False):
         self.user = user
+        self.decision_user = decision_user
+        self.liked = liked
 
 class APNToken(db.Model):
     __tablename__ = "apn_tokens"
