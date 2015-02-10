@@ -11,9 +11,11 @@ from app.utils.Response import Response
 
 @api.resource('/users/<user_id>/matches')
 class UserMatchAPI(Resource):
+    """
     #sends apple push notification
     def _send_apn(self, device_token, data_dict):
         notify("uhsome.Fitpals", device_token, {"aps":data_dict})
+    """
 
     def get(self, user_id):
         parser = reqparse.RequestParser()

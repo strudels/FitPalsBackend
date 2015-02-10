@@ -4,6 +4,7 @@ from flask.ext.restful import Api
 from ConfigParser import ConfigParser
 import MySQLdb as mysql
 from os.path import dirname
+from pyapns import configure, provision, notify
 
 config = ConfigParser()
 config.read([dirname(__file__) + "/fitpals_api.cfg"])
@@ -24,9 +25,11 @@ jabber_db = mysql.connect(
     port=config.getint("tigase","port")
 )
 
+"""
 #setup apple push notifications
 configure({"HOST": "http://localhost:7077/"})
 provision("uhsome.Fitpals", open("certs/apns_cert.pem").read(), "sandbox")
+"""
 
 from models import *
 from controllers import UserListAPI,UserAPI,MessagesAPI,ActivityAPI
