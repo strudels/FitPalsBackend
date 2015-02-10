@@ -85,6 +85,8 @@ class User(db.Model):
             "jabber_id":self.jabber_id,
             "about_me":self.about_me,
             "primary_picture":self.primary_picture,
+            "secondary_pictures":\
+                [p.dict_repr() for p in self.secondary_pictures]
             "dob":self.dob,
             "available":self.available,
             "name":self.name,
@@ -92,7 +94,8 @@ class User(db.Model):
         }
         if not public:
             dict_repr["fb_id"] = self.fb_id
-            dict_repr["password"] = self.password,
+            dict_repr["password"] = self.password
+            dict_repr["apn_tokens"] = [t.dict_repr() for t in self.apn_tokens]
         return dict_repr
 
 
@@ -106,6 +109,13 @@ class Picture(db.Model):
     def __init__(self, user, picture):
         self.user = user
         self.picture = picture
+
+    def dict_repr(self):
+        return {
+            "id":self.id,
+            "user_id":self.user_id,
+            "picture":self.picture
+        }
 
 class MatchDecision(db.Model):
     __tablename__ = "match_decisions"
@@ -121,6 +131,14 @@ class MatchDecision(db.Model):
         self.decision_user = decision_user
         self.liked = liked
 
+    def dict_repr(self):
+        return {
+            "id":self.id,
+            "user_id":self.user_id
+            "decision_user_id":self.decision_user_id,
+            "liked":self.liked
+        }
+
 class APNToken(db.Model):
     __tablename__ = "apn_tokens"
     id = db.Column(db.Integer, primary_key=True)
@@ -131,6 +149,13 @@ class APNToken(db.Model):
     def __init__(self, user, token):
         self.user = user
         self.token = token
+
+    def dict_repr(self):
+        return {
+            "id":self.id,
+            "user_id":self.user_id,
+            "token":self.token
+        }
 
 class Activity(db.Model):
     __tablename__ = "activities"
@@ -167,6 +192,7 @@ class ActivitySetting(db.Model):
 
     def dict_repr(self):
         return {
+            "id":self.id,
             "user_id":self.user_id,
             "activity_id":self.activity_id,
             "question_id":self.question_id,
@@ -188,5 +214,6 @@ class Question(db.Model):
     def dict_repr(self):
         return {
             "id":self.id,
+            "activity_id":self.activity_id,
             "question":self.question
         }

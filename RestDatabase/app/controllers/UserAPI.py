@@ -4,6 +4,7 @@ import simplejson as json
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
 import time
+from sqlalchemy import or_
 
 from app import db, api
 from app.models import *
@@ -62,29 +63,14 @@ class UsersAPI(Resource):
             query = query.join(User.activity_settings)\
                 .filter(ActivitySetting.activity.name==args.activity_name)
 
+        #right now this only matches if questions have the same answers
         if len(args.question_ids) == len(args.answers):
+            or_expr = False
             for q_id,answer in zip(args.question_ids, args.answers):
-                query = query.filter(ActivitySetting.question.id==q_id,
+                or_expr = or_(or_expr,ActivitySetting.question.id==q_id,
                     ActivitySetting.answer==answer)
+            if or_expr != False: query = query.filter(or_expr)
 
-        """
-        if args.activity_name:
-            query_args.append()
-            matches = [m for m in matches
-                if m['activity']['name'] == args.activity_name]
-
-        if args.activity_distance:
-            for m in matches:
-                m['activity']['distance'] =\
-                    abs(m['activity']['distance'] - args.activity_distance)
-            matches.sort(key=lambda x:x['activity']['distance'])
-
-        if args.activity_time:
-            for m in matches:
-                m['activity']['time'] =\
-                    abs(m['activity']['time'] - user['activity']['time'])
-            matches.sort(key=lambda x:x['activity']['time'])
-        """
         if args.offset != None: query = query.offset(args.offset)
 
         if args.limit != None: users = query.limit(args.limit)
@@ -96,12 +82,6 @@ class UsersAPI(Resource):
     def post(self):
         parser = reqparse.RequestParser()
         #skip these args for now
-        """
-        parser.add_argument("apn_tokens",
-            type=str, location='form', required=False, action="append")
-        parser.add_argument("secondary_pictures",
-            type=str, location='form', required=False, action="append")
-        """
         parser.add_argument("fb_id",
             type=str, location='form', required=True)
         parser.add_argument("longitude",
@@ -194,11 +174,11 @@ class UserAPI(Resource):
         parser.add_argument("latitude",
             type=float, location='form', required=False)
         parser.add_argument("primary_picture",
-            type=str, location='form', required=False, action="append")
+            type=str, location='form', required=False)
         parser.add_argument("secondary_pictures",
             type=str, location='form', required=False, action="append")
         parser.add_argument("about_me",
-            type=str, location='form', required=False, action="append")
+            type=str, location='form', required=False)
         parser.add_argument("available",
             type=bool, location='form', required=False)
         parser.add_argument("dob",
@@ -226,11 +206,12 @@ class UserAPI(Resource):
         if args.about_me: user.about_me = args.about_me
         if args.available: user.available = args.available
         if args.dob: user.dob = args.dob
-        """
         if args.secondary_pictures:
-            user["secondary_pictures"] = args.secondary_pictures
-        if args.apn_tokens: user["apn_tokens"] = args.apn_tokens
-        """
+            for pic in args.secondary_pictures:
+                self.secondary_pictures.append(Picture(user,pic))
+        if args.apn_tokens:
+            for token in args.apn_tokens:
+                self.apn_tokens.append(APNToken(user,pic))
 
         #Update database and return whether or not the update was a success
         try: db.session.commit()
