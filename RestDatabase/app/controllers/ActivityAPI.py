@@ -16,8 +16,8 @@ class ActivitiesAPI(Resource):
         return Response(status=200,message="Activites found.",
             value=[a.dict_repr() for a in Activity.query.all()]).__dict__, 200
 
-@api.resource('/users/<user_id>/activities')
-class UserActivitiesAPI(Resource):
+@api.resource('/users/<user_id>/activities_settings')
+class UserActivitySettingsAPI(Resource):
     #get's all activities for a specific user
     def get(self, user_id):
         #cast user_id to int
@@ -30,7 +30,7 @@ class UserActivitiesAPI(Resource):
         if not user:
             return Response(status=400,message="User not found.").__dict__,400
 
-        return Response(status=200, message="Activities found.",
+        return Response(status=200, message="Activities settings found.",
             value=[a.dict_repr() for a in user.activity_settings]).__dict__,200
 
     #add activity to user's activity list
@@ -113,8 +113,8 @@ class UserActivitiesAPI(Resource):
         db.session.commit()
 
 #activity_id maps to an ActivitySetting id
-@api.resource("/users/<user_id>/activities/<activity_id>")
-class UserActivityAPI(Resource):
+@api.resource("/users/<user_id>/activity_settings/<activity_id>")
+class UserActivitySettingAPI(Resource):
     #get settings for user's specific activity
     def get(self, user_id, activity_id):
         parser = reqparse.RequestParser()
