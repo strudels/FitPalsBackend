@@ -161,7 +161,7 @@ class ActivitySetting(db.Model):
         self.user = user
         self.activity = activity
         self.question = question
-        if self.answer: self.answer = answer
+        self.answer = answer
 
     def dict_repr(self):
         return {

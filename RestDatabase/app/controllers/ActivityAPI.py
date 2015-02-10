@@ -182,7 +182,7 @@ class UserActivityAPI(Resource):
         for q_id, answer in zip(args.question_ids,args.answers):
             activity_setting = user.activity_settings\
                 .filter(ActivitySetting.activity_id==activity_id)\
-                .filter(ActivitySetting.question_id==q_id)
+                .filter(ActivitySetting.question_id==q_id).first()
             activity_setting.answer = answer
         db.session.commit()
 
@@ -215,6 +215,7 @@ class UserActivityAPI(Resource):
             .filter(ActivitySetting.activity_id==activity_id)
         for q_id in args.question_ids:
             query = query.filter(ActivitySetting.question_id==q_id)
-        for setting in query.all(): user.acivity_settings.remove(setting)
+        for setting in query.all(): user.activity_settings.remove(setting)
+        db.session.commit()
         return Response(status=200,
             message="Activity Information deleted.").__dict__, 200
