@@ -16,7 +16,7 @@ class ActivitiesAPI(Resource):
         return Response(status=200,message="Activites found.",
             value=[a.dict_repr() for a in Activity.query.all()]).__dict__, 200
 
-@api.resource('/users/<user_id>/activities_settings')
+@api.resource('/users/<user_id>/activity_settings')
 class UserActivitySettingsAPI(Resource):
     #get's all activities for a specific user
     def get(self, user_id):
