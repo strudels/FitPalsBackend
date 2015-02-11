@@ -17,6 +17,25 @@ class UsersAPI(Resource):
         return int(time.mktime(day.timetuple()))
 
     def get(self):
+        """
+        Gets users that fall inside the specified parameters.
+
+        :query float longitude: Specify a longitude to search by.
+        :query float latitude: Specify a latitude to search by.
+        :query int radius: Specify a radius to search by in meters.
+        :query int limit: Limit the number of results.
+        :query int offset: Return users after a given offset.
+        :query int last_updated: Number of seconds since epoch;
+            Return users that were updated before a given time.
+        :query string jabber_id: Return users with specific jabber_id.
+        :query string activity_name: Return users with matching activity_name
+        :query int-list question_ids: Must be same length as answers; specify
+            activity_setting questions to filter by.
+        :query float-list answers: Must be same length as question_ids; specify
+            answers for activity_settings questions to filter by.
+
+        :status 200: Users found.
+        """
         parser = reqparse.RequestParser()
         parser.add_argument("longitude",
             type=float, location='args', required=False)
@@ -89,6 +108,24 @@ class UsersAPI(Resource):
             value={"users":[u.dict_repr() for u in users]}).__dict__,200
 
     def post(self):
+        """
+        Create new user if not already exists; return user
+
+        :form str fb_id: Specify fb_id for user; must be unique for every user.
+        :form float longitude: Specify a longitude to search by.
+        :form float latitude: Specify a latitude to search by.
+        :form str about_me: "About me" description of the user.
+        :form str primary_picture: Picture ID string for primary picture.
+        :form int dob: Integer number to represent DOB. THIS MAY CHANGE!
+        :form bool available: Specify whether or not user is available.
+        :form str name: Specify user name
+        :form str gender: Specify user gender; I DON'T THINK THIS WORKS
+
+        :status 200: User found.
+        :status 201: User created.
+        :status 400: Could not create user.
+        """
+
         parser = reqparse.RequestParser()
         #skip these args for now
         parser.add_argument("fb_id",

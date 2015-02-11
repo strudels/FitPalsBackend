@@ -9,7 +9,7 @@ from app import db, api
 from app.models import *
 from app.utils.Response import Response
 
-@api.resource('/users/<user_id>/matches')
+@api.resource('/users/<int:user_id>/matches')
 class UserMatchAPI(Resource):
     """
     #sends apple push notification
@@ -18,15 +18,19 @@ class UserMatchAPI(Resource):
     """
 
     def get(self, user_id):
+        """
+        :param int user_id: User id for owner of matches.
+
+        :query bool liked: If specified,
+            returns matches that correspond with liked.
+
+        :status 400: User not found.
+        :status 200: Matches retrieved.
+        """
         parser = reqparse.RequestParser()
         parser.add_argument("liked",
             type=bool, location="args", required=False)
         args = parser.parse_args()
-
-        #cast user_id to int
-        try: user_id = int(user_id)
-        except:
-            return Response(status=400,message="Invalid user id.").__dict__,400
 
         #get user from the database
         user = User.query.filter(User.id==user_id).first()
@@ -41,6 +45,17 @@ class UserMatchAPI(Resource):
             value=[m.dict_repr() for m in query.all()]).__dict__,200
 
     def post(self, user_id):
+        """
+        :reqheader Authorization: fb_id token needed here
+        :param int user_id: User id for owner of matches.
+
+        :form int match_id: User id for match.
+        :form bool liked: If specified,
+            returns matches that correspond with liked.
+
+        :status 400: "User not found" or "Match not found".
+        :status 200: Match posted.
+        """
         parser = reqparse.RequestParser()
         parser.add_argument("match_id",
             type=int, location="form", required=True)
@@ -49,11 +64,6 @@ class UserMatchAPI(Resource):
         parser.add_argument("fb_id",
             type=str, location="form", required=True)
         args = parser.parse_args()
-
-        #cast user_id to int
-        try: user_id = int(user_id)
-        except:
-            return Response(status=400,message="Invalid user id.").__dict__,400
 
         #get users from database
         user = User.query.filter(User.id==user_id).first()
@@ -86,17 +96,21 @@ class UserMatchAPI(Resource):
         return Response(status=202,message="User updated").__dict__,202
 
     def delete(self, user_id):
+        """
+        :reqheader Authorization: fb_id token needed here
+        :param int user_id: User id for owner of matches.
+
+        :form int match_id: User id for match.
+
+        :status 400: User not found.
+        :status 200: User match decisions deleted.
+        """
         parser = reqparse.RequestParser()
         parser.add_argument("match_id",
             type=int, location="form", required=False)
         parser.add_argument("fb_id",
             type=str, location="form", required=True)
         args = parser.parse_args()
-
-        #cast user_id to int
-        try: user_id = int(user_id)
-        except:
-            return Response(status=400,message="Invalid user id.").__dict__,400
 
         #get users from database
         user = User.query.filter(User.id==user_id).first()

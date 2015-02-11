@@ -12,6 +12,8 @@ Contents:
    :maxdepth: 2
 
 .. autoflask:: app:app
+    :undoc-static:
+    :include-empty-docstring:
 
 
 Indices and tables
