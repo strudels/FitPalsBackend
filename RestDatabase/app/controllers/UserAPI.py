@@ -4,7 +4,7 @@ import simplejson as json
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
 import time
-from sqlalchemy import func,or_
+from sqlalchemy import func,or_, and_
 
 from app import db, api
 from app.models import *
@@ -36,9 +36,9 @@ class UsersAPI(Resource):
         parser.add_argument("activity_name",
             type=str, location="args", required=False)
         parser.add_argument("question_ids",
-            type=int, location="args", required=False, default=[])
+            type=int, location="args", required=False, action="append")
         parser.add_argument("answers",
-            type=float, location="args", required=False, default=[])
+            type=float, location="args", required=False, action="append")
         args = parser.parse_args()
 
         #apply filters specified by user to matches
@@ -61,15 +61,24 @@ class UsersAPI(Resource):
 
         if args.activity_name:
             query = query.join(User.activity_settings)\
-                .filter(ActivitySetting.activity.name==args.activity_name)
+                .join(ActivitySetting.activity)\
+                .filter(Activity.name==args.activity_name)
 
         #right now this only matches if questions have the same answers
         if len(args.question_ids) == len(args.answers):
+            questions = {x:y for x,y in zip(args.question_ids, args.answers)}
             or_expr = False
-            for q_id,answer in zip(args.question_ids, args.answers):
-                or_expr = or_(or_expr,ActivitySetting.question.id==q_id,
-                    ActivitySetting.answer==answer)
-            if or_expr != False: query = query.filter(or_expr)
+            for q in questions:
+                or_expr = or_(or_expr,ActivitySetting.question_id==q)
+            if or_expr != False:
+                query = query.filter(or_expr)
+                '''
+                for q in questions:
+                    query = query.order_by(abs(questions[ActivitySetting.question_id] - ActivitySetting.answer))
+                '''
+
+        #ensure no repeat users as a result from an earlier join
+        query = query.distinct(User.id)
 
         if args.offset != None: query = query.offset(args.offset)
 
