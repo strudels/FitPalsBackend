@@ -1,5 +1,6 @@
 RestDatabase/venv/
 RestDatabase/certs/
+RestDatabase/docs/build
 RestDatabase/twistd.log
 RestDatabase/twistd.pid
 tigase_scripts/apns/venv
