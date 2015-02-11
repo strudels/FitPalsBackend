@@ -54,6 +54,7 @@ class User(db.Model):
             [self.jabber_id,other_user.jabber_id])
         results = [r[0] for r in cursor.fetchall()]
         cursor.close()
+        jabber_db.commit()
         return results
 
     def del_messages(self, other_user):
