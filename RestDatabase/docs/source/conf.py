@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # Fitpals Web API documentation build configuration file, created by
-# sphinx-quickstart on Wed Feb 11 06:09:35 2015.
+# sphinx-quickstart on Wed Feb 11 08:55:20 2015.
 #
 # This file is execfile()d with the current directory set to its
 # containing dir.
@@ -19,6 +19,7 @@ import os
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #sys.path.insert(0, os.path.abspath('.'))
+sys.path.insert(0, "/home/strudels/Documents/FitPalsBackend/RestDatabase")
 
 # -- General configuration ------------------------------------------------
 
@@ -30,10 +31,9 @@ import os
 # ones.
 extensions = [
     'sphinx.ext.autodoc',
-    'sphinx.ext.doctest',
-    'sphinx.ext.todo',
-    'sphinx.ext.coverage',
     'sphinx.ext.viewcode',
+    'sphinxcontrib.httpdomain',
+    'sphinxcontrib.autohttp.flask',
 ]
 
 # Add any paths that contain templates here, relative to this directory.
