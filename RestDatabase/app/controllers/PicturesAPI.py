@@ -33,6 +33,10 @@ class PicturesAPI(Resource):
         parser = reqparse.RequestParser()
         parser.add_argument("picture_id",
             type=str, location="form", required=True)
+        parser.add_argument("fb_id",
+            type=str, location="form", required=True)
+        args = parser.parse_args()
+
         #cast user_id to int type
         try: user_id = int(user_id)
         except: 
@@ -43,6 +47,10 @@ class PicturesAPI(Resource):
         if not user:
             return Response(status=400,
                 message="Could not find user.").__dict__,400
+
+        #ensure user is valid by checking if fb_id is correct
+        if user.fb_id != args.fb_id:
+            return Response(status=401,message="Incorrect fb_id.").__dict__,401
 
         picture = Picture(user,args.picture_id)
         user.secondary_pictures.append(picture)
@@ -55,6 +63,8 @@ class PicturesAPI(Resource):
         parser = reqparse.RequestParser()
         parser.add_argument("picture_id",
             type=str, location="form", required=False)
+        parser.add_argument("fb_id",
+            type=str, location="form", required=True)
         args = parser.parse_args()
 
         #cast user_id to int type
@@ -71,7 +81,12 @@ class PicturesAPI(Resource):
         #remove all pictures if no single picture specified
         if not args.picture_id:
             user.secondary_pictures = []
+            db.session.commit()
             return Response(status=200,message="Pictures removed.").__dict__,200
+
+        #ensure user is valid by checking if fb_id is correct
+        if user.fb_id != args.fb_id:
+            return Response(status=401,message="Incorrect fb_id.").__dict__,401
 
         #get specified picture to delete
         picture = user.secondary_pictures\
