@@ -20,6 +20,7 @@ import os
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #sys.path.insert(0, os.path.abspath('.'))
 sys.path.insert(0, "/home/strudels/Documents/FitPalsBackend/RestDatabase")
+sys.path.append("/home/strudels/Documents/FitPalsBackend/RestDatabase/venv/lib/python2.7/site-packages/")
 
 # -- General configuration ------------------------------------------------
 
@@ -34,7 +35,22 @@ extensions = [
     'sphinx.ext.viewcode',
     'sphinxcontrib.httpdomain',
     'sphinxcontrib.autohttp.flask',
+    'sphinxcontrib.restbuilder',
 ]
+
+#CONFIGURE RESTBUILDER
+rst_file_suffix = '.rst'
+rst_link_suffix = ''
+rst_line_width = 78
+rst_indent = 4
+def rst_file_transform(docname):
+    if docname == 'index':
+        docname = 'home'
+    return docname.title() + rst_file_suffix
+def rst_link_transform(docname):
+    if docname == 'index':
+        return 'wiki'
+    return 'wiki/' + docname.title()
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']

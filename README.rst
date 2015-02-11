@@ -4,24 +4,23 @@ Welcome to Fitpals Web API's documentation!
 
 Contents:
 
-GET /activities
+``GET /activities``
 
    Get all possible activities.
 
-   Status Codes:
+   :Status Codes:
       * 200 OK -- Activities found.
 
-GET /users
+``GET /users``
 
    Gets users that fall inside the specified parameters.
 
-   Query Parameters:
+   :Query Parameters:
       * **longitude** (*float*) -- Specify a longitude to search by.
 
       * **latitude** (*float*) -- Specify a latitude to search by.
 
-      * **radius** (*int*) -- Specify a radius to search by in
-        meters.
+      * **radius** (*int*) -- Specify a radius to search by in meters.
 
       * **limit** (*int*) -- Limit the number of results.
 
@@ -43,14 +42,14 @@ GET /users
         question_ids; specify answers for activity_settings questions
         to filter by.
 
-   Status Codes:
+   :Status Codes:
       * 200 OK -- Users found.
 
-POST /users
+``POST /users``
 
    Create new user if not already exists; return user
 
-   Form Parameters:
+   :Form Parameters:
       * **str fb_id** -- Specify fb_id for user; must be unique for
         every user.
 
@@ -74,130 +73,130 @@ POST /users
       * **str gender** -- Specify user gender; I DON'T THINK THIS
         WORKS
 
-   Status Codes:
+   :Status Codes:
       * 200 OK -- User found.
 
       * 201 Created -- User created.
 
       * 400 Bad Request -- Could not create user.
 
-GET /users/(int: user_id)/activity_settings/(int: activity_id)
+``GET /users/(int: user_id)/activity_settings/(int: activity_id)``
 
    Get user's activity settings for a specific activity
 
-   Parameters:
+   :Parameters:
       * **user_id** (*int*) -- Id of user.
 
       * **activity_id** (*int*) -- Id of acitivity.
 
-   Query Parameters:
+   :Query Parameters:
       * **question_id** (*int*) -- Id of question.
 
-   Status Codes:
+   :Status Codes:
       * 400 Bad Request -- User not found.
 
       * 202 Accepted -- Activity found.
 
-PUT /users/(int: user_id)/activity_settings/(int: activity_id)
+``PUT /users/(int: user_id)/activity_settings/(int: activity_id)``
 
    Update user's activity settings for a specific activity
 
-   Request Headers:
+   :Request Headers:
       * Authorization -- fb_id token needed here
 
-   Parameters:
+   :Parameters:
       * **user_id** (*int*) -- Id of user.
 
       * **activity_id** (*int*) -- Id of acitivity.
 
-   Form Parameters:
+   :Form Parameters:
       * **int-list question_ids** -- Ids of questions. Must zip with
         answers
 
       * **int-list answers** -- Answer to question. Must zip with
         question_ids
 
-   Status Codes:
+   :Status Codes:
       * 400 Bad Request -- "User not found" or "Inequal amounts of
         questions and answers".
 
       * 202 Accepted -- Activity setting updated.
 
-DELETE /users/(int: user_id)/activity_settings/(int: activity_id)
+``DELETE /users/(int: user_id)/activity_settings/(int: activity_id)``
 
    Delete user's activity settings for a specific activity
 
-   Request Headers:
+   :Request Headers:
       * Authorization -- fb_id token needed here
 
-   Parameters:
+   :Parameters:
       * **user_id** (*int*) -- Id of user.
 
       * **activity_id** (*int*) -- Id of acitivity.
 
-   Form Parameters:
+   :Form Parameters:
       * **int-list question_ids** -- Ids of questions.
 
-   Status Codes:
+   :Status Codes:
       * 400 Bad Request -- User not found.
 
       * 202 Accepted -- Activity setting deleted.
 
-GET /users/(int: owner_id)/messages/(int: other_id)
+``GET /users/(int: owner_id)/messages/(int: other_id)``
 
    Get owner's messages with other user
 
-   Parameters:
+   :Parameters:
       * **owner_id** (*int*) -- User id for owner.
 
       * **other_id** (*int*) -- User id for other user.
 
-   Status Codes:
+   :Status Codes:
       * 400 Bad Request -- User not found.
 
       * 500 Internal Server Error -- Message lookup failed.
 
       * 200 OK -- Messages found.
 
-DELETE /users/(int: owner_id)/messages/(int: other_id)
+``DELETE /users/(int: owner_id)/messages/(int: other_id)``
 
    Delete owner's messages with other user
 
-   Parameters:
+   :Parameters:
       * **owner_id** (*int*) -- User id for owner.
 
       * **other_id** (*int*) -- User id for other user.
 
-   Status Codes:
+   :Status Codes:
       * 400 Bad Request -- User not found.
 
       * 500 Internal Server Error -- Messages not deleted.
 
       * 200 OK -- Messages deleted.
 
-GET /users/(int: user_id)/activity_settings
+``GET /users/(int: user_id)/activity_settings``
 
    Get all activity settings for a user
 
-   Parameters:
+   :Parameters:
       * **user_id** (*int*) -- User to get activity settings for
 
-   Status Codes:
+   :Status Codes:
       * 400 Bad Request -- User not found.
 
       * 200 OK -- Activity settings found.
 
-POST /users/(int: user_id)/activity_settings
+``POST /users/(int: user_id)/activity_settings``
 
    Post new activity setting for user
 
-   Request Headers:
+   :Request Headers:
       * Authorization -- fb_id token needed here
 
-   Parameters:
+   :Parameters:
       * **user_id** (*int*) -- Id of user.
 
-   Form Parameters:
+   :Form Parameters:
       * **int activity_id** -- Id of activity.
 
       * **int-list question_ids** -- List of question_ids, must zip
@@ -206,78 +205,77 @@ POST /users/(int: user_id)/activity_settings
       * **float-list answers** -- List of answers, must zip with
         question_ids
 
-   Status Codes:
+   :Status Codes:
       * 401 Unauthorized -- Not Authorized.
 
-      * 400 Bad Request -- "Inequal numbers of questions and
-        answers" or "Activity not found" or "Activity question not
-        found".
+      * 400 Bad Request -- "Inequal numbers of questions and answers"
+        or "Activity not found" or "Activity question not found".
 
       * 202 Accepted -- Activity setting created.
 
-DELETE /users/(int: user_id)/activity_settings
+``DELETE /users/(int: user_id)/activity_settings``
 
    Delete activity settings for user
 
-   Request Headers:
+   :Request Headers:
       * Authorization -- fb_id token needed here
 
-   Parameters:
+   :Parameters:
       * **user_id** (*int*) -- Id of user.
 
-   Status Codes:
+   :Status Codes:
       * 401 Unauthorized -- Not Authorized.
 
       * 400 Bad Request -- User not found.
 
       * 202 Accepted -- Activity settings created.
 
-GET /users/(int: user_id)/pictures
+``GET /users/(int: user_id)/pictures``
 
    Get all (secondary)pictures for a user.
 
-   Parameters:
+   :Parameters:
       * **user_id** (*int*) -- Id of user.
 
-   Status Codes:
+   :Status Codes:
       * 400 Bad Request -- Could not find user.
 
       * 200 OK -- Pictures found.
 
-POST /users/(int: user_id)/pictures
+``POST /users/(int: user_id)/pictures``
 
    Post new (secondary)picture for a user.
 
-   Request Headers:
+   :Request Headers:
       * Authorization -- fb_id token needed here
 
-   Parameters:
+   :Parameters:
       * **user_id** (*int*) -- Id of user.
 
-   Form Parameters:
+   :Form Parameters:
       * **str picture_id** -- Facebook Picture Id string.
 
-   Status Codes:
+   :Status Codes:
       * 401 Unauthorized -- Not Authorized.
 
       * 400 Bad Request -- Could not find user.
 
       * 201 Created -- Picture added.
 
-DELETE /users/(int: user_id)/pictures
+``DELETE /users/(int: user_id)/pictures``
 
    Delete (secondary)picture for a user.
 
-   Request Headers:
+   :Request Headers:
       * Authorization -- fb_id token needed here
 
-   Parameters:
+   :Parameters:
       * **user_id** (*int*) -- Id of user.
 
-   Form Parameters:
+   :Form Parameters:
       * **str picture_id** -- Facebook Picture Id string.
 
-   Status Codes:
+   :Status Codes:
       * 401 Unauthorized -- Not Authorized.
 
       * 400 Bad Request -- "Could not find user" or "Picture not
@@ -285,125 +283,125 @@ DELETE /users/(int: user_id)/pictures
 
       * 201 Created -- "Picture removed" or "Pictures removed".
 
-GET /users/(int: user_id)/matches
+``GET /users/(int: user_id)/matches``
 
-   Parameters:
+   :Parameters:
       * **user_id** (*int*) -- User id for owner of matches.
 
-   Query Parameters:
+   :Query Parameters:
       * **liked** (*bool*) -- If specified, returns matches that
         correspond with liked.
 
-   Status Codes:
+   :Status Codes:
       * 400 Bad Request -- User not found.
 
       * 200 OK -- Matches retrieved.
 
-POST /users/(int: user_id)/matches
+``POST /users/(int: user_id)/matches``
 
-   Request Headers:
+   :Request Headers:
       * Authorization -- fb_id token needed here
 
-   Parameters:
+   :Parameters:
       * **user_id** (*int*) -- User id for owner of matches.
 
-   Form Parameters:
+   :Form Parameters:
       * **int match_id** -- User id for match.
 
       * **bool liked** -- If specified, returns matches that
         correspond with liked.
 
-   Status Codes:
+   :Status Codes:
       * 400 Bad Request -- "User not found" or "Match not found".
 
       * 200 OK -- Match posted.
 
-DELETE /users/(int: user_id)/matches
+``DELETE /users/(int: user_id)/matches``
 
-   Request Headers:
+   :Request Headers:
       * Authorization -- fb_id token needed here
 
-   Parameters:
+   :Parameters:
       * **user_id** (*int*) -- User id for owner of matches.
 
-   Form Parameters:
+   :Form Parameters:
       * **int match_id** -- User id for match.
 
-   Status Codes:
+   :Status Codes:
       * 400 Bad Request -- User not found.
 
       * 200 OK -- User match decisions deleted.
 
-POST /users/(user_id)/apn_tokens
+``POST /users/(user_id)/apn_tokens``
 
    Post new APN token for user
 
-   Request Headers:
+   :Request Headers:
       * Authorization -- fb_id token needed here
 
-   Parameters:
+   :Parameters:
       * **user_id** (*int*) -- Id of user.
 
-   Form Parameters:
+   :Form Parameters:
       * **str token** -- apn_token to be posted
 
-   Status Codes:
+   :Status Codes:
       * 400 Bad Request -- Could not find user.
 
       * 201 Created -- APN token stored.
 
-DELETE /users/(user_id)/apn_tokens
+``DELETE /users/(user_id)/apn_tokens``
 
    Delete APN token for user
 
-   Request Headers:
+   :Request Headers:
       * Authorization -- fb_id token needed here
 
-   Parameters:
+   :Parameters:
       * **user_id** (*int*) -- Id of user.
 
-   Form Parameters:
+   :Form Parameters:
       * **str token** -- apn_token to be deleted. If not specified,
         all apn_tokens will be deleted.
 
-   Status Codes:
+   :Status Codes:
       * 400 Bad Request -- Could not find user.
 
       * 201 Created -- APN token stored.
 
-GET /users/(int: user_id)
+``GET /users/(int: user_id)``
 
    Get a user object by user_id
 
-   Request Headers:
+   :Request Headers:
       * Authorization -- fb_id token needed for private values;
         currently does nothing
 
-   Parameters:
+   :Parameters:
       * **user_id** (*int*) -- User to delete.
 
-   Query Parameters:
-      * **attributes** (*str-list*) -- list of user attribute names
-        to receive; if left empty, all attributes will be returned
+   :Query Parameters:
+      * **attributes** (*str-list*) -- list of user attribute names to
+        receive; if left empty, all attributes will be returned
 
-   Status Codes:
+   :Status Codes:
       * 200 OK -- User found.
 
       * 400 Bad Request -- User not found.
 
-PUT /users/(int: user_id)
+``PUT /users/(int: user_id)``
 
    Update a user
 
-   Request Headers:
+   :Request Headers:
       * Authorization -- fb_id token needed here
 
-   Parameters:
+   :Parameters:
       * **user_id** (*int*) -- User to delete.
 
-   Form Parameters:
-      * **float longitude** -- Update user's longitude. Latitude
-        must also be specified.
+   :Form Parameters:
+      * **float longitude** -- Update user's longitude. Latitude must
+        also be specified.
 
       * **float latitude** -- Update user's latitude. Longitude must
         also be specified.
@@ -416,7 +414,7 @@ PUT /users/(int: user_id)
 
       * **int dob** -- Update user's DOB; THIS WILL LIKELY CHANGE
 
-   Status Codes:
+   :Status Codes:
       * 400 Bad Request -- "Could not find user" or "User updated
         failed".
 
@@ -424,17 +422,17 @@ PUT /users/(int: user_id)
 
       * 202 Accepted -- User updated.
 
-DELETE /users/(int: user_id)
+``DELETE /users/(int: user_id)``
 
    Delete a user
 
-   Request Headers:
+   :Request Headers:
       * Authorization -- fb_id token needed here
 
-   Parameters:
+   :Parameters:
       * **user_id** (*int*) -- User to delete.
 
-   Status Codes:
+   :Status Codes:
       * 400 Bad Request -- Could not find user.
 
       * 401 Unauthorized -- Not Authorized.
@@ -447,8 +445,8 @@ DELETE /users/(int: user_id)
 Indices and tables
 ******************
 
-* *Index*
+* `Index <wiki/Genindex>`_
 
-* *Module Index*
+* `Module Index <wiki/Py-Modindex>`_
 
-* *Search Page*
+* `Search Page <wiki/Search>`_
