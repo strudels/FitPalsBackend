@@ -182,24 +182,35 @@ class UsersAPI(Resource):
             message="User created.",
             value=new_user.dict_repr(public=False)).__dict__,201
 
-@api.resource('/users/<user_id>')
+@api.resource('/users/<int:user_id>')
 class UserAPI(Resource):
     def get(self, user_id):
+        """
+        Get a user object by user_id
+
+        :reqheader Authorization: fb_id token needed for private values;
+            currently does nothing
+
+        :param int user_id: User to delete.
+
+        :query str-list attributes: list of user attribute names to receive;
+            if left empty, all attributes will be returned
+
+        :status 200: User found.
+        :status 400: User not found.
+        """
         parser = reqparse.RequestParser()
         parser.add_argument("attributes",
             type=str, location='args', required=False, action="append")
         args = parser.parse_args()
         
-        try: user_id = int(user_id)
-        except: 
-            return Response(status=400,message="Invalid user id.").__dict__,400
-
         #Get user from db
         user = User.query.filter(User.id==user_id).first()
         if not user:
             return Response(status=400,message="User not found.").__dict__,400
 
         #apply any attribute filters specified
+        #CHANGE THIS TO user_dict=user.dict_repr(public=is_authorized)
         user_dict = user.dict_repr()
         if args.attributes:
             user_dict = {x:user_dict[x] for x in user_dict\
@@ -210,6 +221,26 @@ class UserAPI(Resource):
             message="User found.",value=user_dict).__dict__,200
     
     def put(self, user_id):
+        """
+        Update a user
+        
+        :reqheader Authorization: fb_id token needed here
+
+        :param int user_id: User to delete.
+
+        :form float longitude: Update user's longitude.
+            Latitude must also be specified.
+        :form float latitude: Update user's latitude.
+            Longitude must also be specified.
+        :form str primary_picture: Update user's primary_picture
+        :form str about_me: Update user's about_me
+        :form bool available: Update user's availability
+        :form int dob: Update user's DOB; THIS WILL LIKELY CHANGE
+
+        :status 400: "Could not find user" or "User updated failed".
+        :status 401: Not Authorized.
+        :status 202: User updated.
+        """
         parser = reqparse.RequestParser()
         parser.add_argument("fb_id",
             type=str, location='form', required=True)
@@ -221,8 +252,6 @@ class UserAPI(Resource):
             type=float, location='form', required=False)
         parser.add_argument("primary_picture",
             type=str, location='form', required=False)
-        parser.add_argument("secondary_pictures",
-            type=str, location='form', required=False, action="append")
         parser.add_argument("about_me",
             type=str, location='form', required=False)
         parser.add_argument("available",
@@ -231,10 +260,6 @@ class UserAPI(Resource):
             type=int, location='form', required=False)
         args = parser.parse_args()
 
-        try: user_id = int(user_id)
-        except: 
-            return Response(status=400,message="Invalid user id.").__dict__,400
-
         #get user to update from db
         user = User.query.filter(User.id==user_id).first()
         if not user:
@@ -242,7 +267,7 @@ class UserAPI(Resource):
 
         #ensure user is valid by checking if fb_id is correct
         if user.fb_id != args.fb_id:
-            return Response(status=401,message="Incorrect fb_id.").__dict__,401
+            return Response(status=401,message="Not Authorized.").__dict__,401
 
         #update fields specified by client
         if args.longitude and args.latitude:
@@ -267,15 +292,22 @@ class UserAPI(Resource):
         return Response(status=202,message="User updated").__dict__,202
 
     def delete(self, user_id):
+        """
+        Delete a user
+        
+        :reqheader Authorization: fb_id token needed here
+
+        :param int user_id: User to delete.
+
+        :status 400: Could not find user.
+        :status 401: Not Authorized.
+        :status 500: User not deleted.
+        :status 202: User updated.
+        """
         parser = reqparse.RequestParser()
         parser.add_argument("fb_id",
             type=str, location='form', required=True)
         args = parser.parse_args()
-
-        #cast user_id to int type
-        try: user_id = int(user_id)
-        except: 
-            return Response(status=400,message="Invalid user id.").__dict__,400
 
         #get user from database
         user = User.query.filter(User.id==user_id).first()
@@ -286,7 +318,7 @@ class UserAPI(Resource):
         #ensure user is authorized to delete
         if user.fb_id != args.fb_id:
             return Response(status=401,
-                message="Incorrect fb_id.").__dict__,401
+                message="Not Authorized.").__dict__,401
 
         #Delete user
         try:
