@@ -35,10 +35,10 @@ class UsersAPI(Resource):
             type=str, location="args", required=False)
         parser.add_argument("activity_name",
             type=str, location="args", required=False)
-        parser.add_argument("question_ids",
-            type=int, location="args", required=False, action="append")
-        parser.add_argument("answers",
-            type=float, location="args", required=False, action="append")
+        parser.add_argument("question_ids", type=int,
+            location="args", required=False, action="append", default=[])
+        parser.add_argument("answers", type=float,
+            location="args", required=False, action="append", default=[])
         args = parser.parse_args()
 
         #apply filters specified by user to matches
