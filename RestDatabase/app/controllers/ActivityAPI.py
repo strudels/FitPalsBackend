@@ -13,28 +13,53 @@ from app.utils.Response import Response
 class ActivitiesAPI(Resource):
     #get's all possible activities
     def get(self):
+        """
+        Get all possible activities.
+
+        :status 200: Activities found.
+        """
         return Response(status=200,message="Activites found.",
             value=[a.dict_repr() for a in Activity.query.all()]).__dict__, 200
 
-@api.resource('/users/<user_id>/activity_settings')
+@api.resource('/users/<int:user_id>/activity_settings')
 class UserActivitySettingsAPI(Resource):
     #get's all activities for a specific user
     def get(self, user_id):
-        #cast user_id to int
-        try: user_id = int(user_id)
-        except:
-            return Response(status=400,message="Invalid user id.").__dict__,400
+        """
+        Get all activity settings for a user
+
+        :param int user_id: User to get activity settings for
+
+        :status 400: User not found.
+        :status 200: Activity settings found.
+        """
 
         #get user via user_id
         user = User.query.filter(User.id==user_id).first()
         if not user:
             return Response(status=400,message="User not found.").__dict__,400
 
-        return Response(status=200, message="Activities settings found.",
+        return Response(status=200, message="Activity settings found.",
             value=[a.dict_repr() for a in user.activity_settings]).__dict__,200
 
     #add activity to user's activity list
     def post(self, user_id):
+        """
+        Post new activity setting for user
+
+        :reqheader Authorization: fb_id token needed here
+        :param int user_id: Id of user.
+
+        :form int activity_id: Id of activity.
+        :form int-list question_ids: List of question_ids, must zip with answers
+        :form float-list answers: List of answers, must zip with question_ids
+
+        :status 401: Not Authorized.
+        :status 400: "Inequal numbers of questions and answers" or
+            "Activity not found" or "Activity question not found".
+        :status 202: Activity setting created.
+        """
+
         parser = reqparse.RequestParser()
         parser.add_argument("fb_id",
             type=str, location='form', required=True)
@@ -46,11 +71,6 @@ class UserActivitySettingsAPI(Resource):
             type=float, location="form", required=True, action="append")
         args = parser.parse_args()
 
-        #cast user_id to int
-        try: user_id = int(user_id)
-        except:
-            return Response(status=400,message="Invalid user id.").__dict__,400
-
         #get user via user_id
         user = User.query.filter(User.id==user_id).first()
         if not user:
@@ -58,7 +78,7 @@ class UserActivitySettingsAPI(Resource):
 
         #ensure user is valid by checking if fb_id is correct
         if user.fb_id != args.fb_id:
-            return Response(status=401,message="Incorrect fb_id.").__dict__,401
+            return Response(status=401,message="Not Authorized.").__dict__,401
 
         #ensure questions and answers can be zipped
         if not len(args.question_ids)==len(args.answers):
@@ -86,19 +106,25 @@ class UserActivitySettingsAPI(Resource):
             user.activity_settings.append(activity_setting)
         db.session.commit()
         
-        return Response(status=202,message="User activities updated").__dict__,202
+        return Response(status=202,message="Activity setting created.").__dict__,202
 
     #delete all user's activities
     def delete(self, user_id):
+        """
+        Delete activity settings for user
+
+        :reqheader Authorization: fb_id token needed here
+        :param int user_id: Id of user.
+
+        :status 401: Not Authorized.
+        :status 400: User not found.
+        :status 202: Activity settings created.
+        """
+
         parser = reqparse.RequestParser()
         parser.add_argument("fb_id",
             type=str, location='form', required=True)
         args = parser.parse_args()
-
-        #cast user_id to int
-        try: user_id = int(user_id)
-        except:
-            return Response(status=400,message="Invalid user id.").__dict__,400
 
         #get user via user_id
         user = User.query.filter(User.id==user_id).first()
@@ -111,6 +137,9 @@ class UserActivitySettingsAPI(Resource):
 
         user.activity_settings = []
         db.session.commit()
+
+        return Response(status=200,
+            message="Activity settings deleted.").__dict__,200
 
 #activity_id maps to an ActivitySetting id
 @api.resource("/users/<user_id>/activity_settings/<activity_id>")
