@@ -12,6 +12,9 @@ sudo apt-get install -y libssl-dev
 #install mysql dev libraries
 sudo apt-get install -y libmysqlclient-dev
 
+#install postgres dev libraries
+sudo apt-get install -y postgresql-server-dev-all
+
 #install pip
 sudo apt-get install -y python-pip
 

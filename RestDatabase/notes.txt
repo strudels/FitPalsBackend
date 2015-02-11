@@ -1,0 +1,22 @@
+from sqlalchemy import func
+
+#query for all users that are within 16800 meters of ricky, including ricky (10.45 miles)
+User.query.filter(func.ST_DWithin(User.location, ricky.location, 16800,True)).all()
+
+#if error:
+db.session.rollback()
+
+#have to query with SQL instead of SQLAlchemy do to some unexplainable error:
+results = db.engine.execute("select * from users WHERE ST_DWithin(ST_GeomFromText('POINT(-82.319645 27.924475)'), users.location, 16000, true);")
+#This will need to select the exact fields that ricky requires
+
+#This is how to query by a point
+User.query.filter(func.ST_DWithin(func.ST_GeomFromText('POINT(-82.319645 27.924475)'), User.location, 16000, True)).all()
+
+#to run queries with an arbitrary number of parameters, run them with a function like this:
+def multifilter(query, arg_list):
+    for arg in arg_list: query = query.filter(arg)
+    return query.all()
+
+    #sample call of this function:
+    multifilter(User.query, [func.ST_DWithin(func.ST_GeomFromText('POINT(-82.319645 27.924475)'), User.location, 17000, True), User.name=="Ben Curtiss"])
