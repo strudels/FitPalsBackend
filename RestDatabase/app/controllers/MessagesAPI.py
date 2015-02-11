@@ -4,15 +4,19 @@ from app import db, api
 from app.models import *
 from app.utils.Response import Response
 
-@api.resource("/users/<owner_id>/messages/<other_id>")
+@api.resource("/users/<int:owner_id>/messages/<int:other_id>")
 class MessagesAPI(Resource):
     def get(self, owner_id, other_id):
-        #ensure user_id's are both ints
-        try:
-            owner_id = int(owner_id)
-            other_id = int(other_id)
-        except: return Response(status=400,
-            message="Invalid user ids.").__dict__, 400
+        """
+        Get owner's messages with other user
+
+        :param int owner_id: User id for owner.
+        :param int other_id: User id for other user.
+
+        :status 400: User not found.
+        :status 500: Message lookup failed.
+        :status 200: Messages found.
+        """
 
         #get owner user
         owner = User.query.filter(User.id==owner_id).first()
@@ -37,12 +41,16 @@ class MessagesAPI(Resource):
             value={"messages":messages}).__dict__, 200
         
     def delete(self, owner_id, other_id):
-        #ensure user_id's are both ints
-        try:
-            owner_id = int(owner_id)
-            other_id = int(other_id)
-        except: return Response(status=400,
-            message="Invalid user ids.").__dict__, 400
+        """
+        Delete owner's messages with other user
+
+        :param int owner_id: User id for owner.
+        :param int other_id: User id for other user.
+
+        :status 400: User not found.
+        :status 500: Messages not deleted.
+        :status 200: Messages deleted.
+        """
 
         #get owner user
         owner = User.query.filter(User.id==owner_id).first()
