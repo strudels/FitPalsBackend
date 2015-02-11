@@ -142,28 +142,31 @@ class UserActivitySettingsAPI(Resource):
             message="Activity settings deleted.").__dict__,200
 
 #activity_id maps to an ActivitySetting id
-@api.resource("/users/<user_id>/activity_settings/<activity_id>")
+@api.resource("/users/<int:user_id>/activity_settings/<int:activity_id>")
 class UserActivitySettingAPI(Resource):
     #get settings for user's specific activity
     def get(self, user_id, activity_id):
+        """
+        Get user's activity settings for a specific activity
+
+        :param int user_id: Id of user.
+        :param int activity_id: Id of acitivity.
+
+        :query int question_id: Id of question.
+
+        :status 400: User not found.
+        :status 202: Activity found.
+        """
+
         parser = reqparse.RequestParser()
         parser.add_argument("question_id",
             type=int, location="args", required=False)
         args = parser.parse_args()
-        #cast user_id to int
-        try: user_id = int(user_id)
-        except:
-            return Response(status=400,message="Invalid user id.").__dict__,400
 
         #get user via user_id
         user = User.query.filter(User.id==user_id).first()
         if not user:
             return Response(status=400,message="User not found.").__dict__,400
-
-        #cast user_id to int
-        try: activity_id = int(activity_id)
-        except:
-            return Response(status=400,message="Invalid user id.").__dict__,400
 
         #get user's activity_settings for specific activity_id
         query =\
@@ -179,6 +182,21 @@ class UserActivitySettingAPI(Resource):
 
     #update user's specific activity
     def put(self, user_id, activity_id):
+        """
+        Update user's activity settings for a specific activity
+
+        :reqheader Authorization: fb_id token needed here
+
+        :param int user_id: Id of user.
+        :param int activity_id: Id of acitivity.
+
+        :form int-list question_ids: Ids of questions. Must zip with answers
+        :form int-list answers: Answer to question. Must zip with question_ids
+
+        :status 400: "User not found" or
+            "Inequal amounts of questions and answers".
+        :status 202: Activity setting updated.
+        """
         parser = reqparse.RequestParser()
         parser.add_argument("fb_id",
             type=str, location='form', required=True)
@@ -188,20 +206,10 @@ class UserActivitySettingAPI(Resource):
             type=float,location="form",required=True,action="append",default=[])
         args = parser.parse_args()
 
-        #cast user_id to int
-        try: user_id = int(user_id)
-        except:
-            return Response(status=400,message="Invalid user id.").__dict__,400
-
         #get user via user_id
         user = User.query.filter(User.id==user_id).first()
         if not user:
             return Response(status=400,message="User not found.").__dict__,400
-
-        #cast user_id to int
-        try: activity_id = int(activity_id)
-        except:
-            return Response(status=400,message="Invalid user id.").__dict__,400
 
         #ensure questions and answers can be zipped together
         if not len(args.question_ids) == len(args.answers):
@@ -215,8 +223,25 @@ class UserActivitySettingAPI(Resource):
             activity_setting.answer = answer
         db.session.commit()
 
+        return Response(status=202,
+            message="Activity setting updated.").__dict__,202
+
     #delete user's specific activity
     def delete(self, user_id, activity_id):
+        """
+        Delete user's activity settings for a specific activity
+
+        :reqheader Authorization: fb_id token needed here
+
+        :param int user_id: Id of user.
+        :param int activity_id: Id of acitivity.
+
+        :form int-list question_ids: Ids of questions.
+
+        :status 400: User not found.
+        :status 202: Activity setting deleted.
+        """
+
         parser = reqparse.RequestParser()
         parser.add_argument("fb_id",
             type=str, location='form', required=True)
@@ -224,20 +249,10 @@ class UserActivitySettingAPI(Resource):
             type=int,location="form",required=False,action="append",default=[])
         args = parser.parse_args()
 
-        #cast user_id to int
-        try: user_id = int(user_id)
-        except:
-            return Response(status=400,message="Invalid user id.").__dict__,400
-
         #get user via user_id
         user = User.query.filter(User.id==user_id).first()
         if not user:
             return Response(status=400,message="User not found.").__dict__,400
-
-        #cast user_id to int
-        try: activity_id = int(activity_id)
-        except:
-            return Response(status=400,message="Invalid user id.").__dict__,400
 
         #delete specific questions if specified
         query = user.activity_settings\
@@ -247,4 +262,4 @@ class UserActivitySettingAPI(Resource):
         for setting in query.all(): user.activity_settings.remove(setting)
         db.session.commit()
         return Response(status=200,
-            message="Activity Information deleted.").__dict__, 200
+            message="Activity setting deleted.").__dict__, 200
