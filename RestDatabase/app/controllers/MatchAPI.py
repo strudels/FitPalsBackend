@@ -33,11 +33,12 @@ class UserMatchAPI(Resource):
         if not user:
             return Response(status=400, message="User not found.").__dict__,400
 
-        query = User.match_decisions
-        if args.liked != None: query = query.filter(MatchDecision.liked==liked)
+        query = user.match_decisions
+        if args.liked != None:
+            query = query.filter(MatchDecision.liked==args.liked)
 
         return Response(status=200, message="Matches retrieved.",
-            value=[m.dict_repr() for m in query.all()]).__dict__,400
+            value=[m.dict_repr() for m in query.all()]).__dict__,200
 
     def post(self, user_id):
         parser = reqparse.RequestParser()
@@ -88,6 +89,8 @@ class UserMatchAPI(Resource):
         parser = reqparse.RequestParser()
         parser.add_argument("match_id",
             type=int, location="form", required=False)
+        parser.add_argument("fb_id",
+            type=str, location="form", required=True)
         args = parser.parse_args()
 
         #cast user_id to int
