@@ -13,15 +13,25 @@ from app.utils.Response import Response
 class APNTokensAPI(Resource):
     #add a device token for a user
     def post(self, user_id):
+        """
+        Post new APN token for user
+
+        :reqheader Authorization: fb_id token needed here
+
+        :param int user_id: Id of user.
+
+        :form str token: apn_token to be posted
+
+        :status 400: Could not find user.
+        :status 201: APN token stored.
+        """
+
         parser = reqparse.RequestParser()
         parser.add_argument("token",
             type=str, location="form", required=True)
+        parser.add_argument("fb_id",
+            type=str, location="form", required=True)
         args = parser.parse_args()
-
-        #cast user_id to int type
-        try: user_id = int(user_id)
-        except: 
-            return Response(status=400,message="Invalid user id.").__dict__,400
 
         #get user from database
         user = User.query.filter(User.id==user_id).first()
@@ -36,15 +46,24 @@ class APNTokensAPI(Resource):
 
     #delete either a specific or all device tokens for a user
     def delete(self, user_id):
+        """
+        Delete APN token for user
+
+        :reqheader Authorization: fb_id token needed here
+
+        :param int user_id: Id of user.
+
+        :form str token: apn_token to be deleted. If not specified,
+            all apn_tokens will be deleted.
+
+        :status 400: Could not find user.
+        :status 201: APN token stored.
+        """
+
         parser = reqparse.RequestParser()
         parser.add_argument("token",
             type=str, location="form", required=False)
         args = parser.parse_args()
-
-        #cast user_id to int type
-        try: user_id = int(user_id)
-        except: 
-            return Response(status=400,message="Invalid user id.").__dict__,400
 
         #get user from database
         user = User.query.filter(User.id==user_id).first()
