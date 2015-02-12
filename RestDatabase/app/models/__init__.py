@@ -28,6 +28,22 @@ class User(db.Model):
     apn_tokens = relationship("APNToken", lazy="dynamic")
     activity_settings = relationship("ActivitySetting", lazy="dynamic")
 
+    def __init__(self,fb_id,longitude=None,latitude=None,about_me=None,
+        primary_picture=None,secondary_pictures=[], dob=None, available=False,
+        apn_tokens=[], name=None, gender=None):
+
+        self.fb_id = fb_id
+        if longitude and latitude:
+            self.location = WKTElement("POINT(%f %f)"%(longitude,latitude))
+        if about_me: self.about_me = about_me
+        if primary_picture: self.primary_picture = primary_picture
+        self.secondary_pictures = secondary_pictures
+        if dob: self.dob = dob
+        self.available = available
+        self.apn_tokens = apn_tokens
+        self.name=name
+        self.gender=gender
+
     @hybrid_property
     def jabber_id(self):
         return str(self.id) + "@strudelcakes.sytes.net"
@@ -63,22 +79,6 @@ class User(db.Model):
             [self.jabber_id,other_user.jabber_id])
         cursor.close()
         jabber_db.commit()
-
-    def __init__(self,fb_id,longitude=None,latitude=None,about_me=None,
-        primary_picture=None,secondary_pictures=[], dob=None, available=False,
-        apn_tokens=[], name=None, gender=None):
-
-        self.fb_id = fb_id
-        if longitude and latitude:
-            self.location = WKTElement("POINT(%f %f)"%(longitude,latitude))
-        if about_me: self.about_me = about_me
-        if primary_picture: self.primary_picture = primary_picture
-        self.secondary_pictures = secondary_pictures
-        if dob: self.dob = dob
-        self.available = available
-        self.apn_tokens = apn_tokens
-        self.name=name
-        self.gender=gender
 
     def dict_repr(self,public=True):
         dict_repr = {

@@ -252,6 +252,8 @@ class UserAPI(Resource):
             type=float, location='form', required=False)
         parser.add_argument("primary_picture",
             type=str, location='form', required=False)
+        parser.add_argument("secondary_pictures",
+            type=str, location="form", required=False, action="append")
         parser.add_argument("about_me",
             type=str, location='form', required=False)
         parser.add_argument("available",
