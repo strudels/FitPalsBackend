@@ -59,3 +59,14 @@ class UserAPITestCase(unittest.TestCase):
                 "about me":"I'm a test user!"
             })
         assert resp.status_code==202
+
+    def test_delete_user(self):
+        user_id = self.test_user.id
+        fb_id = self.test_user.fb_id
+        resp = self.app.delete("/users/" + str(user_id),
+            data={"fb_id":fb_id},
+            headers={'Content-Type': 'application/x-www-form-urlencoded'})
+        self.test_user = User(fb_id)
+        db.session.add(self.test_user)
+        db.session.commit()
+        assert resp.status_code==200
