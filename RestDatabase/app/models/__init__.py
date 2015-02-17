@@ -18,15 +18,19 @@ class User(db.Model):
     primary_picture = db.Column(db.String(2048))
     name = db.Column(db.String(256))
     gender = db.Column(db.String(32))
-    secondary_pictures = relationship("Picture", lazy="dynamic")
+    secondary_pictures = relationship("Picture", lazy="dynamic",
+        cascade="save-update, merge, delete")
     last_updated =\
         db.Column(db.DateTime, default=db.func.now(), onupdate=db.func.now())
     dob = db.Column(db.Integer)
     available = db.Column(db.Boolean, default=False)
     match_decisions = relationship("MatchDecision",
-        primaryjoin="User.id==MatchDecision.user_id", lazy="dynamic")
-    apn_tokens = relationship("APNToken", lazy="dynamic")
-    activity_settings = relationship("ActivitySetting", lazy="dynamic")
+        primaryjoin="User.id==MatchDecision.user_id", lazy="dynamic",
+        cascade="save-update, merge, delete")
+    apn_tokens = relationship("APNToken", lazy="dynamic",
+        cascade="save-update, merge, delete")
+    activity_settings = relationship("ActivitySetting", lazy="dynamic",
+        cascade="save-update, merge, delete")
 
     def __init__(self,fb_id,longitude=None,latitude=None,about_me=None,
         primary_picture=None,secondary_pictures=[], dob=None, available=False,

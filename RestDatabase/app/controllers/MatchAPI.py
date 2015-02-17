@@ -93,7 +93,7 @@ class UserMatchAPI(Resource):
             for token in match["apn_tokens"]: self._send_apn(token, {"alert":"Match!"})
         """
 
-        return Response(status=202,message="User updated").__dict__,202
+        return Response(status=201,message="User updated").__dict__,201
 
     def delete(self, user_id):
         """
