@@ -3,7 +3,7 @@ import simplejson as json
 from app import app,db
 from app.models import *
 
-class PicturesApiTestCase(unittest.TestCase):
+class MatchApiTestCase(unittest.TestCase):
     def setUp(self):
         self.app = app.test_client()
 
@@ -49,7 +49,7 @@ class PicturesApiTestCase(unittest.TestCase):
             headers={'Content-Type': 'application/x-www-form-urlencoded'})
         assert resp.status_code==200
 
-    def test_delete_matches(self):
+    def test_delete_one_match(self):
         fb_id = self.test_user1.fb_id
         resp = self.app.delete("/users/" + str(self.test_user1.id) + "/matches",
             data={"fb_id":fb_id, "match_id":self.test_user2.id},
