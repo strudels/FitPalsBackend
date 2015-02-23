@@ -106,7 +106,7 @@ class UserActivitySettingsAPI(Resource):
             user.activity_settings.append(activity_setting)
         db.session.commit()
         
-        return Response(status=202,message="Activity setting created.").__dict__,202
+        return Response(status=201,message="Activity setting created.").__dict__,201
 
     #delete all user's activities
     def delete(self, user_id):
@@ -135,7 +135,7 @@ class UserActivitySettingsAPI(Resource):
         if user.fb_id != args.fb_id:
             return Response(status=401,message="Incorrect fb_id.").__dict__,401
 
-        user.activity_settings = []
+        user.activity_settings.delete()
         db.session.commit()
 
         return Response(status=200,
@@ -220,7 +220,15 @@ class UserActivitySettingAPI(Resource):
             activity_setting = user.activity_settings\
                 .filter(ActivitySetting.activity_id==activity_id)\
                 .filter(ActivitySetting.question_id==q_id).first()
-            activity_setting.answer = answer
+            if activity_setting != None:
+                activity_setting.answer = answer
+            else:
+                activity = Activity.query.get(activity_id)
+                question = activity.questions\
+                .filter(Question.id==q_id).first()
+                setting = ActivitySetting(user, activity, question)
+                setting.answer = answer
+                user.activity_settings.append(setting)
         db.session.commit()
 
         return Response(status=202,
