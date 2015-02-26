@@ -38,12 +38,22 @@ class UserActivitySettingsAPITestCase(unittest.TestCase):
         fb_id = self.test_user.fb_id
         resp = self.app.post("/users/" + str(user_id) + "/activity_settings",
             data={
-                "fb_id":fb_id,
                 "activity_id":1,
                 "question_ids":[1,2],
                 "answers":[30, 5000]
-            })
+            }, headers= {"Authorization":fb_id})
         assert resp.status_code==201
+
+    def test_add_user_activity_unauthorized(self):
+        user_id = self.test_user.id
+        fb_id = self.test_user.fb_id
+        resp = self.app.post("/users/" + str(user_id) + "/activity_settings",
+            data={
+                "activity_id":1,
+                "question_ids":[1,2],
+                "answers":[30, 5000]
+            }, headers= {"Authorization":fb_id + "junk"})
+        assert resp.status_code==401
 
     def test_delete_user_activities(self):
         user_id = self.test_user.id
