@@ -53,13 +53,21 @@ class MatchApiTestCase(unittest.TestCase):
     def test_delete_matches(self):
         fb_id = self.test_user1.fb_id
         resp = self.app.delete("/users/" + str(self.test_user1.id) + "/matches",
-            data={"fb_id":fb_id},
-            headers={'Content-Type': 'application/x-www-form-urlencoded'})
+            headers={'Content-Type': 'application/x-www-form-urlencoded',
+                     "Authorization":fb_id})
         assert resp.status_code==200
+
+    def test_delete_matches_unauthorized(self):
+        fb_id = self.test_user1.fb_id
+        resp = self.app.delete("/users/" + str(self.test_user1.id) + "/matches",
+            headers={'Content-Type': 'application/x-www-form-urlencoded',
+                     "Authorization":fb_id + "junk"})
+        assert resp.status_code==401
 
     def test_delete_one_match(self):
         fb_id = self.test_user1.fb_id
         resp = self.app.delete("/users/" + str(self.test_user1.id) + "/matches",
-            data={"fb_id":fb_id, "match_id":self.test_user2.id},
-            headers={'Content-Type': 'application/x-www-form-urlencoded'})
+            data={"match_id":self.test_user2.id},
+            headers={'Content-Type': 'application/x-www-form-urlencoded',
+                     "Authorization":fb_id})
         assert resp.status_code==200
