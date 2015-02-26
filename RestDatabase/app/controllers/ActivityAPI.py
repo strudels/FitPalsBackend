@@ -198,8 +198,8 @@ class UserActivitySettingAPI(Resource):
         :status 202: Activity setting updated.
         """
         parser = reqparse.RequestParser()
-        parser.add_argument("fb_id",
-            type=str, location='form', required=True)
+        parser.add_argument("Authorization",
+            type=str, location='headers', required=True)
         parser.add_argument("question_ids",
             type=int,location="form",required=True,action="append",default=[])
         parser.add_argument("answers",
@@ -210,6 +210,10 @@ class UserActivitySettingAPI(Resource):
         user = User.query.filter(User.id==user_id).first()
         if not user:
             return Response(status=400,message="User not found.").__dict__,400
+            
+        #ensure user is valid by checking if fb_id is correct
+        if user.fb_id != args.Authorization:
+            return Response(status=401,message="Not Authorized.").__dict__,401
 
         #ensure questions and answers can be zipped together
         if not len(args.question_ids) == len(args.answers):
