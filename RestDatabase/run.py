@@ -5,7 +5,10 @@ from app import app
 
 # > python run.py
 if len(sys.argv) == 1:
-    app.run(host="127.0.0.1", debug=True)
+    app.run(host="127.0.0.1")
+    
+elif sys.argv[1] == "debug":
+    app.run(host="127.0.0.1", debug=True, use_reloader=False)
 
 # > python run.py setup
 elif sys.argv[1] == "setup":

@@ -242,8 +242,8 @@ class UserAPI(Resource):
         :status 202: User updated.
         """
         parser = reqparse.RequestParser()
-        parser.add_argument("fb_id",
-            type=str, location='form', required=True)
+        parser.add_argument("Authorization",
+            type=str, location='headers', required=True)
         parser.add_argument("apn_tokens",
             type=str, location='form', required=False, action="append")
         parser.add_argument("longitude",
@@ -268,7 +268,7 @@ class UserAPI(Resource):
             return Response(status=400,message="Could not find user.").__dict__,400
 
         #ensure user is valid by checking if fb_id is correct
-        if user.fb_id != args.fb_id:
+        if user.fb_id != args.Authorization:
             return Response(status=401,message="Not Authorized.").__dict__,401
 
         #update fields specified by client
@@ -307,8 +307,8 @@ class UserAPI(Resource):
         :status 202: User updated.
         """
         parser = reqparse.RequestParser()
-        parser.add_argument("fb_id",
-            type=str, location='form', required=True)
+        parser.add_argument("Authorization",
+            type=str, location='headers', required=True)
         args = parser.parse_args()
 
         #get user from database
@@ -318,7 +318,7 @@ class UserAPI(Resource):
                 message="Could not find user.").__dict__,400
 
         #ensure user is authorized to delete
-        if user.fb_id != args.fb_id:
+        if user.fb_id != args.Authorization:
             return Response(status=401,
                 message="Not Authorized.").__dict__,401
 
