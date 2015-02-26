@@ -59,9 +59,17 @@ class UserActivitySettingsAPITestCase(unittest.TestCase):
         user_id = self.test_user.id
         fb_id = self.test_user.fb_id
         resp = self.app.delete("/users/" + str(user_id) + "/activity_settings",
-            data={"fb_id":fb_id},
-            headers={'Content-Type': 'application/x-www-form-urlencoded'})
+            headers={'Content-Type': 'application/x-www-form-urlencoded',
+                     "Authorization":fb_id})
         assert resp.status_code==200
+
+    def test_delete_user_activities_unauthorized(self):
+        user_id = self.test_user.id
+        fb_id = self.test_user.fb_id
+        resp = self.app.delete("/users/" + str(user_id) + "/activity_settings",
+            headers={'Content-Type': 'application/x-www-form-urlencoded',
+                     "Authorization":fb_id + "junk"})
+        assert resp.status_code==401
 
 class UserActivitySettingAPITestCase(unittest.TestCase):
     def setUp(self):
