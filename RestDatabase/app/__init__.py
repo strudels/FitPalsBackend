@@ -1,6 +1,7 @@
 from flask import Flask
 from flask.ext.sqlalchemy import SQLAlchemy
 from flask.ext.restful import Api
+from flask.ext.socketio import SocketIO
 from ConfigParser import ConfigParser
 import MySQLdb as mysql
 from os.path import dirname
@@ -12,6 +13,7 @@ config.read([dirname(__file__) + "/fitpals_api.cfg"])
 app = Flask(__name__)
 app.config["SQLALCHEMY_DATABASE_URI"] =\
     "postgresql://fitpals:Bb0ffline!@192.168.1.12/fitpals_db"
+socketio = SocketIO(app)
 
 api = Api(app)
 
