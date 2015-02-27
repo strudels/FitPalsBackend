@@ -43,3 +43,9 @@ from controllers.APNTokensAPI import *
 from controllers.MatchAPI import *
 from controllers.MessagesAPI import *
 from controllers.PicturesAPI import *
+
+#listen for client's to connect to chat and sync websocket
+@socketio.on("connect")
+def connect(json):
+    user = User.query.get(json["id"])
+    join_room(user.id)

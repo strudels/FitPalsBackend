@@ -1,5 +1,6 @@
 from flask import Flask
 from flask.ext.restful import Resource, reqparse, Api
+from flask.ext.socketio import emit
 import simplejson as json
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
@@ -290,6 +291,9 @@ class UserAPI(Resource):
         try: db.session.commit()
         except: return Response(status=400,
             message="User update failed.").__dict__, 400
+        
+        #reflect update in user's other clients
+        emit("user_update", user.dict_repr(), room=user.id)
 
         return Response(status=202,message="User updated").__dict__,202
 
