@@ -45,8 +45,18 @@ class PicturesApiTestCase(unittest.TestCase):
         self.test_user.secondary_pictures.append(Picture(self.test_user,"some fb picture string"))
         db.session.commit()
         resp = self.app.delete("/users/" + str(self.test_user.id) + "/pictures",
-            data={"fb_id":fb_id},
-            headers={'Content-Type': 'application/x-www-form-urlencoded'})
+            headers={'Content-Type': 'application/x-www-form-urlencoded',
+                    "Authorization":fb_id})
+        db.session.commit()
+        assert resp.status_code==200
+
+    def test_delete_pictures_unauthorized(self):
+        fb_id = self.test_user.fb_id
+        self.test_user.secondary_pictures.append(Picture(self.test_user,"some fb picture string"))
+        db.session.commit()
+        resp = self.app.delete("/users/" + str(self.test_user.id) + "/pictures",
+            headers={'Content-Type': 'application/x-www-form-urlencoded',
+                     "Authorization":fb_id + "junk"})
         db.session.commit()
         assert resp.status_code==200
 
@@ -56,6 +66,6 @@ class PicturesApiTestCase(unittest.TestCase):
         db.session.commit()
         pic = self.test_user.secondary_pictures.first()
         resp = self.app.delete("/users/" + str(self.test_user.id) + "/pictures",
-            data={"fb_id":fb_id, "picture_id":pic.picture},
-            headers={'Content-Type': 'application/x-www-form-urlencoded'})
+            headers={'Content-Type': 'application/x-www-form-urlencoded',
+                    "Authorization":fb_id})
         assert resp.status_code==200
