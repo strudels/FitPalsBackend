@@ -44,8 +44,26 @@ from controllers.MatchAPI import *
 from controllers.MessagesAPI import *
 from controllers.PicturesAPI import *
 
-#listen for client's to connect to chat and sync websocket
-@socketio.on("connect")
+#listen for client's to connect to chat websocket
+@socketio.on("connect", namespace="/chat")
 def connect(json):
+    pass
+    
+@socketio.on("join", namespace="/chat")
+def on_join(json):
     user = User.query.get(json["id"])
-    join_room(user.id)
+    if user.fb_id != json["fb_id"]:
+        emit("unauthorized", user.dict_repr())
+    join_room(str(user.id) + "-chat")
+
+#listen for client's to connect to sync websocket
+@socketio.on("connect", namespace="/sync")
+def connect(json):
+    pass
+    
+@socketio.on("join", namespace="/sync")
+def on_join(json):
+    user = User.query.get(json["id"])
+    if user.fb_id != json["fb_id"]:
+        emit("unauthorized", user.dict_repr())
+    join_room(str(user.id) + "-sync")
