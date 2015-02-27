@@ -5,6 +5,7 @@ from app.models import *
 
 class UsersApiTestCase(unittest.TestCase):
     def setUp(self):
+        app.testing = True
         self.app = app.test_client()
 
         self.test_user = User.query.filter(User.fb_id=="fbTestUser1").first()
