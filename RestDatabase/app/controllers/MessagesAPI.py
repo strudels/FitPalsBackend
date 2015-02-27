@@ -9,6 +9,8 @@ class MessagesAPI(Resource):
     def get(self, owner_id, other_id):
         """
         Get owner's messages with other user
+        
+        :reqheader Authorization: fb_id token needed here
 
         :param int owner_id: User id for owner.
         :param int other_id: User id for other user.
@@ -17,12 +19,20 @@ class MessagesAPI(Resource):
         :status 500: Message lookup failed.
         :status 200: Messages found.
         """
+        parser = reqparse.RequestParser()
+        parser.add_argument("Authorization",
+            type=str, location='headers', required=True)
+        args = parser.parse_args()
 
         #get owner user
         owner = User.query.filter(User.id==owner_id).first()
         if not owner:
             return Response(status=400,
                 message="User %d not found" % owner_id).__dict__, 400
+
+        #ensure user is valid by checking if fb_id is correct
+        if owner.fb_id != args.Authorization:
+            return Response(status=401,message="Not Authorized.").__dict__,401
 
         #get other user
         other_user = User.query.filter(User.id==other_id).first()
@@ -44,6 +54,8 @@ class MessagesAPI(Resource):
         """
         Delete owner's messages with other user
 
+        :reqheader Authorization: fb_id token needed here
+
         :param int owner_id: User id for owner.
         :param int other_id: User id for other user.
 
@@ -51,12 +63,20 @@ class MessagesAPI(Resource):
         :status 500: Messages not deleted.
         :status 200: Messages deleted.
         """
+        parser = reqparse.RequestParser()
+        parser.add_argument("Authorization",
+            type=str, location='headers', required=True)
+        args = parser.parse_args()
 
         #get owner user
         owner = User.query.filter(User.id==owner_id).first()
         if not owner:
             return Response(status=400,
                 message="User %d not found" % owner_id).__dict__, 400
+
+        #ensure user is valid by checking if fb_id is correct
+        if owner.fb_id != args.Authorization:
+            return Response(status=401,message="Not Authorized.").__dict__,401
 
         #get other user
         other_user = User.query.filter(User.id==other_id).first()

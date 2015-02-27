@@ -30,12 +30,25 @@ class MessagesApiTestCase(unittest.TestCase):
     def test_get_messages(self):
         resp = self.app.get("/users/" + str(self.test_user1.id)\
             + "/messages/" + str(self.test_user2.id),
-            data={"fb_id":self.test_user1.fb_id})
+            headers={"Authorization":self.test_user1.fb_id})
         assert resp.status_code==200 #user created
+
+    def test_get_messages_unauthorized(self):
+        resp = self.app.get("/users/" + str(self.test_user1.id)\
+            + "/messages/" + str(self.test_user2.id),
+            headers={"Authorization":self.test_user1.fb_id + "junk"})
+        assert resp.status_code==401 #user created
 
     def test_delete_messages(self):
         resp = self.app.delete("/users/" + str(self.test_user1.id)\
             + "/messages/" + str(self.test_user2.id),
-            data={"fb_id":self.test_user1.fb_id},
-            headers={'Content-Type': 'application/x-www-form-urlencoded'})
+            headers={'Content-Type': 'application/x-www-form-urlencoded',
+                     "Authorization":self.test_user1.fb_id})
         assert resp.status_code==200
+
+    def test_delete_messages_unauthorized(self):
+        resp = self.app.delete("/users/" + str(self.test_user1.id)\
+            + "/messages/" + str(self.test_user2.id),
+            headers={'Content-Type': 'application/x-www-form-urlencoded',
+                     "Authorization":self.test_user1.fb_id + "junk"})
+        assert resp.status_code==401
