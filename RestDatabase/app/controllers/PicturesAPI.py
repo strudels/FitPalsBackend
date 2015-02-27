@@ -51,8 +51,8 @@ class PicturesAPI(Resource):
         parser = reqparse.RequestParser()
         parser.add_argument("picture_id",
             type=str, location="form", required=True)
-        parser.add_argument("fb_id",
-            type=str, location="form", required=True)
+        parser.add_argument("Authorization",
+            type=str, location="headers", required=True)
         args = parser.parse_args()
 
         #get user from database
@@ -62,7 +62,7 @@ class PicturesAPI(Resource):
                 message="Could not find user.").__dict__,400
 
         #ensure user is valid by checking if fb_id is correct
-        if user.fb_id != args.fb_id:
+        if user.fb_id != args.Authorization:
             return Response(status=401,message="Not Authorized.").__dict__,401
 
         picture = Picture(user,args.picture_id)

@@ -22,9 +22,19 @@ class PicturesApiTestCase(unittest.TestCase):
         fb_id = self.test_user.fb_id
         db.session.add(self.test_user)
         resp = self.app.post("/users/" + str(self.test_user.id) + "/pictures",
-            data={"fb_id":fb_id, "picture_id":"some fb picture id string"})
+            data={"picture_id":"some fb picture id string"},
+            headers={"Authorization":fb_id})
         db.session.commit()
         assert resp.status_code==201 #user created
+
+    def test_add_picture_unauthorized(self):
+        fb_id = self.test_user.fb_id
+        db.session.add(self.test_user)
+        resp = self.app.post("/users/" + str(self.test_user.id) + "/pictures",
+            data={"picture_id":"some fb picture id string"},
+            headers={"Authorization":fb_id + "junk"})
+        db.session.commit()
+        assert resp.status_code==401 #Not Authorized
 
     def test_get_pictures(self):
         resp = self.app.get("/users/" + str(self.test_user.id) + "/pictures")
