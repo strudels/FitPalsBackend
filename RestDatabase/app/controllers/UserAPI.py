@@ -7,7 +7,7 @@ from dateutil.relativedelta import relativedelta
 import time
 from sqlalchemy import func,or_, and_
 
-from app import db, api
+from app import db, api, socketio
 from app.models import *
 from app.utils.Response import Response
 
@@ -293,7 +293,7 @@ class UserAPI(Resource):
             message="User update failed.").__dict__, 400
         
         #reflect update in user's other clients
-        emit("user_update", user.dict_repr(), room=user.id)
+        socketio.emit("user_update", user.dict_repr(), room=user.id)
 
         return Response(status=202,message="User updated").__dict__,202
 
