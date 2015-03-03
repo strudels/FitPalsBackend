@@ -50,6 +50,17 @@ class MessagesAPI(Resource):
         return Response(status=200,message="Messages found.",
             value={"messages":messages}).__dict__, 200
         
+    def post(self, from_user_id, to_user_id):
+        parser = reqparse.RequestParser()
+        parser.add_argument("Authorization",
+            type=str, location="headers", required=True)
+        parser.add_argument("body",
+            typ=str, location="form", required=True)
+        args = parser.parse_args()
+
+
+        
+        
     def delete(self, owner_id, other_id):
         """
         Delete owner's messages with other user
