@@ -29,7 +29,7 @@ class WebSocketTestCase(unittest.TestCase):
         client.disconnect(namespace="/chat")
         
     def test_websocket_join_chat(self):
-        self.chat_client.emit("join", self.test_user.dict_repr(),\
+        self.chat_client.emit("join", self.test_user.dict_repr(public=False),\
                               namespace="/chat")
         received = self.chat_client.get_received("/chat")
         assert len(received) == 1
@@ -45,7 +45,7 @@ class WebSocketTestCase(unittest.TestCase):
         client.disconnect(namespace="/sync")
 
     def test_websocket_join_sync(self):
-        self.sync_client.emit("join", self.test_user.dict_repr(),\
+        self.sync_client.emit("join", self.test_user.dict_repr(public=False),\
                               namespace="/sync")
         received = self.sync_client.get_received("/sync")
         assert len(received) == 1

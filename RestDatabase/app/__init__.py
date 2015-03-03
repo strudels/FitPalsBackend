@@ -47,7 +47,7 @@ from controllers.PicturesAPI import *
 #listen for client's to connect to chat websocket
 @socketio.on("connect", namespace="/chat")
 def connect():
-    send("connected-chat")
+    emit("connected-chat")
     
 @socketio.on("join", namespace="/chat")
 def on_join(json):
@@ -55,12 +55,12 @@ def on_join(json):
     if user.fb_id != json["fb_id"]:
         emit("unauthorized", user.dict_repr())
     join_room(str(user.id) + "-chat")
-    send("joined-" + str(user.id) + "-chat")
+    emit("joined-" + str(user.id) + "-chat")
 
 #listen for client's to connect to sync websocket
 @socketio.on("connect", namespace="/sync")
 def connect():
-    send("connected-sync")
+    emit("connected-sync")
     pass
     
 @socketio.on("join", namespace="/sync")
@@ -69,3 +69,4 @@ def on_join(json):
     if user.fb_id != json["fb_id"]:
         emit("unauthorized", user.dict_repr())
     join_room(str(user.id) + "-sync")
+    emit("joined-" + str(user.id) + "-sync")
