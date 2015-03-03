@@ -11,8 +11,15 @@ config = ConfigParser()
 config.read([dirname(__file__) + "/fitpals_api.cfg"])
 
 app = Flask(__name__)
-app.config["SQLALCHEMY_DATABASE_URI"] =\
-    "postgresql://fitpals:Bb0ffline!@192.168.1.12/fitpals_db"
+
+conn_str = "postgresql://"
+conn_str += config.get("postgres","username")
+conn_str += ":" + config.get("postgres","password")
+conn_str += "@" + config.get("postgres","hostname")
+conn_str += ":" + config.get("postgres","port")
+conn_str += "/" + config.get("postgres","dbname")
+app.config["SQLALCHEMY_DATABASE_URI"] = conn_str
+
 socketio = SocketIO(app)
 
 api = Api(app)

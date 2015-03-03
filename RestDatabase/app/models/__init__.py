@@ -227,14 +227,10 @@ class Question(db.Model):
 class Message(db.Model):
     __tablename__ = "messages"
     id = db.Column(db.Integer, primary_key=True)
-
-class Message(db.Model):
-    __tablename__ = "messages"
-    id = db.Column(db.Integer, primary_key=True)
     from_user_id = db.Column(db.Integer, ForeignKey("users.id"))
-    from_user = relationship("User",foreign_keys=[user_id])
+    from_user = relationship("User",foreign_keys=[from_user_id])
     to_user_id = db.Column(db.Integer, ForeignKey("users.id"))
-    to_user = relationship("User",foreign_keys=[decision_user_id])
+    to_user = relationship("User",foreign_keys=[to_user_id])
     body = db.Column(db.String(9900), index=True, nullable=False)
     time =\
         db.Column(db.DateTime, default=db.func.now(), onupdate=db.func.now())
@@ -249,6 +245,6 @@ class Message(db.Model):
             "id":self.id,
             "from_user_id":self.from_user_id,
             "to_user_id":self.to_user_id,
-            "body":self.body
+            "body":self.body,
             "time":self.time
         }

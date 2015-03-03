@@ -15,14 +15,14 @@ sudo apt-get install -y libmysqlclient-dev
 #install postgres dev libraries
 sudo apt-get install -y postgresql-server-dev-all
 
+#install postgresql server
+sudo apt-get install -y postgresql postgresql-contrib
+
+#install postgresql server postgis support
+sudo apt-get install -y postgis postgresql-9.3-postgis-2.1
+
 #install pip
 sudo apt-get install -y python-pip
-
-#install local mongodb server
-sudo apt-key adv -y --keyserver hkp://keyserer.ubuntu.com:80 --recv 7F0CEB10
-echo 'deb http://downloads-distro.mongodb.org/repo/ubuntu-upstart dist 10gen' | sudo tee /etc/apt/sources.list.d/mongodb.list
-sudo apt-get update -y
-sudo apt-get install -y mongodb-org
 
 #install virtualenv
 sudo pip install virtualenv
