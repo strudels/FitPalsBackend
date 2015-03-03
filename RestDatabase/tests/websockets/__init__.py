@@ -3,7 +3,7 @@ import simplejson as json
 from app import app,db,socketio
 from app.models import *
 
-class PicturesApiTestCase(unittest.TestCase):
+class WebSocketTestCase(unittest.TestCase):
     def setUp(self):
         pass
 
