@@ -7,3 +7,5 @@ tigase_scripts/apns/venv
 tigase_scripts/apns/certs
 *.swp
 *.pyc
+#*#
+.#*#
