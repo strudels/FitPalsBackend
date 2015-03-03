@@ -1,7 +1,7 @@
 from flask import Flask
 from flask.ext.sqlalchemy import SQLAlchemy
 from flask.ext.restful import Api
-from flask.ext.socketio import SocketIO
+from flask.ext.socketio import SocketIO, send, emit, join_room, leave_room
 from ConfigParser import ConfigParser
 import MySQLdb as mysql
 from os.path import dirname
@@ -46,7 +46,8 @@ from controllers.PicturesAPI import *
 
 #listen for client's to connect to chat websocket
 @socketio.on("connect", namespace="/chat")
-def connect(json):
+def connect():
+    send("connected-chat")
     pass
     
 @socketio.on("join", namespace="/chat")
@@ -58,7 +59,8 @@ def on_join(json):
 
 #listen for client's to connect to sync websocket
 @socketio.on("connect", namespace="/sync")
-def connect(json):
+def connect():
+    send("connected-sync")
     pass
     
 @socketio.on("join", namespace="/sync")
