@@ -1,6 +1,5 @@
 import unittest
-import simplejson as json
-from app import app,db,socketio
+from app import app,socketio
 from app.models import *
 
 class WebSocketTestCase(unittest.TestCase):
