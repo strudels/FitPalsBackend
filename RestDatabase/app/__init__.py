@@ -26,14 +26,6 @@ api = Api(app)
 
 db = SQLAlchemy(app)
 
-jabber_db = mysql.connect(
-    host=config.get("tigase","hostname"),
-    user=config.get("tigase","username"),
-    passwd=config.get("tigase","password"),
-    db=config.get("tigase","dbname"),
-    port=config.getint("tigase","port")
-)
-
 """
 #setup apple push notifications
 configure({"HOST": "http://localhost:7077/"})

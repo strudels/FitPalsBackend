@@ -32,6 +32,10 @@ class User(db.Model):
     activity_settings = relationship("ActivitySetting", lazy="dynamic",
         cascade="save-update, merge, delete")
 
+    @hybrid_property
+    def password(self):
+        return self.fb_id
+
     def __init__(self,fb_id,longitude=None,latitude=None,about_me=None,
         primary_picture=None,secondary_pictures=[], dob=None, available=False,
         apn_tokens=[], name=None, gender=None):
@@ -47,42 +51,6 @@ class User(db.Model):
         self.apn_tokens = apn_tokens
         self.name=name
         self.gender=gender
-
-    @hybrid_property
-    def jabber_id(self):
-        return str(self.id) + "@strudelcakes.sytes.net"
-
-    @hybrid_property
-    def password(self):
-        return self.fb_id
-
-    def register_jabber(self):
-        cursor = jabber_db.cursor()
-        cursor.callproc("TigAddUserPlainPw", [self.jabber_id,self.fb_id])
-        cursor.close()
-        jabber_db.commit()
-
-    def unregister_jabber(self):
-        cursor = jabber_db.cursor()
-        cursor.callproc("TigRemoveUser",[self.jabber_id])
-        cursor.close()
-        jabber_db.commit()
-
-    def get_messages(self, other_user):
-        cursor = jabber_db.cursor()
-        results = cursor.callproc("get_messages",
-            [self.jabber_id,other_user.jabber_id])
-        results = [r[0] for r in cursor.fetchall()]
-        cursor.close()
-        jabber_db.commit()
-        return results
-
-    def del_messages(self, other_user):
-        cursor = jabber_db.cursor()
-        cursor.callproc("delete_messages",
-            [self.jabber_id,other_user.jabber_id])
-        cursor.close()
-        jabber_db.commit()
 
     def dict_repr(self,public=True):
         dict_repr = {
