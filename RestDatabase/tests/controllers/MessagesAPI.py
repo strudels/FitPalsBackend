@@ -29,6 +29,14 @@ class MessagesApiTestCase(unittest.TestCase):
             db.session.commit()
 
     """
+    def test_create_message_thread(self):
+        resp = self.app.post("/messages_threads",
+                             headers={"Authorization":self.test_user1.fb_id},
+                             data={"direction"}
+        pass
+    """
+
+    """
     def test_get_messages(self):
         resp = self.app.get("/users/" + str(self.test_user1.id)\
             + "/messages/" + str(self.test_user2.id),

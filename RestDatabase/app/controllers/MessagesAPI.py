@@ -137,7 +137,7 @@ class MessageThreadsAPI(Resource):
         parser = reqparse.RequestParser()
         parser.add_argument("Authorization",
             type=str, location="headers", required=True)
-        args = parse.parse_args()
+        args = parser.parse_args()
         
         #get user from Authorization
         user = User.query.filter(User.fb_id==args.Authorization).first()
@@ -156,6 +156,46 @@ class MessageThreadsAPI(Resource):
         
         return Response(status=200, message="Message threads found.",
                         value=[t.dict_repr() for t in threads]).__dict__,200
+    
+    #create new message thread
+    def post(self):
+        """
+        Create new message thread between 2 users.
+        
+        :reqheader Authorization: fb_id token needed here
+        
+        :form int user2_id: User.id of user2 for new message thread.
+        
+        :status 201: Message thread created.
+        """
+        parser = reqparse.RequestParser()
+        parser.add_argument("Authorization",
+            type=str, location="headers", required=True)
+        parser.add_argument("user2_id",
+            type=int, location="form", required=True)
+        args = parser.parse_args()
+        
+        #get user from Authorization
+        user1 = User.query.filter(User.fb_id==args.Authorization).first()
+        if not user:
+            return Response(status=400, message="Invalid Authorization Token.")\
+                .__dict__, 400
+            
+        #get user 2
+        user2 = User.query.get(args.user2_id)
+        if not user2:
+            return Response(status=400,
+                            message="user2_id does not exist.").__dict__,400
+        
+        #create new thread and save to db
+        new_thread = MessageThread(user1, user2)
+        db.session.add(new_thread)
+        db.session.commit()
+        
+        #return create success!
+        return Response(status=201, message="Message thread created.",
+                        value=new_thread.dict_repr()).__dict__,201
+
         
 @api.resource("/message_threads/<int:thread_id>")
 class MessageThreadAPI(Resource):
