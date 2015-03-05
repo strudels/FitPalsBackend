@@ -152,7 +152,7 @@ class MessageThreadsAPI(Resource):
                     and_expr(MessageThread.user1.fb_id==args.Authorization,
                              MessageThread.user1_deleted==False),
                     and_expr(MessageThread.user2.fb_id==args.Authorization,
-                             MessageThread.user2_deleted=False))).all()
+                             MessageThread.user2_deleted==False))).all()
         
         return Response(status=200, message="Message threads found.",
                         value=[t.dict_repr() for t in threads]).__dict__,200

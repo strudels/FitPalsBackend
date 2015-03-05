@@ -7,7 +7,7 @@ from flask.ext.sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import relationship, backref
 from sqlalchemy.ext.hybrid import hybrid_property
 
-from app import db, jabber_db
+from app import db
 
 class User(db.Model):
     __tablename__ = "users"
@@ -55,7 +55,6 @@ class User(db.Model):
     def dict_repr(self,public=True):
         dict_repr = {
             "id":self.id,
-            "jabber_id":self.jabber_id,
             "about_me":self.about_me,
             "primary_picture":self.primary_picture,
             "secondary_pictures":\
