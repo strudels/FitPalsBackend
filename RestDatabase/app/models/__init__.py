@@ -227,24 +227,48 @@ class Question(db.Model):
 class Message(db.Model):
     __tablename__ = "messages"
     id = db.Column(db.Integer, primary_key=True)
-    from_user_id = db.Column(db.Integer, ForeignKey("users.id"))
-    from_user = relationship("User",foreign_keys=[from_user_id])
-    to_user_id = db.Column(db.Integer, ForeignKey("users.id"))
-    to_user = relationship("User",foreign_keys=[to_user_id])
+    # 0 for user1->user2, 1 for user2->user1
+    direction = db.Column(db.Boolean, nullable=False)
     body = db.Column(db.String(9900), index=True, nullable=False)
     time =\
         db.Column(db.DateTime, default=db.func.now(), onupdate=db.func.now())
+    message_thread_id = db.Column(db.Integer, ForeignKey("message_threads.id"))
+    message_thread =\
+        relationship("MessageThread",foreign_keys=[message_thread_id])
 
-    def __init__(self, from_user, to_user, body):
-        self.from_user = from_user
-        self.to_user = to_user
+    def __init__(self, message_thread, direction, body):
+        self.message_thread = message_thread
+        self.direction = direction
         self.body = body
 
     def dict_repr(self):
         return {
             "id":self.id,
-            "from_user_id":self.from_user_id,
-            "to_user_id":self.to_user_id,
+            "direction":self.direction,
             "body":self.body,
-            "time":self.time
+            "time":self.time,
+            "message_thread_id":self.message_thread_id
+        }
+
+class MessageThread(db.Model):
+    __tablename__ = "message_threads"
+    id = db.Column(db.Integer, primary_key=True)
+    messages = relationship("Message", lazy="dynamic",
+        cascade="save-update, merge, delete")
+    user1_id = db.Column(db.Integer, ForeignKey("users.id"))
+    user1 = relationship("User",foreign_keys=[user1_id])
+    user1_deleted = db.Column(db.Boolean, nullable=False)
+    user2_id = db.Column(db.Integer, ForeignKey("users.id"))
+    user2 = relationship("User",foreign_keys=[user2_id])
+    user2_deleted = db.Column(db.Boolean, nullable=False)
+    
+    def __init__(self, user1, user2):
+        self.user1 = user1
+        self.user2 = user2
+        
+    def dict_repr(self):
+        return {
+            "id":self.id,
+            "user1_id":self.user1_id,
+            "user2_id":self.user2_id,
         }
