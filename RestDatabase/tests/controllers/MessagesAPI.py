@@ -19,21 +19,20 @@ class MessagesApiTestCase(unittest.TestCase):
             self.test_user2 = User("fbTestUser2")
             db.session.add(self.test_user2)
             db.session.commit()
+            
+        # hack, since using socketio seems to deattach objects from db session...
+        # for some reason, doing this retains the session connection
+        test_user1_id = self.test_user1.id
+        test_user2_id = self.test_user2.id
 
     def tearDown(self):
         reset_app()
 
     def test_create_message_thread(self):
-        #save id's
-        test_user1_id = self.test_user1.id
-        test_user2_id = self.test_user2.id
-
         #log in test_user1 to chat web socket
         client = socketio.test_client(app, namespace="/chat")
-        client.get_received("/chat")
         client.emit("join", self.test_user1.dict_repr(public=False),
                     namespace="/chat")
-        client.get_received("/chat")
 
         #make request
         resp = self.app.post("/message_threads",
@@ -43,15 +42,14 @@ class MessagesApiTestCase(unittest.TestCase):
         #ensure request worked correctly
         assert resp.status_code==201
         value = json.loads(resp.data)["value"]
-        assert value["user1_id"] == test_user1_id
-        assert value["user2_id"] == test_user2_id
+        assert value["user1_id"] == self.test_user1.id
+        assert value["user2_id"] == self.test_user2.id
         thread_id = value["id"]
         
         #ensure that test_user1 websocket client got update
         received = client.get_received("/chat")
-        assert len(received) == 1
-        assert received[0]["name"] == "message_thread_created"
-        
+        assert len(received) != 0
+        assert received[-1]["name"] == "message_thread_created"
         
     def test_create_message_thread_invalid_fb_id(self):
         resp = self.app.post("/message_threads",
@@ -68,20 +66,39 @@ class MessagesApiTestCase(unittest.TestCase):
         assert json.loads(resp.data)["message"]=="user2_id does not exist."
         
     def test_create_message(self):
+        #log in test_user1 to chat web socket
+        client1 = socketio.test_client(app, namespace="/chat")
+        client1.emit("join", self.test_user1.dict_repr(public=False),
+                    namespace="/chat")
+
+        #log in test_user2 to chat web socket
+        client2 = socketio.test_client(app, namespace="/chat")
+        client2.emit("join", self.test_user2.dict_repr(public=False),
+                    namespace="/chat")
+
         #create thread
         resp = self.app.post("/message_threads",
                              headers={"Authorization":self.test_user1.fb_id},
                              data={"user2_id":self.test_user2.id})
         thread_id = json.loads(resp.data)["value"]["id"]
 
+        #ensure message was created correctly
         resp = self.app.post("/messages",
                              headers={"Authorization":self.test_user1.fb_id},
                              data={"message_thread_id":thread_id,
                                    "direction":0,
                                    "body":"yo dawg"})
         assert resp.status_code == 201
-        db.session.delete(MessageThread.query.get(thread_id))
-        db.session.commit()
+
+        #ensure that test_user1 websocket client got new message
+        received = client1.get_received("/chat")
+        assert len(received) != 0
+        assert received[-1]["name"] == "message_received"
+
+        #ensure that test_user2 websocket client got new message
+        received = client2.get_received("/chat")
+        assert len(received) != 0
+        assert received[-1]["name"] == "message_received"
 
     """
     def test_get_messages(self):

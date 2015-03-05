@@ -115,9 +115,9 @@ class NewMessagesAPI(Resource):
         
         #send update over websocket
         socketio.emit("message_received", new_message.dict_repr(),
-                      room=str(thread.user1.id) + "-chat")
+                      room=str(thread.user1.id) + "-chat", namespace="/chat")
         socketio.emit("message_received", new_message.dict_repr(),
-                      room=str(thread.user2.id) + "-chat")
+                      room=str(thread.user2.id) + "-chat", namespace="/chat")
         
         #return success
         return Response(status=201,
