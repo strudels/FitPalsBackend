@@ -1,6 +1,6 @@
 import unittest
 import simplejson as json
-from app import app,db
+from app import app,db,socketio
 from app.models import *
 
 class MessagesApiTestCase(unittest.TestCase):
@@ -29,11 +29,23 @@ class MessagesApiTestCase(unittest.TestCase):
             db.session.commit()
 
     def test_create_message_thread(self):
+        #save id's
         test_user1_id = self.test_user1.id
         test_user2_id = self.test_user2.id
+
+        #log in test_user1 to chat web socket
+        client = socketio.test_client(app, namespace="/chat")
+        client.get_received("/chat")
+        client.emit("join", self.test_user1.dict_repr(public=False),
+                    namespace="/chat")
+        client.get_received("/chat")
+
+        #make request
         resp = self.app.post("/message_threads",
                              headers={"Authorization":self.test_user1.fb_id},
                              data={"user2_id":self.test_user2.id})
+        
+        #ensure request worked correctly
         assert resp.status_code==201
         value = json.loads(resp.data)["value"]
         assert value["user1_id"] == test_user1_id
@@ -41,6 +53,12 @@ class MessagesApiTestCase(unittest.TestCase):
         thread_id = value["id"]
         db.session.delete(MessageThread.query.get(thread_id))
         db.session.commit()
+        
+        #ensure that test_user1 websocket client got update
+        received = client.get_received("/chat")
+        assert len(received) == 1
+        assert received[0]["name"] == "message_thread_created"
+        
         
     def test_create_message_thread_invalid_fb_id(self):
         resp = self.app.post("/message_threads",

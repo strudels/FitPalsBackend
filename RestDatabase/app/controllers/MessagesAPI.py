@@ -1,6 +1,6 @@
 from flask.ext.restful import Resource, reqparse, Api
 
-from app import db, api
+from app import db, api, socketio
 from app.models import *
 from app.utils.Response import Response
 from sqlalchemy import or_
@@ -194,7 +194,7 @@ class MessageThreadsAPI(Resource):
 
         #update user's other client's with new thread
         socketio.emit("message_thread_created", new_thread.dict_repr(),
-                      room=str(thread.user1.id) + "-chat")
+                      room=str(new_thread.user1.id) + "-chat", namespace="/chat")
         
         #return create success!
         return Response(status=201, message="Message thread created.",
