@@ -1,6 +1,6 @@
 import unittest
 import simplejson as json
-from app import app,db,socketio
+from app import app,db,socketio,reset_app
 from app.models import *
 
 class MessagesApiTestCase(unittest.TestCase):
@@ -21,12 +21,7 @@ class MessagesApiTestCase(unittest.TestCase):
             db.session.commit()
 
     def tearDown(self):
-        if hasattr(self, "test_user1"):
-            db.session.delete(self.test_user1)
-            db.session.commit()
-        if hasattr(self, "test_user2"):
-            db.session.delete(self.test_user2)
-            db.session.commit()
+        reset_app()
 
     def test_create_message_thread(self):
         #save id's
@@ -51,8 +46,6 @@ class MessagesApiTestCase(unittest.TestCase):
         assert value["user1_id"] == test_user1_id
         assert value["user2_id"] == test_user2_id
         thread_id = value["id"]
-        db.session.delete(MessageThread.query.get(thread_id))
-        db.session.commit()
         
         #ensure that test_user1 websocket client got update
         received = client.get_received("/chat")
@@ -70,9 +63,25 @@ class MessagesApiTestCase(unittest.TestCase):
     def test_create_message_thread_no_user2(self):
         resp = self.app.post("/message_threads",
                              headers={"Authorization":self.test_user1.fb_id},
-                             data={"user2_id":1})
+                             data={"user2_id":-1})
         assert resp.status_code==400
         assert json.loads(resp.data)["message"]=="user2_id does not exist."
+        
+    def test_create_message(self):
+        #create thread
+        resp = self.app.post("/message_threads",
+                             headers={"Authorization":self.test_user1.fb_id},
+                             data={"user2_id":self.test_user2.id})
+        thread_id = json.loads(resp.data)["value"]["id"]
+
+        resp = self.app.post("/messages",
+                             headers={"Authorization":self.test_user1.fb_id},
+                             data={"message_thread_id":thread_id,
+                                   "direction":0,
+                                   "body":"yo dawg"})
+        assert resp.status_code == 201
+        db.session.delete(MessageThread.query.get(thread_id))
+        db.session.commit()
 
     """
     def test_get_messages(self):

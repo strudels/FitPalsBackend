@@ -12,16 +12,6 @@ elif sys.argv[1] == "debug":
 
 # > python run.py setup
 elif sys.argv[1] == "setup":
-    from app import db
-    db.drop_all()
-    db.create_all()
-
-    from app.models import *
-    running = Activity("running")
-    running_q1 = Question(running, "How much time do you want to spend running?")
-    running_q2 = Question(running, "How far do you want to run?")
-    running.questions.append(running_q1)
-    running.questions.append(running_q2)
-    db.session.add(running)
-    db.session.commit()
+    from app import reset_app
+    reset_app()
     print "Setup complete."

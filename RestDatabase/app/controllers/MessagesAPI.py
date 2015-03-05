@@ -78,7 +78,7 @@ class NewMessagesAPI(Resource):
         parser.add_argument("Authorization",
             type=str, location="headers", required=True)
         parser.add_argument("direction",
-            type=bool, location="form", required=True)
+            type=int, location="form", required=True)
         parser.add_argument("body",
             type=str, location="form", required=True)
         parser.add_argument("message_thread_id",
@@ -104,12 +104,12 @@ class NewMessagesAPI(Resource):
             return Response(status=401,message="Not Authorized.").__dict__,401
             
         #Don't allow a user to send messages to a thread deleted by another user
-        if thread.user1_deleted or thread.user2_delete:
+        if thread.user1_deleted or thread.user2_deleted:
             return Response(status=400,
                 message="Message thread has been closed.").__dict__, 400
 
         #add message to thread
-        new_message = Message(thread, args.direction, args.body)
+        new_message = Message(thread, bool(args.direction), args.body)
         thread.messages.append(new_message)
         db.session.commit()
         

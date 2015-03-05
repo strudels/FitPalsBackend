@@ -45,3 +45,18 @@ from controllers.PicturesAPI import *
 
 #import websocket events
 from websockets import *
+
+#reset app and database to fresh install
+def reset_app():
+    from app import db
+    db.drop_all()
+    db.create_all()
+
+    from app.models import *
+    running = Activity("running")
+    running_q1 = Question(running, "How much time do you want to spend running?")
+    running_q2 = Question(running, "How far do you want to run?")
+    running.questions.append(running_q1)
+    running.questions.append(running_q2)
+    db.session.add(running)
+    db.session.commit()
