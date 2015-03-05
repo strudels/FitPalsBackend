@@ -191,6 +191,10 @@ class MessageThreadsAPI(Resource):
         new_thread = MessageThread(user1, user2)
         db.session.add(new_thread)
         db.session.commit()
+
+        #update user's other client's with new thread
+        socketio.emit("message_thread_created", new_thread.dict_repr(),
+                      room=str(thread.user1.id) + "-chat")
         
         #return create success!
         return Response(status=201, message="Message thread created.",
