@@ -177,7 +177,7 @@ class MessageThreadsAPI(Resource):
         
         #get user from Authorization
         user1 = User.query.filter(User.fb_id==args.Authorization).first()
-        if not user:
+        if not user1:
             return Response(status=400, message="Invalid Authorization Token.")\
                 .__dict__, 400
             
@@ -195,7 +195,6 @@ class MessageThreadsAPI(Resource):
         #return create success!
         return Response(status=201, message="Message thread created.",
                         value=new_thread.dict_repr()).__dict__,201
-
         
 @api.resource("/message_threads/<int:thread_id>")
 class MessageThreadAPI(Resource):

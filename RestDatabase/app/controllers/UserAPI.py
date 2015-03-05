@@ -28,7 +28,6 @@ class UsersAPI(Resource):
         :query int offset: Return users after a given offset.
         :query int last_updated: Number of seconds since epoch;
             Return users that were updated before a given time.
-        :query string jabber_id: Return users with specific jabber_id.
         :query string activity_name: Return users with matching activity_name
         :query int-list question_ids: Must be same length as answers; specify
             activity_setting questions to filter by.
@@ -51,8 +50,6 @@ class UsersAPI(Resource):
             type=int, location="args", required=False)
         parser.add_argument("last_updated",
             type=int, location="args", required=False)
-        parser.add_argument("jabber_id",
-            type=str, location="args", required=False)
         parser.add_argument("activity_name",
             type=str, location="args", required=False)
         parser.add_argument("question_ids", type=int,
@@ -75,9 +72,6 @@ class UsersAPI(Resource):
         #args.last_updated probably needs to be converted to a datetime
         if args.last_updated:
             query = query.filter(User.last_update<=args.last_updated)
-
-        if args.jabber_id:
-            query = query.filter(User.last_update==args.jabber_id)
 
         if args.activity_name:
             query = query.join(User.activity_settings)\
@@ -170,13 +164,6 @@ class UsersAPI(Resource):
         )
         db.session.add(new_user)
         db.session.commit()
-
-        #register jabber user
-        try: new_user.register_jabber()
-        except:
-            db.session.delete(new_user)
-            return Response(status=400,
-               message="Could not create user.").__dict__,400 
 
         #return json for new user
         return Response(status=201,
@@ -325,13 +312,8 @@ class UserAPI(Resource):
         if user.fb_id != args.Authorization:
             return Response(status=401,
                 message="Not Authorized.").__dict__,401
-
-        #Delete user
-        try:
-            user.unregister_jabber()
-            db.session.delete(user)
-            db.session.commit()
-        except:
-            return Response(status=500,message="User not deleted.").__dict__,500
+            
+        db.session.delete(user)
+        db.session.commit()
 
         return Response(status=200, message="User deleted.").__dict__,200

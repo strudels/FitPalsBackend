@@ -224,10 +224,10 @@ class MessageThread(db.Model):
         cascade="save-update, merge, delete")
     user1_id = db.Column(db.Integer, ForeignKey("users.id"))
     user1 = relationship("User",foreign_keys=[user1_id])
-    user1_deleted = db.Column(db.Boolean, nullable=False)
+    user1_deleted = db.Column(db.Boolean, default=False)
     user2_id = db.Column(db.Integer, ForeignKey("users.id"))
     user2 = relationship("User",foreign_keys=[user2_id])
-    user2_deleted = db.Column(db.Boolean, nullable=False)
+    user2_deleted = db.Column(db.Boolean, default=False)
     
     def __init__(self, user1, user2):
         self.user1 = user1

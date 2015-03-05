@@ -28,13 +28,14 @@ class MessagesApiTestCase(unittest.TestCase):
             db.session.delete(self.test_user2)
             db.session.commit()
 
-    """
     def test_create_message_thread(self):
-        resp = self.app.post("/messages_threads",
+        resp = self.app.post("/message_threads",
                              headers={"Authorization":self.test_user1.fb_id},
-                             data={"direction"}
-        pass
-    """
+                             data={"user2_id":self.test_user2.id})
+        assert resp.status_code==201
+        thread_id = json.loads(resp.data)["value"]["id"]
+        db.session.delete(MessageThread.query.get(thread_id))
+        db.session.commit()
 
     """
     def test_get_messages(self):

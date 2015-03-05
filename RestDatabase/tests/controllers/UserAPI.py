@@ -66,7 +66,7 @@ class UserAPITestCase(unittest.TestCase):
         resp = self.app.delete("/users/" + str(user_id),
                                headers={"Content-Type": "application/x-www-form-urlencoded",
                                         "Authorization":fb_id})
+        assert resp.status_code==200
         self.test_user = User(fb_id)
         db.session.add(self.test_user)
         db.session.commit()
-        assert resp.status_code==200
