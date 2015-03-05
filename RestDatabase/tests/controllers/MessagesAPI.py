@@ -29,13 +29,32 @@ class MessagesApiTestCase(unittest.TestCase):
             db.session.commit()
 
     def test_create_message_thread(self):
+        test_user1_id = self.test_user1.id
+        test_user2_id = self.test_user2.id
         resp = self.app.post("/message_threads",
                              headers={"Authorization":self.test_user1.fb_id},
                              data={"user2_id":self.test_user2.id})
         assert resp.status_code==201
-        thread_id = json.loads(resp.data)["value"]["id"]
+        value = json.loads(resp.data)["value"]
+        assert value["user1_id"] == test_user1_id
+        assert value["user2_id"] == test_user2_id
+        thread_id = value["id"]
         db.session.delete(MessageThread.query.get(thread_id))
         db.session.commit()
+        
+    def test_create_message_thread_invalid_fb_id(self):
+        resp = self.app.post("/message_threads",
+                             headers={"Authorization":self.test_user1.fb_id + "junk"},
+                             data={"user2_id":self.test_user2.id})
+        assert resp.status_code==400
+        assert json.loads(resp.data)["message"]=="Invalid Authorization Token."
+        
+    def test_create_message_thread_no_user2(self):
+        resp = self.app.post("/message_threads",
+                             headers={"Authorization":self.test_user1.fb_id},
+                             data={"user2_id":1})
+        assert resp.status_code==400
+        assert json.loads(resp.data)["message"]=="user2_id does not exist."
 
     """
     def test_get_messages(self):
