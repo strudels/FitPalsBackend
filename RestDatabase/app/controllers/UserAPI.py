@@ -280,7 +280,7 @@ class UserAPI(Resource):
             message="User update failed.").__dict__, 400
         
         #reflect update in user's other clients
-        socketio.emit("user_update", user.dict_repr(), room=str(user.id) + "-sync")
+        socketio.emit("user_update", user.dict_repr(), room=str(user.id))
 
         return Response(status=202,message="User updated").__dict__,202
 
