@@ -114,9 +114,9 @@ class NewMessagesAPI(Resource):
         
         #send update over websocket
         socketio.emit("message_received", new_message.dict_repr(),
-                      room=str(thread.user1.id) + "-chat", namespace="/chat")
+                      room=str(thread.user1.id))
         socketio.emit("message_received", new_message.dict_repr(),
-                      room=str(thread.user2.id) + "-chat", namespace="/chat")
+                      room=str(thread.user2.id))
         
         #return success
         return Response(status=201,
@@ -193,7 +193,7 @@ class MessageThreadsAPI(Resource):
 
         #update user's other client's with new thread
         socketio.emit("message_thread_created", new_thread.dict_repr(),
-                      room=str(new_thread.user1.id) + "-chat", namespace="/chat")
+                      room=str(new_thread.user1.id))
         
         #return create success!
         return Response(status=201, message="Message thread created.",
@@ -250,8 +250,7 @@ class MessageThreadAPI(Resource):
         #push delete to user's other devices
         socketio.emit("message_thread_deleted",
                       room=str(thread.user1.id if user==thread.user1
-                               else thread.user2.id) + "-chat",
-                      namespace="/chat")
+                               else thread.user2.id))
         
         #return deletion success!
         return Response(status=200, message="Message thread deleted.")\

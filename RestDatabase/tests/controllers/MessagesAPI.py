@@ -47,9 +47,8 @@ class MessagesApiTestCase(unittest.TestCase):
 
     def test_create_message_thread(self):
         #log in test_user1 to chat web socket
-        client = socketio.test_client(app, namespace="/chat")
-        client.emit("join", self.test_user1,
-                    namespace="/chat")
+        client = socketio.test_client(app)
+        client.emit("join", self.test_user1)
 
         #make request
         resp = self.app.post("/message_threads",
@@ -64,7 +63,7 @@ class MessagesApiTestCase(unittest.TestCase):
         thread_id = value["id"]
         
         #ensure that test_user1 websocket client got update
-        received = client.get_received("/chat")
+        received = client.get_received()
         assert len(received) != 0
         assert received[-1]["name"] == "message_thread_created"
         
@@ -84,9 +83,8 @@ class MessagesApiTestCase(unittest.TestCase):
         
     def test_delete_message_thread(self):
         #log in test_user1 to chat web socket
-        client = socketio.test_client(app, namespace="/chat")
-        client.emit("join", self.test_user1,
-                    namespace="/chat")
+        client = socketio.test_client(app)
+        client.emit("join", self.test_user1)
 
         #create thread
         resp = self.app.post("/message_threads",
@@ -100,7 +98,7 @@ class MessagesApiTestCase(unittest.TestCase):
         assert json.loads(resp.data)["message"]=="Message thread deleted."
 
         #ensure that test_user1 websocket client got update
-        received = client.get_received("/chat")
+        received = client.get_received()
         assert len(received) != 0
         assert received[-1]["name"] == "message_thread_deleted"
         
@@ -184,14 +182,12 @@ class MessagesApiTestCase(unittest.TestCase):
 
     def test_create_message(self):
         #log in test_user1 to chat web socket
-        client1 = socketio.test_client(app, namespace="/chat")
-        client1.emit("join", self.test_user1,
-                    namespace="/chat")
+        client1 = socketio.test_client(app)
+        client1.emit("join", self.test_user1)
 
         #log in test_user2 to chat web socket
-        client2 = socketio.test_client(app, namespace="/chat")
-        client2.emit("join", self.test_user2,
-                    namespace="/chat")
+        client2 = socketio.test_client(app)
+        client2.emit("join", self.test_user2)
 
         #create thread
         resp = self.app.post("/message_threads",
@@ -208,12 +204,12 @@ class MessagesApiTestCase(unittest.TestCase):
         assert resp.status_code == 201
 
         #ensure that test_user1 websocket client got new message
-        received = client1.get_received("/chat")
+        received = client1.get_received()
         assert len(received) != 0
         assert received[-1]["name"] == "message_received"
 
         #ensure that test_user2 websocket client got new message
-        received = client2.get_received("/chat")
+        received = client2.get_received()
         assert len(received) != 0
         assert received[-1]["name"] == "message_received"
         

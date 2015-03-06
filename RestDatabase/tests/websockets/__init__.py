@@ -5,10 +5,8 @@ from app.models import *
 class WebSocketTestCase(unittest.TestCase):
     def setUp(self):
         app.testing = True
-        self.chat_client = socketio.test_client(app, namespace="/chat")
-        self.chat_client.get_received("/chat")
-        self.sync_client = socketio.test_client(app, namespace="/sync")
-        self.sync_client.get_received("/sync")
+        self.client = socketio.test_client(app)
+        self.client.get_received()
 
         self.test_user = User.query.filter(User.fb_id=="fbTestUser1").first()
         if not self.test_user:
@@ -21,70 +19,33 @@ class WebSocketTestCase(unittest.TestCase):
             db.session.delete(self.test_user)
             db.session.commit()
 
-    def test_websocket_connect_chat(self):
-        client = socketio.test_client(app, namespace="/chat")
-        received = client.get_received("/chat")
+    def test_websocket_connect(self):
+        client = socketio.test_client(app)
+        received = client.get_received()
         assert len(received) == 1
-        client.disconnect(namespace="/chat")
+        client.disconnect()
         
-    def test_websocket_join_chat(self):
+    def test_websocket_join_room(self):
         #ensure client does not receive messages before joining chat room
         socketio.emit("user_update", self.test_user.dict_repr(),\
-                      room=str(self.test_user.id) + "-chat",
-                      namespace="/chat")
-        received = self.chat_client.get_received("/chat")
+                      room=str(self.test_user.id))
+        received = self.client.get_received()
         assert len(received) == 0
 
         #ensure client can join chat room
-        self.chat_client.emit("join", self.test_user.dict_repr(public=False),\
-                              namespace="/chat")
-        received = self.chat_client.get_received("/chat")
-        assert len(received) == 1
-        assert received[0]["name"] ==\
+        self.client.emit("join", self.test_user.dict_repr(public=False))
+        received = self.client.get_received()
+        assert len(received) != 0
+        assert received[-1]["name"] ==\
             "joined_room"
 
         #ensure client receives messages after joining chat room
         socketio.emit("user_update", self.test_user.dict_repr(),\
-                      room=str(self.test_user.id) + "-chat",
-                      namespace="/chat")
-        received = self.chat_client.get_received("/chat")
-        assert len(received) == 1
-        assert received[0]["name"] ==\
+                      room=str(self.test_user.id))
+        received = self.client.get_received()
+        assert len(received) != 0
+        assert received[-1]["name"] ==\
             "user_update"
         
         #disconnect client
-        self.chat_client.disconnect(namespace="/chat")
-    
-    def test_websocket_connect_sync(self):
-        client = socketio.test_client(app, namespace="/sync")
-        received = client.get_received("/sync")
-        assert len(received) == 1
-        client.disconnect(namespace="/sync")
-
-    def test_websocket_join_sync(self):
-        #ensure client does not receive messages before joining chat room
-        socketio.emit("user_update", self.test_user.dict_repr(),\
-                      room=str(self.test_user.id) + "-sync",
-                      namespace="/sync")
-        received = self.sync_client.get_received("/sync")
-        assert len(received) == 0
-
-        #ensure client can join chat room
-        self.sync_client.emit("join", self.test_user.dict_repr(public=False),\
-                              namespace="/sync")
-        received = self.sync_client.get_received("/sync")
-        assert len(received) == 1
-        assert received[0]["name"] ==\
-            "joined_room"
-
-        #ensure client receives messages after joining chat room
-        socketio.emit("user_update", self.test_user.dict_repr(),\
-                      room=str(self.test_user.id) + "-sync",
-                      namespace="/sync")
-        received = self.sync_client.get_received("/sync")
-        assert len(received) == 1
-        assert received[0]["name"] ==\
-            "user_update"
-        
-        #disconnect client
-        self.sync_client.disconnect(namespace="/sync")
+        self.client.disconnect()

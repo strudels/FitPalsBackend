@@ -32,9 +32,8 @@ class UsersApiTestCase(unittest.TestCase):
 
     def test_update_user(self):
         #log in test_user1 to chat web socket
-        client = socketio.test_client(app, namespace="/chat")
-        client.emit("join", self.test_user,
-                    namespace="/chat")
+        client = socketio.test_client(app)
+        client.emit("join", self.test_user)
 
         user_id = self.test_user["id"]
         fb_id = self.test_user["fb_id"]

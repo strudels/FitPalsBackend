@@ -3,30 +3,16 @@ from app.models import *
 from app import socketio
 
 #listen for client's to connect to chat websocket
-@socketio.on("connect", namespace="/chat")
+@socketio.on("connect")
 def connect():
-    emit("connected_chat")
+    emit("connected")
     
-@socketio.on("join", namespace="/chat")
+#need to add support for authorizing a device, as well as a user
+@socketio.on("join")
 def on_join(json):
     user = User.query.get(json["id"])
     if user.fb_id != json["fb_id"]:
         emit("unauthorized", user.dict_repr())
-    room = str(user.id) + "-chat"
+    room = str(user.id)
     join_room(room)
     emit("joined_room",{"room":room})
-
-#listen for client's to connect to sync websocket
-@socketio.on("connect", namespace="/sync")
-def connect():
-    emit("connected_sync")
-    pass
-    
-@socketio.on("join", namespace="/sync")
-def on_join(json):
-    user = User.query.get(json["id"])
-    if user.fb_id != json["fb_id"]:
-        emit("unauthorized", user.dict_repr())
-    room = str(user.id) + "-sync"
-    join_room(room)
-    emit("joined_room", {"room":room})
