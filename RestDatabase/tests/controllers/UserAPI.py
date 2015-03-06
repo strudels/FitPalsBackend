@@ -116,3 +116,22 @@ class UsersApiTestCase(unittest.TestCase):
                                headers={"Content-Type": "application/x-www-form-urlencoded",
                                         "Authorization":fb_id})
         assert resp.status_code==200
+        assert json.loads(resp.data)["message"] == "User deleted."
+        
+    def test_delete_user_not_found(self):
+        user_id = 0
+        fb_id = self.test_user["fb_id"]
+        resp = self.app.delete("/users/" + str(user_id),
+                               headers={"Content-Type": "application/x-www-form-urlencoded",
+                                        "Authorization":fb_id})
+        assert resp.status_code==404
+        assert json.loads(resp.data)["message"] == "Could not find user."
+
+    def test_delete_user_not_authorized(self):
+        user_id = self.test_user["id"]
+        fb_id = self.test_user["fb_id"] + "junk"
+        resp = self.app.delete("/users/" + str(user_id),
+                               headers={"Content-Type": "application/x-www-form-urlencoded",
+                                        "Authorization":fb_id})
+        assert resp.status_code==401
+        assert json.loads(resp.data)["message"] == "Not Authorized."

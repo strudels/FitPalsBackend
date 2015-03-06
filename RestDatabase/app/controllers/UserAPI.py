@@ -315,7 +315,7 @@ class UserAPI(Resource):
         user = User.query.filter(User.id==user_id).first()
         if not user:
             return Response(status=400,
-                message="Could not find user.").__dict__,400
+                message="Could not find user.").__dict__,404
 
         #ensure user is authorized to delete
         if user.fb_id != args.Authorization:
