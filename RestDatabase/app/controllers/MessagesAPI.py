@@ -229,7 +229,7 @@ class MessageThreadAPI(Resource):
         thread = MessageThread.query.get(thread_id)
         if not thread:
             return Response(status=400,
-                message="Message thread %d not found." % thread_id)\
+                message="Message thread not found.")\
                 .__dict__, 400
             
         #delete thread for user if user is authorized
@@ -249,7 +249,9 @@ class MessageThreadAPI(Resource):
         
         #push delete to user's other devices
         socketio.emit("message_thread_deleted",
-                      room=str(thread.user.id) + "-chat")
+                      room=str(thread.user1.id if user==thread.user1
+                               else thread.user2.id) + "-chat",
+                      namespace="/chat")
         
         #return deletion success!
         return Response(status=200, message="Message thread deleted.")\
