@@ -95,8 +95,7 @@ class NewMessagesAPI(Resource):
         thread = MessageThread.query.get(args.message_thread_id)
         if not thread:
             return Response(status=400,
-                message="Message thread %d not found." % args.thread_id)\
-                .__dict__, 400
+                message="Message thread not found.").__dict__, 400
 
         #ensure that user is authorized to add the message to the thread
         if not ((user == thread.user1 and args.direction==0) or\
