@@ -185,21 +185,30 @@ class UserAPI(Resource):
             if left empty, all attributes will be returned
 
         :status 200: User found.
-        :status 400: User not found.
+        :status 404: User not found.
         """
         parser = reqparse.RequestParser()
         parser.add_argument("attributes",
             type=str, location='args', required=False, action="append")
+        parser.add_argument("Authorization",
+            type=str, location="headers", required=False)
         args = parser.parse_args()
         
         #Get user from db
         user = User.query.filter(User.id==user_id).first()
         if not user:
-            return Response(status=400,message="User not found.").__dict__,400
+            return Response(status=404,message="User not found.").__dict__,404
+            
+        if args.Authorization != None:
+            #ensure user is valid by checking if fb_id is correct
+            if user.fb_id != args.Authorization:
+                return Response(status=401,message="Not Authorized.").__dict__,401
+            user_dict = user.dict_repr(public=False)
+        else:
+            user_dict = user.dict_repr()
 
         #apply any attribute filters specified
         #CHANGE THIS TO user_dict=user.dict_repr(public=is_authorized)
-        user_dict = user.dict_repr()
         if args.attributes:
             user_dict = {x:user_dict[x] for x in user_dict\
                 if x in args.attributes}

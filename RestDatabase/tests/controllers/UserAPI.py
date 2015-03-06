@@ -11,6 +11,7 @@ class UsersApiTestCase(unittest.TestCase):
         self.test_user = User.query.filter(User.fb_id=="fbTestUser1").first()
         if not self.test_user:
             self.test_user = User("fbTestUser1")
+            self.test_user.name = "test"
             db.session.add(self.test_user)
             db.session.commit()
             self.test_user_public = self.test_user.dict_repr()
@@ -21,7 +22,13 @@ class UsersApiTestCase(unittest.TestCase):
 
     def test_create_user(self):
         resp = self.app.post("/users",data={"fb_id":"some fb_id"})
-        assert resp.status_code==201 #user created
+        assert resp.status_code==201
+        assert json.loads(resp.data)["message"] == "User created."
+
+    def test_create_user_found(self):
+        resp = self.app.post("/users",data={"fb_id":self.test_user["fb_id"]})
+        assert resp.status_code==200
+        assert json.loads(resp.data)["message"] == "User found."
 
     def test_get_users(self):
         resp = self.app.get("/users")
@@ -30,6 +37,31 @@ class UsersApiTestCase(unittest.TestCase):
     def test_get_user(self):
         resp = self.app.get("/users/" + str(self.test_user["id"]))
         assert resp.status_code==200
+        assert json.loads(resp.data)["value"] == self.test_user_public
+
+    def test_get_user_name(self):
+        resp = self.app.get("/users/" + str(self.test_user["id"])\
+                            + "?attributes=name")
+        assert resp.status_code==200
+        assert json.loads(resp.data)["value"] == {"name":self.test_user["name"]}
+        
+    def test_get_user_not_found(self):
+        resp = self.app.get("/users/0")
+        assert resp.status_code==404
+        assert json.loads(resp.data)["message"] == "User not found."
+        
+    def test_get_user_authorized(self):
+        resp = self.app.get("/users/" + str(self.test_user["id"]),
+                            headers={"Authorization":self.test_user["fb_id"]})
+        assert resp.status_code==200
+        assert json.loads(resp.data)["value"] == self.test_user
+
+    def test_get_user_not_authorized(self):
+        resp = self.app.get("/users/" + str(self.test_user["id"]),
+                            headers={"Authorization":
+                                     self.test_user["fb_id"] + "junk"})
+        assert resp.status_code==401
+        assert json.loads(resp.data)["message"] == "Not Authorized."
 
     def test_update_user(self):
         #log in test_user1 to chat web socket
