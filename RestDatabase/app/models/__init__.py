@@ -1,10 +1,10 @@
-from sqlalchemy import ForeignKey, DateTime
+from sqlalchemy import ForeignKey, DateTime, UniqueConstraint
 import geoalchemy2
 from geoalchemy2.types import Geography
 from geoalchemy2.elements import WKTElement
 from flask import Flask
 from flask.ext.sqlalchemy import SQLAlchemy
-from sqlalchemy.orm import relationship, backref
+from sqlalchemy.orm import relationship, backref, validates
 from sqlalchemy.ext.hybrid import hybrid_property
 
 from app import db
@@ -76,17 +76,40 @@ class Picture(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, ForeignKey("users.id"))
     user = relationship("User",foreign_keys=[user_id])
-    picture = db.Column(db.String(2048), nullable=False)
+    uri = db.Column(db.String(2048), nullable=False)
+    ui_index = db.Column(db.Integer, nullable=False)
+    top = db.Column(db.Float, nullable=False)
+    bottom = db.Column(db.Float, nullable=False)
+    left = db.Column(db.Float, nullable=False)
+    right = db.Column(db.Float, nullable=False)
+    
+    UniqueConstraint('id','ui_index')
 
-    def __init__(self, user, picture):
+    #ensure that top bottom left and right are all between 0.0 and 1.0
+    @validates("top","bottom","left","right")
+    def validate_top(self, key, value):
+        assert 0.0 <= value <= 1.0
+        return value
+
+    def __init__(self, user, uri, ui_index, top, bottom, left, right):
         self.user = user
-        self.picture = picture
+        self.uri = uri
+        self.ui_index = ui_index
+        self.top = top
+        self.bottom = bottom
+        self.left = left 
+        self.right = right 
 
     def dict_repr(self):
         return {
             "id":self.id,
             "user_id":self.user_id,
-            "picture":self.picture
+            "uri":self.uri,
+            "ui_index":self.ui_index,
+            "top":self.top,
+            "bottom":self.bottom,
+            "left":self.left,
+            "right":self.right,
         }
 
 class MatchDecision(db.Model):
