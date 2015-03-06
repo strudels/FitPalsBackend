@@ -29,8 +29,8 @@ class PicturesAPI(Resource):
         #get user from database
         user = User.query.filter(User.id==args.user_id).first()
         if not user:
-            return Response(status=400,
-                message="Could not find user.").__dict__,400
+            return Response(status=404,
+                message="User not found.").__dict__,404
 
         return Response(status=200, message="Pictures found.",
             value=[p.dict_repr() for p in user.secondary_pictures.all()])\
@@ -79,7 +79,7 @@ class PicturesAPI(Resource):
         user = User.query.filter(User.id==args.user_id).first()
         if not user:
             return Response(status=404,
-                message="Could not find user.").__dict__,404
+                message="User not found.").__dict__,404
 
         #ensure user is valid by checking if fb_id is correct
         if user.fb_id != args.Authorization:

@@ -45,7 +45,7 @@ class PicturesApiTestCase(unittest.TestCase):
                                    "right":0.5},
                              headers={"Authorization":fb_id})
         assert resp.status_code==404 #user created
-        assert json.loads(resp.data)["message"]=="Could not find user."
+        assert json.loads(resp.data)["message"]=="User not found."
 
     def test_add_picture_not_authorized(self):
         fb_id = self.test_user_private["fb_id"] + "junk"
@@ -74,20 +74,18 @@ class PicturesApiTestCase(unittest.TestCase):
                              headers={"Authorization":fb_id})
         assert resp.status_code==400 #user created
         assert json.loads(resp.data)["message"]=="Picture data invalid."
-    """
-    def test_add_picture_unauthorized(self):
-        fb_id = self.test_user.fb_id
-        db.session.add(self.test_user)
-        resp = self.app.post("/users/" + str(self.test_user.id) + "/pictures",
-            data={"picture_id":"some fb picture id string"},
-            headers={"Authorization":fb_id + "junk"})
-        db.session.commit()
-        assert resp.status_code==401 #Not Authorized
 
     def test_get_pictures(self):
-        resp = self.app.get("/users/" + str(self.test_user.id) + "/pictures")
+        resp = self.app.get("/pictures?user_id=%d" % self.test_user["id"])
         assert resp.status_code==200
+        assert json.loads(resp.data)["message"]=="Pictures found."
 
+    def test_get_pictures_user_not_found(self):
+        resp = self.app.get("/pictures?user_id=%d" % 0)
+        assert resp.status_code==404
+        assert json.loads(resp.data)["message"]=="User not found."
+
+    """
     def test_delete_pictures(self):
         fb_id = self.test_user.fb_id
         self.test_user.secondary_pictures.append(Picture(self.test_user,"some fb picture string"))
