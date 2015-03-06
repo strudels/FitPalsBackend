@@ -24,6 +24,19 @@ class MessagesApiTestCase(unittest.TestCase):
             
     def tearDown(self):
         reset_app()
+        
+    def test_get_message_threads(self):
+        resp = self.app.get("/message_threads?user2_id=%s"\
+                             % self.test_user1["fb_id"],
+                             headers={"Authorization":self.test_user1["fb_id"]})
+        assert resp.status_code==200
+
+    def test_get_message_threads_invalid_auth_token(self):
+        resp = self.app.get("/message_threads?user2_id=%s"\
+                             % self.test_user1["fb_id"],
+                             headers={"Authorization":
+                                      self.test_user1["fb_id"] + "junk"})
+        assert resp.status_code==400
 
     def test_create_message_thread(self):
         #log in test_user1 to chat web socket

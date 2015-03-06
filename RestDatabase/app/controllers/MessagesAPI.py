@@ -3,7 +3,7 @@ from flask.ext.restful import Resource, reqparse, Api
 from app import db, api, socketio
 from app.models import *
 from app.utils.Response import Response
-from sqlalchemy import or_
+from sqlalchemy import or_, and_
 
 @api.resource("/messages")
 class NewMessagesAPI(Resource):
@@ -144,14 +144,14 @@ class MessageThreadsAPI(Resource):
             return Response(status=400, message="Invalid Authorization Token.")\
                 .__dict__, 400
         
-        #This query will likely need a rewrite
+        #get threads for user
         threads = MessageThread.query\
             .filter(
-                or_expr(
-                    and_expr(MessageThread.user1.fb_id==args.Authorization,
-                             MessageThread.user1_deleted==False),
-                    and_expr(MessageThread.user2.fb_id==args.Authorization,
-                             MessageThread.user2_deleted==False))).all()
+                    or_(
+                        and_(MessageThread.user1==user,
+                                MessageThread.user1_deleted==False),
+                        and_(MessageThread.user2==user,
+                                MessageThread.user2_deleted==False))).all()
         
         return Response(status=200, message="Message threads found.",
                         value=[t.dict_repr() for t in threads]).__dict__,200
