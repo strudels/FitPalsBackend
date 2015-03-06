@@ -36,12 +36,12 @@ class NewMessagesAPI(Resource):
                 .__dict__, 400
         
         #get thread from database
-        thread = MessageThread.query.get(message_thread_id)
+        thread = MessageThread.query.get(args.message_thread_id)
         if not thread or\
-           (thread.user1==user and thread.user1.deleted==true) or\
-           (thread.user2==user and thread.user2.deleted==true):
+           (thread.user1==user and thread.user1_deleted==True) or\
+           (thread.user2==user and thread.user2_deleted==True):
             return Response(status=400,
-                message="Message thread %d not found." % args.thread_id)\
+                message="Message thread not found.")\
                 .__dict__, 400
 
         #ensure user is authorized to read thread
@@ -54,7 +54,7 @@ class NewMessagesAPI(Resource):
             
         #return thread
         return Response(status=200, message="Messages found.",
-                        value=[m.dict_repr() for m in messages]), 200
+                        value=[m.dict_repr() for m in messages]).__dict__, 200
 
     #create new message
     def post(self):

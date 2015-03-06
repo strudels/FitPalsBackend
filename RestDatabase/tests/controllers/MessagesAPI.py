@@ -22,6 +22,13 @@ class MessagesApiTestCase(unittest.TestCase):
             db.session.commit()
             self.test_user2 = self.test_user2.dict_repr(public=False)
             
+        self.test_user3 = User.query.filter(User.fb_id=="fbTestUser3").first()
+        if not self.test_user3:
+            self.test_user3 = User("fbTestUser3")
+            db.session.add(self.test_user3)
+            db.session.commit()
+            self.test_user3 = self.test_user3.dict_repr(public=False)
+
     def tearDown(self):
         reset_app()
         
@@ -75,6 +82,48 @@ class MessagesApiTestCase(unittest.TestCase):
         assert resp.status_code==400
         assert json.loads(resp.data)["message"]=="user2_id does not exist."
         
+    def test_get_messages(self):
+        #create thread
+        resp = self.app.post("/message_threads",
+                             headers={"Authorization":self.test_user1["fb_id"]},
+                             data={"user2_id":self.test_user2["id"]})
+        thread_id = json.loads(resp.data)["value"]["id"]
+
+        #get messages for user
+        resp = self.app.get("/messages?message_thread_id=%d" % thread_id,
+                             headers={"Authorization":self.test_user1["fb_id"]})
+        assert resp.status_code==200
+        assert json.loads(resp.data)["message"]=="Messages found."
+        
+    def test_get_messages_thread_not_found(self):
+        #get messages for user
+        resp = self.app.get("/messages?message_thread_id=%d" % -1,
+                             headers={"Authorization":self.test_user1["fb_id"]})
+        assert resp.status_code==400
+        assert json.loads(resp.data)["message"]=="Message thread not found."
+        
+    def test_get_messages_invalid_auth_token(self):
+        #get messages for user
+        resp = self.app.get("/messages?message_thread_id=%d" % -1,
+                             headers={"Authorization":
+                                      self.test_user1["fb_id"] + "junk"})
+        assert resp.status_code==400
+        assert json.loads(resp.data)["message"]=="Invalid Authorization Token."
+        
+    def test_get_messages_not_authorized(self):
+        #create thread
+        resp = self.app.post("/message_threads",
+                             headers={"Authorization":self.test_user1["fb_id"]},
+                             data={"user2_id":self.test_user2["id"]})
+        thread_id = json.loads(resp.data)["value"]["id"]
+
+        #get messages for user
+        resp = self.app.get("/messages?message_thread_id=%d" % thread_id,
+                             headers={"Authorization":
+                                      self.test_user3["fb_id"]})
+        assert resp.status_code==401
+        assert json.loads(resp.data)["message"]=="Not Authorized."
+
     def test_create_message(self):
         #log in test_user1 to chat web socket
         client1 = socketio.test_client(app, namespace="/chat")
