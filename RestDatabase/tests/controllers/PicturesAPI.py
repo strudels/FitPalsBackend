@@ -1,6 +1,6 @@
 import unittest
 import simplejson as json
-from app import app,db,reset_app
+from app import app,db,reset_app,socketio
 from app.models import *
 
 class PicturesApiTestCase(unittest.TestCase):
@@ -28,6 +28,11 @@ class PicturesApiTestCase(unittest.TestCase):
         reset_app()
 
     def test_add_picture(self):
+        #log in test_user1 to chat web socket
+        client = socketio.test_client(app)
+        client.emit("join", self.test_user1_private)
+
+        #add picture
         fb_id = self.test_user1_private["fb_id"]
         resp = self.app.post("/pictures",
                              data={"user_id":self.test_user1["id"],
@@ -40,6 +45,11 @@ class PicturesApiTestCase(unittest.TestCase):
                              headers={"Authorization":fb_id})
         assert resp.status_code==201
         assert json.loads(resp.data)["message"]=="Picture added."
+
+        #ensure that test_user1 websocket client got update
+        received = client.get_received()
+        assert len(received) != 0
+        assert received[-1]["name"] == "picture_added"
 
     def test_add_picture_user_not_found(self):
         fb_id = self.test_user1_private["fb_id"]
@@ -94,6 +104,10 @@ class PicturesApiTestCase(unittest.TestCase):
         assert json.loads(resp.data)["message"]=="User not found."
         
     def test_update_picture(self):
+        #log in test_user1 to chat web socket
+        client = socketio.test_client(app)
+        client.emit("join", self.test_user1_private)
+
         #create picture 1
         fb_id = self.test_user1_private["fb_id"]
         resp = self.app.post("/pictures",
@@ -108,9 +122,9 @@ class PicturesApiTestCase(unittest.TestCase):
         pic1_id = json.loads(resp.data)["value"]["id"]
 
         #create picture 2
-        fb_id = self.test_user2_private["fb_id"]
+        fb_id = self.test_user1_private["fb_id"]
         resp = self.app.post("/pictures",
-                             data={"user_id":self.test_user2["id"],
+                             data={"user_id":self.test_user1["id"],
                                    "uri":"some uri",
                                    "ui_index":1,
                                    "top":0.5,
@@ -121,7 +135,7 @@ class PicturesApiTestCase(unittest.TestCase):
         pic1_id = json.loads(resp.data)["value"]["id"]
         
         #update picture
-        resp = self.app.put("/pictures/%d" % self.test_user2["id"],
+        resp = self.app.put("/pictures/%d" % self.test_user1["id"],
                              data={"uri":"some other uri",
                                    "ui_index":0,
                                    "top":0.6,
@@ -131,6 +145,11 @@ class PicturesApiTestCase(unittest.TestCase):
                              headers={"Authorization":fb_id})
         assert resp.status_code==202
         assert json.loads(resp.data)["message"]=="Picture updated."
+
+        #ensure that test_user1 websocket client got update
+        received = client.get_received()
+        assert len(received) != 0
+        assert received[-1]["name"] == "picture_updated"
 
     def test_update_picture_not_found(self):
         fb_id = self.test_user1_private["fb_id"]
@@ -200,6 +219,10 @@ class PicturesApiTestCase(unittest.TestCase):
     def test_delete_picture(self):
         fb_id = self.test_user1_private["fb_id"]
 
+        #log in test_user1 to chat web socket
+        client = socketio.test_client(app)
+        client.emit("join", self.test_user1_private)
+
         #add picture to delete
         resp = self.app.post("/pictures",
                              data={"user_id":self.test_user1["id"],
@@ -218,6 +241,11 @@ class PicturesApiTestCase(unittest.TestCase):
                     "Authorization":fb_id})
         assert resp.status_code==200
         assert json.loads(resp.data)["message"]=="Picture removed."
+
+        #ensure that test_user1 websocket client got update
+        received = client.get_received()
+        assert len(received) != 0
+        assert received[-1]["name"] == "picture_deleted"
 
     def test_delete_picture_not_found(self):
         fb_id = self.test_user1_private["fb_id"]

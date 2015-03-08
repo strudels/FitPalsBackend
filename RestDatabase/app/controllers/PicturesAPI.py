@@ -5,7 +5,7 @@ from datetime import datetime
 from dateutil.relativedelta import relativedelta
 import time
 
-from app import db, api
+from app import db, api, socketio
 from app.models import *
 from app.utils.Response import Response
 
@@ -100,6 +100,11 @@ class PicturesAPI(Resource):
             db.session.rollback()
             return Response(status=400, message="Picture data invalid.")\
               .__dict__,400
+            
+        #send new picture to user's other devices
+        socketio.emit("picture_added",picture.dict_repr(),
+                      room=str(picture.user.id))
+
         user.pictures.append(picture)
         db.session.commit()
 
@@ -160,7 +165,7 @@ class PictureAPI(Resource):
             if args.ui_index != None:
                 old_pic = Picture.query.filter(
                     Picture.ui_index==args.ui_index).first()
-                if old_pic: old_pic.user.pictures.remove(old_pic)
+                if old_pic and old_pic!=pic: old_pic.user.pictures.remove(old_pic)
                 pic.ui_index = args.ui_index
             if args.top != None: pic.top = args.top
             if args.bottom != None: pic.bottom = args.bottom
@@ -169,6 +174,9 @@ class PictureAPI(Resource):
             db.session.commit()
         except: return Response(status=400, message="Picture data invalid.")\
               .__dict__, 400
+
+        #send pic update to user's other devices
+        socketio.emit("picture_updated",pic.dict_repr(),room=str(pic.user.id))
         
         return Response(status=202, message="Picture updated.")\
             .__dict__, 202
@@ -195,12 +203,17 @@ class PictureAPI(Resource):
         if not pic:
             return Response(status=404,
                 message="Picture not found.").__dict__,404
+        user = pic.user
 
         #ensure user is valid by checking if fb_id is correct
-        if pic.user.fb_id != args.Authorization:
+        if user.fb_id != args.Authorization:
             return Response(status=401,message="Not Authorized.").__dict__,401
 
         #delete picture
-        pic.user.pictures.remove(pic)
+        user.pictures.remove(pic)
         db.session.commit()
+
+        #alert user that picture has been deleted
+        socketio.emit("picture_deleted",pic_id,room=str(user.id))
+
         return Response(status=200, message="Picture removed.").__dict__, 200
