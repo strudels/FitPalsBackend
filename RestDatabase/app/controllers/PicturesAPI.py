@@ -33,7 +33,7 @@ class PicturesAPI(Resource):
                 message="User not found.").__dict__,404
 
         return Response(status=200, message="Pictures found.",
-            value=[p.dict_repr() for p in user.secondary_pictures.all()])\
+            value=[p.dict_repr() for p in user.pictures.all()])\
             .__dict__, 200
 
     def post(self):
@@ -84,23 +84,95 @@ class PicturesAPI(Resource):
         #ensure user is valid by checking if fb_id is correct
         if user.fb_id != args.Authorization:
             return Response(status=401,message="Not Authorized.").__dict__,401
+            
+        if args.ui_index in [p.ui_index for p in user.pictures.all()]:
+            user.pictures.delete(
+                Picture.query.filter(Picture.ui_index==args.ui_index).first())
 
         try: picture = Picture(user,
-                          args.uri,
-                          args.ui_index,
-                          args.top,
-                          args.bottom,
-                          args.left,
-                          args.right)
-        except: return Response(status=400, message="Picture data invalid.")\
+                               args.uri,
+                               args.ui_index,
+                               args.top,
+                               args.bottom,
+                               args.left,
+                               args.right)
+        except:
+            db.session.rollback()
+            return Response(status=400, message="Picture data invalid.")\
               .__dict__,400
-        user.secondary_pictures.append(picture)
+        user.pictures.append(picture)
         db.session.commit()
 
-        return Response(status=201, message="Picture added.").__dict__,201
+        return Response(status=201, message="Picture added.",
+                        value=picture.dict_repr()).__dict__,201
 
 @api.resource("/pictures/<int:pic_id>")
 class PictureAPI(Resource):
+    def put(self, pic_id):
+        """
+        Delete picture for a user.
+
+        :reqheader Authorization: fb_id token needed here
+
+        :param int pic_id: Id of user.
+        
+        :form int user_id: Id of user.
+        :form str uri: Facebook Picture Id string.
+        :form int ui_index: Index of the ui.
+        :form float top: Top position for crop
+        :form float bottom: Bottom position for crop
+        :form float left: Left position for crop
+        :form float right: Right position for crop
+
+        :status 400: Picture data invalid.
+        :status 401: Not Authorized.
+        :status 404: Picture not found.
+        :status 201: Picture removed.
+        """
+        parser = reqparse.RequestParser()
+        parser.add_argument("Authorization",
+            type=str, location="headers", required=True)
+        parser.add_argument("uri",
+            type=str, location="form", required=False)
+        parser.add_argument("ui_index",
+            type=int, location="form", required=False)
+        parser.add_argument("top",
+            type=float, location="form", required=False)
+        parser.add_argument("bottom",
+            type=float, location="form", required=False)
+        parser.add_argument("left",
+            type=float, location="form", required=False)
+        parser.add_argument("right",
+            type=float, location="form", required=False)
+        args = parser.parse_args()
+        
+        pic = Picture.query.get(pic_id)
+        if not pic:
+            return Response(status=404,
+                message="Picture not found.").__dict__,404
+
+        #ensure user is valid by checking if fb_id is correct
+        if pic.user.fb_id != args.Authorization:
+            return Response(status=401,message="Not Authorized.").__dict__,401
+            
+        try:
+            if args.uri != None: pic.uri = args.uri
+            if args.ui_index != None:
+                old_pic = Picture.query.filter(
+                    Picture.ui_index==args.ui_index).first()
+                if old_pic: old_pic.user.pictures.remove(old_pic)
+                pic.ui_index = args.ui_index
+            if args.top != None: pic.top = args.top
+            if args.bottom != None: pic.bottom = args.bottom
+            if args.left != None: pic.left = args.left
+            if args.right != None: pic.right = args.right
+            db.session.commit()
+        except: return Response(status=400, message="Picture data invalid.")\
+              .__dict__, 400
+        
+        return Response(status=202, message="Picture updated.")\
+            .__dict__, 202
+
     #delete either a single, or all pictures for a user
     def delete(self, pic_id):
         """
@@ -119,7 +191,7 @@ class PictureAPI(Resource):
             type=str, location="headers", required=True)
         args = parser.parse_args()
         
-        pic = Picture.query.get(args.pic_id)
+        pic = Picture.query.get(pic_id)
         if not pic:
             return Response(status=404,
                 message="Picture not found.").__dict__,404
@@ -129,6 +201,6 @@ class PictureAPI(Resource):
             return Response(status=401,message="Not Authorized.").__dict__,401
 
         #delete picture
-        user.secondary_pictures.remove(picture)
+        pic.user.pictures.remove(pic)
         db.session.commit()
         return Response(status=200, message="Picture removed.").__dict__, 200

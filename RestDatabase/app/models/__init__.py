@@ -15,11 +15,10 @@ class User(db.Model):
     fb_id = db.Column(db.String(2048), unique=True, nullable=False)
     location = db.Column(Geography(geometry_type="POINT",srid=4326))
     about_me = db.Column(db.String(2048))
-    primary_picture = db.Column(db.String(2048))
     name = db.Column(db.String(256))
     gender = db.Column(db.String(32))
-    secondary_pictures = relationship("Picture", lazy="dynamic",
-        cascade="save-update, merge, delete")
+    pictures = relationship("Picture", lazy="dynamic",
+                            cascade="save-update, merge, delete")
     last_updated =\
         db.Column(db.DateTime, default=db.func.now(), onupdate=db.func.now())
     dob = db.Column(db.Integer)
@@ -56,10 +55,8 @@ class User(db.Model):
         dict_repr = {
             "id":self.id,
             "about_me":self.about_me,
-            "primary_picture":self.primary_picture,
-            "secondary_pictures":\
-                [p.dict_repr() for p in self.secondary_pictures],
             "dob":self.dob,
+            "pictures":[p.dict_repr() for p in self.pictures],
             "available":self.available,
             "name":self.name,
             "gender":self.gender
@@ -77,20 +74,26 @@ class Picture(db.Model):
     user_id = db.Column(db.Integer, ForeignKey("users.id"))
     user = relationship("User",foreign_keys=[user_id])
     uri = db.Column(db.String(2048), nullable=False)
-    ui_index = db.Column(db.Integer, nullable=False)
+    ui_index = db.Column(db.Integer)
     top = db.Column(db.Float, nullable=False)
     bottom = db.Column(db.Float, nullable=False)
     left = db.Column(db.Float, nullable=False)
     right = db.Column(db.Float, nullable=False)
     
-    UniqueConstraint('id','ui_index')
+    UniqueConstraint('user_id','ui_index')
+    UniqueConstraint('user_id','uri')
 
     #ensure that top bottom left and right are all between 0.0 and 1.0
     @validates("top","bottom","left","right")
     def validate_top(self, key, value):
         assert 0.0 <= value <= 1.0
         return value
-
+        
+    @validates("ui_index")
+    def validate_ui_index(self, key, ui_index):
+        assert 0 <= ui_index <= 6
+        return ui_index
+        
     def __init__(self, user, uri, ui_index, top, bottom, left, right):
         self.user = user
         self.uri = uri
