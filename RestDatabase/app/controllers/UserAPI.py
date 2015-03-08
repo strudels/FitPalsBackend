@@ -156,7 +156,6 @@ class UsersAPI(Resource):
             longitude=args.longitude,
             latitude=args.latitude,
             about_me=args.about_me,
-            primary_picture=args.primary_picture,
             dob=args.dob,
             available=args.available,
             name=args.name,
@@ -241,8 +240,6 @@ class UserAPI(Resource):
         parser = reqparse.RequestParser()
         parser.add_argument("Authorization",
             type=str, location='headers', required=True)
-        parser.add_argument("apn_tokens",
-            type=str, location='form', required=False, action="append")
         parser.add_argument("longitude",
             type=float, location='form', required=False)
         parser.add_argument("latitude",
@@ -279,9 +276,6 @@ class UserAPI(Resource):
         if args.secondary_pictures:
             for pic in args.secondary_pictures:
                 self.secondary_pictures.append(Picture(user,pic))
-        if args.apn_tokens:
-            for token in args.apn_tokens:
-                self.apn_tokens.append(APNToken(user,pic))
 
         #Update database and return whether or not the update was a success
         try: db.session.commit()

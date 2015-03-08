@@ -38,7 +38,7 @@ from models import *
 #import all controllers
 from controllers.UserAPI import *
 from controllers.ActivityAPI import *
-from controllers.APNTokensAPI import *
+from controllers.DevicesAPI import *
 from controllers.MatchAPI import *
 from controllers.MessagesAPI import *
 from controllers.PicturesAPI import *

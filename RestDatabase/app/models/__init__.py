@@ -26,7 +26,7 @@ class User(db.Model):
     match_decisions = relationship("MatchDecision",
         primaryjoin="User.id==MatchDecision.user_id", lazy="dynamic",
         cascade="save-update, merge, delete")
-    apn_tokens = relationship("APNToken", lazy="dynamic",
+    devices = relationship("Device", lazy="dynamic",
         cascade="save-update, merge, delete")
     activity_settings = relationship("ActivitySetting", lazy="dynamic",
         cascade="save-update, merge, delete")
@@ -36,18 +36,13 @@ class User(db.Model):
         return self.fb_id
 
     def __init__(self,fb_id,longitude=None,latitude=None,about_me=None,
-        primary_picture=None,secondary_pictures=[], dob=None, available=False,
-        apn_tokens=[], name=None, gender=None):
-
+        dob=None, available=False, name=None, gender=None):
         self.fb_id = fb_id
         if longitude and latitude:
             self.location = WKTElement("POINT(%f %f)"%(longitude,latitude))
         if about_me: self.about_me = about_me
-        if primary_picture: self.primary_picture = primary_picture
-        self.secondary_pictures = secondary_pictures
         if dob: self.dob = dob
         self.available = available
-        self.apn_tokens = apn_tokens
         self.name=name
         self.gender=gender
 
@@ -56,7 +51,6 @@ class User(db.Model):
             "id":self.id,
             "about_me":self.about_me,
             "dob":self.dob,
-            "pictures":[p.dict_repr() for p in self.pictures],
             "available":self.available,
             "name":self.name,
             "gender":self.gender
@@ -64,7 +58,6 @@ class User(db.Model):
         if not public:
             dict_repr["fb_id"] = self.fb_id
             dict_repr["password"] = self.password
-            dict_repr["apn_tokens"] = [t.dict_repr() for t in self.apn_tokens]
         return dict_repr
 
 
@@ -137,12 +130,14 @@ class MatchDecision(db.Model):
             "liked":self.liked
         }
 
-class APNToken(db.Model):
-    __tablename__ = "apn_tokens"
+class Device(db.Model):
+    __tablename__ = "devices"
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, ForeignKey("users.id"))
     user = relationship("User",foreign_keys=[user_id])
     token = db.Column(db.String(2048), nullable=False)
+
+    UniqueConstraint('user_id','token')
 
     def __init__(self, user, token):
         self.user = user
