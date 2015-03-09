@@ -106,7 +106,7 @@ class UserActivitySettingsAPI(Resource):
 
 #activity_id maps to an ActivitySetting id
 @api.resource("/activity_settings/<int:setting_id>")
-class UserActivitySettingAPI(Resource):
+class ActivitySettingAPI(Resource):
     #get settings for user's specific activity
     def get(self, setting_id):
         """
@@ -160,12 +160,12 @@ class UserActivitySettingAPI(Resource):
         try:
             setting.lower_value = args.lower_value
             setting.upper_value = args.upper_value
+            db.session.commit()
         except:
             db.session.rollback()
             return Response(status=400,
                 message="Could not update activity setting.").__dict__,400
 
-        db.session.commit()
         return Response(status=202,
                         message="Activity setting updated.",
                         value=setting.dict_repr()).__dict__,202
