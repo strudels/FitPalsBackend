@@ -60,6 +60,39 @@ class User(db.Model):
             dict_repr["password"] = self.password
         return dict_repr
 
+class SearchSettings(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    activity_id = db.Column(db.Integer, ForeignKey("Activity.id"))
+    activity = relationship("Activity",foreign_keys=[activity_id])
+    friends_only = db.Column(db.Boolean)
+    men_only = db.Column(db.Boolean)
+    women_only = db.Column(db.Boolean)
+    age_lower_limit = db.Column(db.Integer, default=18)
+    #oldest person to ever live was 122, 130 should be good enough...
+    # http://en.wikipedia.org/wiki/Oldest_people
+    age_upper_limit = db.Column(db.Integer, default=130)
+
+    __table_args__ = (CheckConstraint("age_lower_limit < age_upper_limit"),)
+    
+    def __init__(self,activity,friends_only=False,men_only=False,
+                 women_only=False,age_lower_limit=None,age_upper_limit=None):
+        self.activity = activity
+        self.friends_only = friends_only
+        self.men_only = men_only
+        self.women_only = women_only
+        self.age_lower_limit = age_lower_limit
+        self.age_upper_limit = age_upper_limit
+        
+    def dict_repr(self):
+        return {
+            "id":self.id,
+            "activity_id":self.activity_id,
+            "friends_only":self.friends_only,
+            "men_only":self.men_only,
+            "women_only":self.women_only,
+            "age_lower_limit":self.age_lower_limit,
+            "age_upper_limit":self.age_upper_limit
+        }
 
 class Picture(db.Model):
     __tablename__ = "pictures"
