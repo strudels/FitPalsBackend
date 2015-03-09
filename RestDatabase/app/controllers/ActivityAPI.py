@@ -5,7 +5,7 @@ from datetime import datetime
 from dateutil.relativedelta import relativedelta
 import time
 
-from app import db, api
+from app import db, api, socketio
 from app.models import *
 from app.utils.Response import Response
 
@@ -100,6 +100,9 @@ class UserActivitySettingsAPI(Resource):
             db.session.rollback()
             return Response(status=400,
                 message="Could not create activity setting.").__dict__,400
+            
+        socketio.emit("activity_setting_added",activity_setting.dict_repr(),
+                      room=str(activity_setting.user.id))
         
         return Response(status=201,message="Activity setting created.",
                         value=activity_setting.dict_repr()).__dict__,201
@@ -166,6 +169,9 @@ class ActivitySettingAPI(Resource):
             return Response(status=400,
                 message="Could not update activity setting.").__dict__,400
 
+        socketio.emit("activity_setting_updated",setting.dict_repr(),
+                      room=str(setting.user.id))
+
         return Response(status=202,
                         message="Activity setting updated.",
                         value=setting.dict_repr()).__dict__,202
@@ -193,6 +199,7 @@ class ActivitySettingAPI(Resource):
         if not setting:
             return Response(status=404,message="Activity setting not found.")\
                 .__dict__, 404
+        user = setting.user
 
         #ensure user is valid by checking if fb_id is correct
         if setting.user.fb_id != args.Authorization:
@@ -200,6 +207,9 @@ class ActivitySettingAPI(Resource):
             
         setting.user.activity_settings.remove(setting)
         db.session.commit()
+
+        socketio.emit("activity_setting_deleted",setting_id,
+                      room=str(user.id))
 
         return Response(status=200,
             message="Activity setting deleted.").__dict__, 200

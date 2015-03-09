@@ -43,6 +43,11 @@ class ActivitySettingsAPITestCase(unittest.TestCase):
         assert json.loads(resp.data)["message"]=="User not found."
         
     def test_create_activity_setting(self):
+        #log in test_user1 to chat web socke
+        client = socketio.test_client(app)
+        client.emit("join", self.test_user_private)
+
+        #create activity
         fb_id = self.test_user_private["fb_id"]
         activity = json.loads(self.app.get("/activities").data)["value"][0]
         resp = self.app.post("/activity_settings",
@@ -53,6 +58,11 @@ class ActivitySettingsAPITestCase(unittest.TestCase):
                              headers = {"Authorization":fb_id})
         assert resp.status_code==201
         assert json.loads(resp.data)["message"]=="Activity setting created."
+
+        #ensure that test_user1 websocket client got update
+        received = client.get_received()
+        assert len(received) != 0
+        assert received[-1]["name"] == "activity_setting_added"
         
     def test_create_activity_setting_question_not_found(self):
         fb_id = self.test_user_private["fb_id"]
@@ -127,6 +137,10 @@ class ActivitySettingsAPITestCase(unittest.TestCase):
         
 
     def test_update_activity_setting(self):
+        #log in test_user1 to chat web socke
+        client = socketio.test_client(app)
+        client.emit("join", self.test_user_private)
+
         #create setting
         fb_id = self.test_user_private["fb_id"]
         activity = json.loads(self.app.get("/activities").data)["value"][0]
@@ -144,6 +158,11 @@ class ActivitySettingsAPITestCase(unittest.TestCase):
                             headers={"Authorization":fb_id})
         assert resp.status_code==202
         assert json.loads(resp.data)["message"]=="Activity setting updated."
+
+        #ensure that test_user1 websocket client got update
+        received = client.get_received()
+        assert len(received) != 0
+        assert received[-1]["name"] == "activity_setting_updated"
 
     def test_update_activity_setting_not_found(self):
         fb_id = self.test_user_private["fb_id"]
@@ -193,6 +212,10 @@ class ActivitySettingsAPITestCase(unittest.TestCase):
         assert json.loads(resp.data)["message"]=="Could not update activity setting."
         
     def test_delete_activity_setting(self):
+        #log in test_user1 to chat web socke
+        client = socketio.test_client(app)
+        client.emit("join", self.test_user_private)
+
         #create setting
         fb_id = self.test_user_private["fb_id"]
         activity = json.loads(self.app.get("/activities").data)["value"][0]
@@ -209,6 +232,11 @@ class ActivitySettingsAPITestCase(unittest.TestCase):
                                headers={"Authorization":fb_id})
         assert resp.status_code==200
         assert json.loads(resp.data)["message"]=="Activity setting deleted."
+
+        #ensure that test_user1 websocket client got update
+        received = client.get_received()
+        assert len(received) != 0
+        assert received[-1]["name"] == "activity_setting_deleted"
 
     def test_delete_activity_setting_not_found(self):
         fb_id = self.test_user_private["fb_id"]
@@ -234,130 +262,3 @@ class ActivitySettingsAPITestCase(unittest.TestCase):
                                headers={"Authorization":fb_id})
         assert resp.status_code==200
         assert json.loads(resp.data)["message"]=="Activity setting deleted."
-    """
-    def test_get_user_activities(self):
-        resp = self.app.get("/users/" + str(self.test_user.id) + "/activity_settings")
-        assert resp.status_code==200
-
-    def test_add_user_activity(self):
-        user_id = self.test_user.id
-        fb_id = self.test_user.fb_id
-        resp = self.app.post("/users/" + str(user_id) + "/activity_settings",
-            data={
-                "activity_id":1,
-                "question_ids":[1,2],
-                "answers":[30, 5000]
-            }, headers= {"Authorization":fb_id})
-        assert resp.status_code==201
-
-    def test_add_user_activity_unauthorized(self):
-        user_id = self.test_user.id
-        fb_id = self.test_user.fb_id
-        resp = self.app.post("/users/" + str(user_id) + "/activity_settings",
-            data={
-                "activity_id":1,
-                "question_ids":[1,2],
-                "answers":[30, 5000]
-            }, headers= {"Authorization":fb_id + "junk"})
-        assert resp.status_code==401
-
-    def test_delete_user_activities(self):
-        user_id = self.test_user.id
-        fb_id = self.test_user.fb_id
-        resp = self.app.delete("/users/" + str(user_id) + "/activity_settings",
-            headers={'Content-Type': 'application/x-www-form-urlencoded',
-                     "Authorization":fb_id})
-        assert resp.status_code==200
-
-    def test_delete_user_activities_unauthorized(self):
-        user_id = self.test_user.id
-        fb_id = self.test_user.fb_id
-        resp = self.app.delete("/users/" + str(user_id) + "/activity_settings",
-            headers={'Content-Type': 'application/x-www-form-urlencoded',
-                     "Authorization":fb_id + "junk"})
-        assert resp.status_code==401
-    """
-
-"""
-class UserActivitySettingAPITestCase(unittest.TestCase):
-    def setUp(self):
-        self.app = app.test_client()
-
-        self.test_user = User.query.filter(User.fb_id=="fbTestUser1").first()
-        if not self.test_user:
-            self.test_user = User("fbTestUser1")
-            db.session.add(self.test_user)
-            db.session.commit()
-
-    def tearDown(self):
-        if hasattr(self, "test_user"):
-            db.session.delete(self.test_user)
-            db.session.commit()
-
-    def test_get_user_activity(self):
-        user_id = self.test_user.id
-        fb_id = self.test_user.fb_id
-        activity = Activity.query.get(1)
-        setting = ActivitySetting(self.test_user,activity,activity.questions[0])
-        self.test_user.activity_settings.append(setting)
-        db.session.commit()
-        resp = self.app.get("/users/" + str(user_id) + "/activity_settings")
-        assert resp.status_code==200
-
-    def test_update_user_activity(self):
-        user_id = self.test_user.id
-        fb_id = self.test_user.fb_id
-        activity = Activity.query.get(1) #running
-        setting = ActivitySetting(self.test_user,activity,activity.questions[0])
-        self.test_user.activity_settings.append(setting)
-        db.session.commit()
-        resp = self.app.put("/users/" + str(user_id) +\
-            "/activity_settings/" + str(activity.id),
-            data = {
-                "question_ids":[q.id for q in activity.questions],
-                "answers":[1 for x in activity.questions]
-            }, headers = {"Authorization":fb_id})
-        assert resp.status_code==202
-
-    def test_update_user_activity_unauthorized(self):
-        user_id = self.test_user.id
-        fb_id = self.test_user.fb_id
-        activity = Activity.query.get(1) #running
-        setting = ActivitySetting(self.test_user,activity,activity.questions[0])
-        self.test_user.activity_settings.append(setting)
-        db.session.commit()
-        resp = self.app.put("/users/" + str(user_id) +\
-            "/activity_settings/" + str(activity.id),
-            data = {
-                "question_ids":[q.id for q in activity.questions],
-                "answers":[1 for x in activity.questions]
-            }, headers = {"Authorization":fb_id + "junk"})
-        assert resp.status_code==401
-
-    def test_delete_user_activity(self):
-        user_id = self.test_user.id
-        fb_id = self.test_user.fb_id
-        activity = Activity.query.get(1) #running
-        setting = ActivitySetting(self.test_user,activity, activity.questions[0])
-        self.test_user.activity_settings.append(setting)
-        db.session.commit()
-        resp = self.app.delete("/users/" + str(user_id) +\
-            "/activity_settings/" + str(activity.id),
-            headers={'Content-Type': 'application/x-www-form-urlencoded',
-                     "Authorization":fb_id})
-        assert resp.status_code==200
-
-    def test_delete_user_activity_unauthorized(self):
-        user_id = self.test_user.id
-        fb_id = self.test_user.fb_id
-        activity = Activity.query.get(1) #running
-        setting = ActivitySetting(self.test_user,activity, activity.questions[0])
-        self.test_user.activity_settings.append(setting)
-        db.session.commit()
-        resp = self.app.delete("/users/" + str(user_id) +\
-            "/activity_settings/" + str(activity.id),
-            headers={'Content-Type': 'application/x-www-form-urlencoded',
-                     "Authorization":fb_id + "junk"})
-        assert resp.status_code==401
-
-"""
