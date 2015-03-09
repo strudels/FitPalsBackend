@@ -84,7 +84,7 @@ class DeviceAPI(Resource):
 
         #get specific token to delete
         device = Device.query.get(device_id)
-        if not token:
+        if not device:
             return Response(status=404,
                 message="Device not found.").__dict__,404
 
