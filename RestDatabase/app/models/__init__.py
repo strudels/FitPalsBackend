@@ -23,8 +23,8 @@ class User(db.Model):
         db.Column(db.DateTime, default=db.func.now(), onupdate=db.func.now())
     dob = db.Column(db.Integer)
     available = db.Column(db.Boolean, default=False)
-    match_decisions = relationship("MatchDecision",
-        primaryjoin="User.id==MatchDecision.user_id", lazy="dynamic",
+    matches = relationship("Match",
+        primaryjoin="User.id==Match.user_id", lazy="dynamic",
         cascade="save-update, merge, delete")
     devices = relationship("Device", lazy="dynamic",
         cascade="save-update, merge, delete")
@@ -108,25 +108,27 @@ class Picture(db.Model):
             "right":self.right,
         }
 
-class MatchDecision(db.Model):
-    __tablename__ = "match_decisions"
+class Match(db.Model):
+    __tablename__ = "matches"
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, ForeignKey("users.id"))
     user = relationship("User",foreign_keys=[user_id])
-    decision_user_id = db.Column(db.Integer, ForeignKey("users.id"))
-    decision_user = relationship("User",foreign_keys=[decision_user_id])
+    matched_user_id = db.Column(db.Integer, ForeignKey("users.id"))
+    matched_user = relationship("User",foreign_keys=[matched_user_id])
     liked = db.Column(db.Boolean, index=True, nullable=False)
 
-    def __init__(self, user, decision_user,liked=False):
+    __table_args__ = (CheckConstraint("user_id != matched_user_id"),)
+
+    def __init__(self, user, matched_user,liked=False):
         self.user = user
-        self.decision_user = decision_user
+        self.matched_user = matched_user
         self.liked = liked
 
     def dict_repr(self):
         return {
             "id":self.id,
             "user_id":self.user_id,
-            "decision_user_id":self.decision_user_id,
+            "matched_user_id":self.matched_user_id,
             "liked":self.liked
         }
 
@@ -136,8 +138,8 @@ class Device(db.Model):
     user_id = db.Column(db.Integer, ForeignKey("users.id"))
     user = relationship("User",foreign_keys=[user_id])
     token = db.Column(db.String(2048), nullable=False)
-
-    UniqueConstraint('user_id','token')
+    
+    __table_args__ = (UniqueConstraint('user_id','token'),)
 
     def __init__(self, user, token):
         self.user = user
