@@ -1,4 +1,4 @@
-from sqlalchemy import ForeignKey, DateTime, UniqueConstraint
+from sqlalchemy import ForeignKey, DateTime, UniqueConstraint, CheckConstraint
 import geoalchemy2
 from geoalchemy2.types import Geography
 from geoalchemy2.elements import WKTElement
@@ -62,7 +62,7 @@ class User(db.Model):
 
 
 class Picture(db.Model):
-    __tablename__ = "secondary_pictures"
+    __tablename__ = "pictures"
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, ForeignKey("users.id"))
     user = relationship("User",foreign_keys=[user_id])
@@ -73,8 +73,8 @@ class Picture(db.Model):
     left = db.Column(db.Float, nullable=False)
     right = db.Column(db.Float, nullable=False)
     
-    UniqueConstraint('user_id','ui_index')
-    UniqueConstraint('user_id','uri')
+    __table_args__ = (UniqueConstraint("user_id","ui_index"),
+                      UniqueConstraint("user_id","uri"))
 
     #ensure that top bottom left and right are all between 0.0 and 1.0
     @validates("top","bottom","left","right")
@@ -172,26 +172,26 @@ class ActivitySetting(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, ForeignKey("users.id"))
     user = relationship("User",foreign_keys=[user_id])
-    activity_id = db.Column(db.Integer, ForeignKey("activities.id"))
-    activity = relationship("Activity", foreign_keys=[activity_id])
     question_id = db.Column(db.Integer, ForeignKey("activity_questions.id"))
     question = relationship("Question", foreign_keys=[question_id])
-    answer = db.Column(db.Float)
+    lower_value = db.Column(db.Float)
+    upper_value = db.Column(db.Float)
+    
+    __table_args__ = (CheckConstraint("lower_value <= upper_value"),)
 
-    def __init__(self, user, activity ,question, answer=None):
+    def __init__(self, user, question, lower_value=None, upper_value=None):
         self.user = user
-        self.activity = activity
         self.question = question
-        self.answer = answer
+        self.lower_value = lower_value
+        self.upper_value = upper_value
 
     def dict_repr(self):
         return {
             "id":self.id,
             "user_id":self.user_id,
-            "activity_id":self.activity_id,
             "question_id":self.question_id,
-            "question":self.question.question,
-            "answer":self.answer
+            "lower_value":self.lower_value,
+            "upper_value":self.upper_value
         }
 
 class Question(db.Model):

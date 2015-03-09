@@ -125,7 +125,7 @@ class PicturesApiTestCase(unittest.TestCase):
         fb_id = self.test_user1_private["fb_id"]
         resp = self.app.post("/pictures",
                              data={"user_id":self.test_user1["id"],
-                                   "uri":"some uri",
+                                   "uri":"some uri 2",
                                    "ui_index":1,
                                    "top":0.5,
                                    "bottom":0.5,

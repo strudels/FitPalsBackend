@@ -89,13 +89,16 @@ class PicturesAPI(Resource):
             user.pictures.delete(
                 Picture.query.filter(Picture.ui_index==args.ui_index).first())
 
-        try: picture = Picture(user,
+        try: 
+            picture = Picture(user,
                                args.uri,
                                args.ui_index,
                                args.top,
                                args.bottom,
                                args.left,
                                args.right)
+            user.pictures.append(picture)
+            db.session.commit()
         except:
             db.session.rollback()
             return Response(status=400, message="Picture data invalid.")\
@@ -105,8 +108,6 @@ class PicturesAPI(Resource):
         socketio.emit("picture_added",picture.dict_repr(),
                       room=str(picture.user.id))
 
-        user.pictures.append(picture)
-        db.session.commit()
 
         return Response(status=201, message="Picture added.",
                         value=picture.dict_repr()).__dict__,201
@@ -172,7 +173,9 @@ class PictureAPI(Resource):
             if args.left != None: pic.left = args.left
             if args.right != None: pic.right = args.right
             db.session.commit()
-        except: return Response(status=400, message="Picture data invalid.")\
+        except:
+            db.session.rollback()
+            return Response(status=400, message="Picture data invalid.")\
               .__dict__, 400
 
         #send pic update to user's other devices
