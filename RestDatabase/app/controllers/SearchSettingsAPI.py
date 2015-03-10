@@ -12,8 +12,8 @@ from app.models import *
 from app.utils.Response import Response
 
 @api.resource("/search_settings/<int:settings_id>")
-class SearchSettingsAPI(Resourse):
-    def get(self, setting_id):
+class SearchSettingsAPI(Resource):
+    def get(self, settings_id):
         """
         Get search settings.
 
@@ -25,6 +25,10 @@ class SearchSettingsAPI(Resourse):
         :status 404: Search settings not found.
         :status 200: Search settings found.
         """
+        parser = reqparse.RequestParser()
+        parser.add_argument("Authorization",
+            type=str, location="headers", required=True)
+        args = parser.parse_args()
 
         #get search_settings
         settings = SearchSettings.query.get(settings_id)
@@ -40,18 +44,21 @@ class SearchSettingsAPI(Resourse):
         return Response(status=200, message="Search settings found.",
                         value=settings.dict_repr()), 200
 
-    def put(self, setting_id):
+    def put(self, settings_id):
         """
         Create new search setting.
+        
+        NOTE bool fields friends_only, men_only, and women_only are encoded as int
+        because reqparse is dumb and I should've used something else.
 
         :reqheader Authorization: Facebook token.
         
         :param int settings_id: Id of search settings.
         
         :form int activity_id: Activity id.
-        :form bool friends_only: Set if user wants friends only
-        :form bool men_only: Set if user wants men only
-        :form bool women_only: Set if user wants women only
+        :form int friends_only: Set to 1 if user wants friends only; Default is 0
+        :form int men_only: Set to 1 if user wants men only; Default is 0
+        :form int women_only: Set to 1 if user wants women only; Default is 0
         :form int age_lower_limit: Set if user want lower age limit. Default is 18.
         :form int age_upper_limit: Set if user want upper age limit. Default is 130.
         http://en.wikipedia.org/wiki/Oldest_people
@@ -62,19 +69,27 @@ class SearchSettingsAPI(Resourse):
         :status 202: Search settings updated.
         """
         parser = reqparse.RequestParser()
+        parser.add_argument("Authorization",
+            type=str, location="headers", required=True)
         parser.add_argument("activity_id",
             type=int, location="form", required=False)
         parser.add_argument("friends_only",
-            type=bool, location="form", required=False)
+            type=int, location="form", required=False)
         parser.add_argument("men_only",
-            type=bool, location="form", required=False)
+            type=int, location="form", required=False)
         parser.add_argument("women_only",
-            type=bool, location="form", required=False)
+            type=int, location="form", required=False)
         parser.add_argument("age_lower_limit",
             type=int, location="form", required=False)
         parser.add_argument("age_upper_limit",
             type=int, location="form", required=False)
         args = parser.parse_args()
+        if type(args.friends_only)==type(int()):
+            args.friends_only = bool(args.friends_only)
+        if type(args.men_only)==type(int()):
+            args.men_only = bool(args.men_only)
+        if type(args.women_only)==type(int()):
+            args.women_only = bool(args.women_only)
         
         #get search_settings
         settings = SearchSettings.query.get(settings_id)
@@ -90,7 +105,7 @@ class SearchSettingsAPI(Resourse):
         #update search_settings
         try:
             for arg in args.keys():
-                if args[arg] != None: getattr(settings,arg) = args[arg]
+                if args[arg] != None: setattr(settings,arg,args[arg])
             db.session.commit()
         except:
             return Response(status=400,

@@ -42,6 +42,7 @@ from controllers.DevicesAPI import *
 from controllers.MatchAPI import *
 from controllers.MessagesAPI import *
 from controllers.PicturesAPI import *
+from controllers.SearchSettingsAPI import *
 
 #import websocket events
 from websockets import *
