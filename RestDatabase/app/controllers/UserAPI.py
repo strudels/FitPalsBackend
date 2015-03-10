@@ -5,7 +5,7 @@ import simplejson as json
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
 import time
-from sqlalchemy import func,or_, and_
+from sqlalchemy import func,or_, and_, not_
 
 from app import db, api, socketio
 from app.models import *
@@ -43,7 +43,6 @@ class UsersAPI(Resource):
             type=float, location='args', required=False)
         parser.add_argument("latitude",
             type=float, location='args', required=False)
-        #radius in meters
         parser.add_argument("radius",
             type=float, location='args', required=False)
         parser.add_argument("limit",
@@ -54,6 +53,7 @@ class UsersAPI(Resource):
             type=int, location="args", required=False)
         args = parser.parse_args()
         
+        #ASK RICKY ABOUT PUTTING RADIUS IN SEARCHSETTINGS
         #get user by fb_id; if no user then 401
         user = User.query.filter(User.fb_id==args.Authorization).first()
         if not user:
@@ -73,7 +73,7 @@ class UsersAPI(Resource):
         if args.last_updated:
             query = query.filter(User.last_update<=args.last_updated)
             
-        #filter by search settings
+        #apply filters in search settings
         #STILL NEED TO FILTER BY FRIENDS
         if user.search_settings.friends_only:
             pass
@@ -93,22 +93,12 @@ class UsersAPI(Resource):
         for s in user.activity_settings.filter(Activity_Setting.activity_id==
             user.search_settings.activity_id).all():
             #make this show an intersection of lower and upper values, not equality
-            query = query.filter(and_(ActivitySetting.question_id==s.question_id,
-                                      or_(ActivitySetting.lower_value==s.lower_value,
-                                          ActivitySetting.upper_value==s.upper_value)))
-
-        #right now this only matches if questions have the same answers
-        if len(args.question_ids) == len(args.answers):
-            questions = {x:y for x,y in zip(args.question_ids, args.answers)}
-            or_expr = False
-            for q in questions:
-                or_expr = or_(or_expr,ActivitySetting.question_id==q)
-            if or_expr != False:
-                query = query.filter(or_expr)
-                '''
-                for q in questions:
-                    query = query.order_by(abs(questions[ActivitySetting.question_id] - ActivitySetting.answer))
-                '''
+            query = query\
+                .filter(and_(ActivitySetting.question_id==s.question_id,
+                             not_(or_(and_(ActivitySetting.lower_value < s.lower_value,
+                                           ActivitySetting.upper_value < s.lower_value,),
+                                      and_(ActivitySetting.lower_value > s.upper_value,
+                                           ActivitySetting.upper_value > s.upper_value))
 
         #ensure no repeat users as a result from an earlier join
         query = query.distinct(User.id)
