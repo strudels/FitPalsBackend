@@ -42,7 +42,7 @@ class SearchSettingsAPI(Resource):
             return Response(status=401, message="Not Authorized.").__dict__,401
             
         return Response(status=200, message="Search settings found.",
-                        value=settings.dict_repr()), 200
+                        value=settings.dict_repr()).__dict__, 200
 
     def put(self, settings_id):
         """
