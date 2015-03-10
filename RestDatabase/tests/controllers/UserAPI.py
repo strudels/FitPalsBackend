@@ -2,6 +2,7 @@ import unittest
 import simplejson as json
 from app import app,db,socketio,reset_app
 from app.models import *
+from datetime import date
 
 class UsersApiTestCase(unittest.TestCase):
     def setUp(self):
@@ -10,7 +11,7 @@ class UsersApiTestCase(unittest.TestCase):
 
         self.test_user = User.query.filter(User.fb_id=="fbTestUser1").first()
         if not self.test_user:
-            self.test_user = User("fbTestUser1")
+            self.test_user = User("fbTestUser1",dob=date(1990,1,1))
             self.test_user.name = "test"
             db.session.add(self.test_user)
             db.session.commit()
@@ -20,6 +21,7 @@ class UsersApiTestCase(unittest.TestCase):
     def tearDown(self):
         reset_app()
 
+    """
     def test_create_user(self):
         resp = self.app.post("/users",data={"fb_id":"some fb_id"})
         assert resp.status_code==201
@@ -29,11 +31,45 @@ class UsersApiTestCase(unittest.TestCase):
         resp = self.app.post("/users",data={"fb_id":self.test_user["fb_id"]})
         assert resp.status_code==200
         assert json.loads(resp.data)["message"] == "User found."
+    """
 
     def test_get_users(self):
-        resp = self.app.get("/users")
-        assert resp.status_code==200
+        fb_id = self.test_user["fb_id"]
+        setting_id = self.test_user["search_settings_id"]
+        activity_id = json.loads(self.app.get("/activities").data)["value"][0]["id"]
 
+        #update search settings
+        resp = self.app.put("/search_settings/%d" % setting_id,
+                            data={"activity_id":activity_id,
+                                  "men_only":0, "women_only":1},
+                            headers={"Authorization":fb_id})
+
+        resp = self.app.get("/users?longitude=20&latitude=20&radius=17000",
+                            headers={"Authorization":fb_id})
+        assert resp.status_code==200
+        
+    def test_get_users_not_authorized(self):
+        fb_id = self.test_user["fb_id"]
+        resp = self.app.get("/users?longitude=20&latitude=20&radius=17000",
+                            headers={"Authorization":fb_id + "junk"})
+        assert resp.status_code==401
+        
+    def test_get_users_invalid_gps_params(self):
+        fb_id = self.test_user["fb_id"]
+        setting_id = self.test_user["search_settings_id"]
+        activity_id = json.loads(self.app.get("/activities").data)["value"][0]["id"]
+
+        #update search settings
+        resp = self.app.put("/search_settings/%d" % setting_id,
+                            data={"activity_id":activity_id,
+                                  "men_only":0, "women_only":1},
+                            headers={"Authorization":fb_id})
+
+        resp = self.app.get("/users?longitude=200&latitude=20&radius=17000",
+                            headers={"Authorization":fb_id})
+        assert resp.status_code==400
+        
+    """
     def test_get_user(self):
         resp = self.app.get("/users/" + str(self.test_user["id"]))
         assert resp.status_code==200
@@ -135,3 +171,4 @@ class UsersApiTestCase(unittest.TestCase):
                                         "Authorization":fb_id})
         assert resp.status_code==401
         assert json.loads(resp.data)["message"] == "Not Authorized."
+    """

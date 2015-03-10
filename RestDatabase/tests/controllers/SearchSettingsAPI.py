@@ -2,6 +2,7 @@ import unittest
 import simplejson as json
 from app import app,db,socketio,reset_app
 from app.models import *
+from datetime import date
 
 class SearchSettingsApiTestCase(unittest.TestCase):
     def setUp(self):
@@ -10,7 +11,7 @@ class SearchSettingsApiTestCase(unittest.TestCase):
 
         self.test_user1 = User.query.filter(User.fb_id=="fbTestUser1").first()
         if not self.test_user1:
-            self.test_user1 = User("fbTestUser1")
+            self.test_user1 = User("fbTestUser1",dob=date(1990,1,1))
             db.session.add(self.test_user1)
             db.session.commit()
             self.test_user1 = self.test_user1.dict_repr(public=False)

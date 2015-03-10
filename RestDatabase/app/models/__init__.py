@@ -65,7 +65,7 @@ class User(db.Model):
                             cascade="save-update, merge, delete")
     last_updated =\
         db.Column(db.DateTime, default=db.func.now(), onupdate=db.func.now())
-    dob = db.Column(db.Integer)
+    dob = db.Column(db.Date,nullable=False)
     available = db.Column(db.Boolean, default=False)
     matches = relationship("Match",
         primaryjoin="User.id==Match.user_id", lazy="dynamic",
@@ -86,6 +86,18 @@ class User(db.Model):
     @hybrid_property
     def latitude(self):
         return db.session.query(ST_Y(self.location)).first()[0]
+        
+    @hybrid_property
+    def dob_year(self):
+        return self.dob.year
+
+    @hybrid_property
+    def dob_month(self):
+        return self.dob.month
+
+    @hybrid_property
+    def dob_day(self):
+        return self.dob.day
 
     def __init__(self,fb_id,longitude=None,latitude=None,about_me=None,
         dob=None, available=False, name=None, gender=None):
@@ -94,7 +106,7 @@ class User(db.Model):
             self.location = WKTElement("POINT(%f %f)"%(longitude,latitude))
         self.search_settings = SearchSettings(self)
         if about_me: self.about_me = about_me
-        if dob: self.dob = dob
+        if dob != None: self.dob = dob
         self.available = available
         self.name=name
         self.gender=gender
@@ -106,7 +118,9 @@ class User(db.Model):
             "latitude":self.latitude,
             "search_settings_id":self.search_settings.id,
             "about_me":self.about_me,
-            "dob":self.dob,
+            "dob_year":self.dob_year,
+            "dob_month":self.dob_month,
+            "dob_day":self.dob_day,
             "available":self.available,
             "name":self.name,
             "gender":self.gender

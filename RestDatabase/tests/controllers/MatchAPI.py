@@ -2,6 +2,7 @@ import unittest
 import simplejson as json
 from app import app,db,socketio,reset_app
 from app.models import *
+from datetime import date
 
 class MatchApiTestCase(unittest.TestCase):
     def setUp(self):
@@ -10,7 +11,7 @@ class MatchApiTestCase(unittest.TestCase):
 
         self.test_user1 = User.query.filter(User.fb_id=="fbTestUser1").first()
         if not self.test_user1:
-            self.test_user1 = User("fbTestUser1")
+            self.test_user1 = User("fbTestUser1",dob=date(1990,1,1))
             db.session.add(self.test_user1)
             db.session.commit()
         self.test_user1_private = self.test_user1.dict_repr(public=False)
@@ -18,7 +19,7 @@ class MatchApiTestCase(unittest.TestCase):
 
         self.test_user2 = User.query.filter(User.fb_id=="fbTestUser2").first()
         if not self.test_user2:
-            self.test_user2 = User("fbTestUser2")
+            self.test_user2 = User("fbTestUser2",dob=date(1990,1,1))
             db.session.add(self.test_user2)
             db.session.commit()
         self.test_user2_private = self.test_user2.dict_repr(public=False)

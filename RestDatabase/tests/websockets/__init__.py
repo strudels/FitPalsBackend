@@ -1,23 +1,23 @@
 import unittest
-from app import app,socketio
+from app import app,socketio,reset_app
 from app.models import *
+from datetime import date
 
 class WebSocketTestCase(unittest.TestCase):
     def setUp(self):
+        reset_app()
         app.testing = True
         self.client = socketio.test_client(app)
         self.client.get_received()
 
         self.test_user = User.query.filter(User.fb_id=="fbTestUser1").first()
         if not self.test_user:
-            self.test_user = User("fbTestUser1")
+            self.test_user = User("fbTestUser1",dob=date(1990,1,1))
             db.session.add(self.test_user)
             db.session.commit()
 
     def tearDown(self):
-        if hasattr(self, "test_user"):
-            db.session.delete(self.test_user)
-            db.session.commit()
+        reset_app()
 
     def test_websocket_connect(self):
         client = socketio.test_client(app)

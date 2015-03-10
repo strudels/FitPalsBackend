@@ -6,6 +6,7 @@ from datetime import datetime
 from dateutil.relativedelta import relativedelta
 import time
 from sqlalchemy import func,or_, and_, not_
+from datetime import date
 
 from app import db, api, socketio
 from app.models import *
@@ -14,8 +15,7 @@ from app.utils.Response import Response
 @api.resource('/users')
 class UsersAPI(Resource):
     def _age_to_day(self,age):
-        day = datetime.now().date() - relativedelta(years=age)
-        return int(time.mktime(day.timetuple()))
+        return datetime.now().date() - relativedelta(years=age)
         
     def today(self):
         return int(time.mktime(datetime.now().date().timetuple()))
@@ -57,22 +57,10 @@ class UsersAPI(Resource):
         user = User.query.filter(User.fb_id==args.Authorization).first()
         if not user:
             return Response(status=401,message="Not Authorized.").__dict__,401
-
-        #apply filters in args
-        query = User.query
-        if (args.radius and args.longitude and args.latitude):
-            #ensure GPS parameters are valid
-            if (args.radius <= 0) or not (-180 <= args.longitude <= 180)\
-                or not (-90 <= args.latitude <= 90):
-                return Response(status=400,message="Invalid GPS parameters"),400
-            point = func.ST_GeomFromText("POINT(%f %f)" %\
-                                         (args.longitude,latitude)) 
-            arg = func.ST_DWithin(point, User.location, args.radius, True)
-            query = query.filter(arg)
-        #args.last_updated probably needs to be converted to a datetime
-        if args.last_updated:
-            query = query.filter(User.last_update<=args.last_updated)
             
+        #begin creating query
+        query = User.query
+
         #apply filters in search settings
         #STILL NEED TO FILTER BY FRIENDS
         if user.search_settings.friends_only:
@@ -82,24 +70,45 @@ class UsersAPI(Resource):
                 query = query.filter(User.gender=="male")
             elif user.search_settings.women_only:
                 query = query.filter(User.gender=="female")
-            query = query.filter(User.dob>=_age_to_day(
-                user.search_settings.lower_age_limit))
-            query = query.filter(User.dob<=_age_to_day(
-                user.search_settings.upper_age_limit))
+            query = query.filter(User.dob>=self._age_to_day(
+                user.search_settings.age_lower_limit))
+            query = query.filter(User.dob<=self._age_to_day(
+                user.search_settings.age_upper_limit))
         query = query.join(User.search_settings)
         query = query.filter(SearchSettings.activity_id==
                              user.search_settings.activity_id)
-        query = query.join(User.activity_settings)
-        for s in user.activity_settings.filter(Activity_Setting.activity_id==
-            user.search_settings.activity_id).all():
-            #make this show an intersection of lower and upper values, not equality
-            query = query\
-                .filter(and_(ActivitySetting.question_id==s.question_id,
-                             not_(or_(and_(ActivitySetting.lower_value < s.lower_value,
-                                           ActivitySetting.upper_value < s.lower_value,),
-                                      and_(ActivitySetting.lower_value > s.upper_value,
-                                           ActivitySetting.upper_value > s.upper_value)))))
 
+        #filter by activity preferences
+        or_expr = None
+        query = query.join(User.activity_settings)
+        for s in user.activity_settings\
+                     .join(ActivitySetting.question)\
+                     .filter(Question.activity_id==
+                            user.search_settings.activity_id).all():
+            #make this show an intersection of lower and upper values, not equality
+            and_expr = and_(ActivitySetting.question_id==s.question_id,
+                            not_(or_(and_(ActivitySetting.lower_value < s.lower_value,
+                                          ActivitySetting.upper_value < s.lower_value,),
+                                     and_(ActivitySetting.lower_value > s.upper_value,
+                                          ActivitySetting.upper_value > s.upper_value))))
+            or_expr = or_(or_expr,an_expr)
+        query = query.filter(or_expr)
+
+        #apply filters in args
+        if args.last_updated:
+            query = query.filter(User.last_updated<=args.last_updated)
+        query = User.query
+        if (args.radius and args.longitude and args.latitude):
+            #ensure GPS parameters are valid
+            if (args.radius <= 0) or not (-180 <= args.longitude <= 180)\
+                or not (-90 <= args.latitude <= 90):
+                return Response(status=400,message="Invalid GPS parameters")\
+                    .__dict__,400
+            point = func.ST_GeomFromText("POINT(%f %f)" %\
+                                         (args.longitude,args.latitude)) 
+            arg = func.ST_DWithin(point, User.location, args.radius, True)
+            query = query.filter(arg)
+            
         #ensure no repeat users as a result from an earlier join
         query = query.distinct(User.id)
 
