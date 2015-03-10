@@ -175,8 +175,7 @@ class UserAPI(Resource):
         """
         Get a user object by user_id
 
-        :reqheader Authorization: fb_id token needed for private values;
-            currently does nothing
+        :reqheader Authorization: Facebook token.
 
         :param int user_id: User to delete.
 

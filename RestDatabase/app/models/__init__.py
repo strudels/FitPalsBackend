@@ -24,12 +24,8 @@ class SearchSettings(db.Model):
 
     __table_args__ = (CheckConstraint("age_lower_limit < age_upper_limit"),)
     
-    @hybrid_property
-    def activity(self):
-        return Activity.query.get(self.activity_id)
-    
     def __init__(self,user,activity=None,friends_only=False,men_only=False,
-                 women_only=False,age_lower_limit=None,age_upper_limit=None):
+                 women_only=False,age_lower_limit=18,age_upper_limit=130):
         self.user = user
         self.activity = activity
         self.friends_only = friends_only
