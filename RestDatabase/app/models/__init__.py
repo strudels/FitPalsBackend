@@ -9,11 +9,58 @@ from sqlalchemy.ext.hybrid import hybrid_property
 
 from app import db
 
+class SearchSettings(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, ForeignKey("users.id"))
+    user = relationship("User",foreign_keys=[user_id])
+    activity_id = db.Column(db.Integer,nullable=True)
+    friends_only = db.Column(db.Boolean)
+    men_only = db.Column(db.Boolean)
+    women_only = db.Column(db.Boolean)
+    age_lower_limit = db.Column(db.Integer, default=18)
+    #oldest person to ever live was 122, 130 should be good enough...
+    # http://en.wikipedia.org/wiki/Oldest_people
+    age_upper_limit = db.Column(db.Integer, default=130)
+
+    __table_args__ = (CheckConstraint("age_lower_limit < age_upper_limit"),)
+    
+    @hybrid_property
+    def activity(self):
+        return Activity.query.get(self.activity_id)
+    
+    def __init__(self,user,activity=None,friends_only=False,men_only=False,
+                 women_only=False,age_lower_limit=None,age_upper_limit=None):
+        self.user = user
+        self.activity = activity
+        self.friends_only = friends_only
+        self.men_only = men_only
+        self.women_only = women_only
+        self.age_lower_limit = age_lower_limit
+        self.age_upper_limit = age_upper_limit
+        
+    def dict_repr(self):
+        return {
+            "id":self.id,
+            "user_id":self.user_id,
+            "activity_id":self.activity_id,
+            "friends_only":self.friends_only,
+            "men_only":self.men_only,
+            "women_only":self.women_only,
+            "age_lower_limit":self.age_lower_limit,
+            "age_upper_limit":self.age_upper_limit
+        }
+
+
+
 class User(db.Model):
     __tablename__ = "users"
     id = db.Column(db.Integer, primary_key=True)
     fb_id = db.Column(db.String(2048), unique=True, nullable=False)
     location = db.Column(Geography(geometry_type="POINT",srid=4326))
+    search_settings = relationship("SearchSettings",
+                                  uselist=False,
+                                  backref="parent",
+                                  cascade="save-update, merge, delete")
     about_me = db.Column(db.String(2048))
     name = db.Column(db.String(256))
     gender = db.Column(db.String(32))
@@ -40,6 +87,7 @@ class User(db.Model):
         self.fb_id = fb_id
         if longitude and latitude:
             self.location = WKTElement("POINT(%f %f)"%(longitude,latitude))
+        self.search_settings = SearchSettings(self)
         if about_me: self.about_me = about_me
         if dob: self.dob = dob
         self.available = available
@@ -59,40 +107,6 @@ class User(db.Model):
             dict_repr["fb_id"] = self.fb_id
             dict_repr["password"] = self.password
         return dict_repr
-
-class SearchSettings(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    activity_id = db.Column(db.Integer, ForeignKey("Activity.id"))
-    activity = relationship("Activity",foreign_keys=[activity_id])
-    friends_only = db.Column(db.Boolean)
-    men_only = db.Column(db.Boolean)
-    women_only = db.Column(db.Boolean)
-    age_lower_limit = db.Column(db.Integer, default=18)
-    #oldest person to ever live was 122, 130 should be good enough...
-    # http://en.wikipedia.org/wiki/Oldest_people
-    age_upper_limit = db.Column(db.Integer, default=130)
-
-    __table_args__ = (CheckConstraint("age_lower_limit < age_upper_limit"),)
-    
-    def __init__(self,activity,friends_only=False,men_only=False,
-                 women_only=False,age_lower_limit=None,age_upper_limit=None):
-        self.activity = activity
-        self.friends_only = friends_only
-        self.men_only = men_only
-        self.women_only = women_only
-        self.age_lower_limit = age_lower_limit
-        self.age_upper_limit = age_upper_limit
-        
-    def dict_repr(self):
-        return {
-            "id":self.id,
-            "activity_id":self.activity_id,
-            "friends_only":self.friends_only,
-            "men_only":self.men_only,
-            "women_only":self.women_only,
-            "age_lower_limit":self.age_lower_limit,
-            "age_upper_limit":self.age_upper_limit
-        }
 
 class Picture(db.Model):
     __tablename__ = "pictures"
