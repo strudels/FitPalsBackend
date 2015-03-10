@@ -65,7 +65,8 @@ class UsersAPI(Resource):
             if (args.radius <= 0) or not (-180 <= args.longitude <= 180)\
                 or not (-90 <= args.latitude <= 90):
                 return Response(status=400,message="Invalid GPS parameters"),400
-            point = func.ST_GeomFromText('POINT(-82.319645 27.924475)') 
+            point = func.ST_GeomFromText("POINT(%f %f)" %\
+                                         (args.longitude,latitude)) 
             arg = func.ST_DWithin(point, User.location, args.radius, True)
             query = query.filter(arg)
         #args.last_updated probably needs to be converted to a datetime
