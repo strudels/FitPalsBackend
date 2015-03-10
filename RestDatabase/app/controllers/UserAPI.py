@@ -53,7 +53,6 @@ class UsersAPI(Resource):
             type=int, location="args", required=False)
         args = parser.parse_args()
         
-        #ASK RICKY ABOUT PUTTING RADIUS IN SEARCHSETTINGS
         #get user by fb_id; if no user then 401
         user = User.query.filter(User.fb_id==args.Authorization).first()
         if not user:
@@ -98,7 +97,7 @@ class UsersAPI(Resource):
                              not_(or_(and_(ActivitySetting.lower_value < s.lower_value,
                                            ActivitySetting.upper_value < s.lower_value,),
                                       and_(ActivitySetting.lower_value > s.upper_value,
-                                           ActivitySetting.upper_value > s.upper_value))
+                                           ActivitySetting.upper_value > s.upper_value)))))
 
         #ensure no repeat users as a result from an earlier join
         query = query.distinct(User.id)

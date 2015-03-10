@@ -2,6 +2,7 @@ from sqlalchemy import ForeignKey, DateTime, UniqueConstraint, CheckConstraint
 import geoalchemy2
 from geoalchemy2.types import Geography
 from geoalchemy2.elements import WKTElement
+from geoalchemy2.functions import ST_X, ST_Y
 from flask import Flask
 from flask.ext.sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import relationship, backref, validates
@@ -77,6 +78,14 @@ class User(db.Model):
     @hybrid_property
     def password(self):
         return self.fb_id
+        
+    @hybrid_property
+    def longitude(self):
+        return db.session.query(ST_X(self.location)).first()[0]
+
+    @hybrid_property
+    def latitude(self):
+        return db.session.query(ST_Y(self.location)).first()[0]
 
     def __init__(self,fb_id,longitude=None,latitude=None,about_me=None,
         dob=None, available=False, name=None, gender=None):
@@ -93,6 +102,8 @@ class User(db.Model):
     def dict_repr(self,public=True):
         dict_repr = {
             "id":self.id,
+            "longitude":self.longitude,
+            "latitude":self.latitude,
             "search_settings_id":self.search_settings.id,
             "about_me":self.about_me,
             "dob":self.dob,
