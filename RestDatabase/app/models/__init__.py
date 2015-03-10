@@ -97,6 +97,7 @@ class User(db.Model):
     def dict_repr(self,public=True):
         dict_repr = {
             "id":self.id,
+            "search_settings_id":self.search_settings.id,
             "about_me":self.about_me,
             "dob":self.dob,
             "available":self.available,
