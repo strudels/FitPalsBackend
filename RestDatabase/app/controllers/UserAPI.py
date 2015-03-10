@@ -16,10 +16,15 @@ class UsersAPI(Resource):
     def _age_to_day(self,age):
         day = datetime.now().date() - relativedelta(years=age)
         return int(time.mktime(day.timetuple()))
+        
+    def today(self):
+        return int(time.mktime(datetime.now().date().timetuple()))
 
     def get(self):
         """
         Gets users that fall inside the specified parameters.
+        
+        :reqheader Authorization: Facebook token.
 
         :query float longitude: Specify a longitude to search by.
         :query float latitude: Specify a latitude to search by.
@@ -28,15 +33,12 @@ class UsersAPI(Resource):
         :query int offset: Return users after a given offset.
         :query int last_updated: Number of seconds since epoch;
             Return users that were updated before a given time.
-        :query string activity_name: Return users with matching activity_name
-        :query int-list question_ids: Must be same length as answers; specify
-            activity_setting questions to filter by.
-        :query float-list answers: Must be same length as question_ids; specify
-            answers for activity_settings questions to filter by.
 
         :status 200: Users found.
         """
         parser = reqparse.RequestParser()
+        parser.add_argument("Authorization",
+            type=str, location="headers", required=True)
         parser.add_argument("longitude",
             type=float, location='args', required=False)
         parser.add_argument("latitude",
@@ -50,15 +52,14 @@ class UsersAPI(Resource):
             type=int, location="args", required=False)
         parser.add_argument("last_updated",
             type=int, location="args", required=False)
-        parser.add_argument("activity_name",
-            type=str, location="args", required=False)
-        parser.add_argument("question_ids", type=int,
-            location="args", required=False, action="append", default=[])
-        parser.add_argument("answers", type=float,
-            location="args", required=False, action="append", default=[])
         args = parser.parse_args()
+        
+        #get user by fb_id; if no user then 401
+        user = User.query.filter(User.fb_id==args.Authorization).first()
+        if not user:
+            return Response(status=401,message="Not Authorized.").__dict__,401
 
-        #apply filters specified by user to matches
+        #apply filters in args
         query = User.query
         if (args.radius and args.longitude and args.latitude):
             #ensure GPS parameters are valid
@@ -68,15 +69,33 @@ class UsersAPI(Resource):
             point = func.ST_GeomFromText('POINT(-82.319645 27.924475)') 
             arg = func.ST_DWithin(point, User.location, args.radius, True)
             query = query.filter(arg)
-
         #args.last_updated probably needs to be converted to a datetime
         if args.last_updated:
             query = query.filter(User.last_update<=args.last_updated)
-
-        if args.activity_name:
-            query = query.join(User.activity_settings)\
-                .join(ActivitySetting.activity)\
-                .filter(Activity.name==args.activity_name)
+            
+        #filter by search settings
+        #STILL NEED TO FILTER BY FRIENDS
+        if user.search_settings.friends_only:
+            pass
+        else:
+            if user.search_settings.men_only:
+                query = query.filter(User.gender=="male")
+            elif user.search_settings.women_only:
+                query = query.filter(User.gender=="female")
+            query = query.filter(User.dob>=_age_to_day(
+                user.search_settings.lower_age_limit))
+            query = query.filter(User.dob<=_age_to_day(
+                user.search_settings.upper_age_limit))
+        query = query.join(User.search_settings)
+        query = query.filter(SearchSettings.activity_id==
+                             user.search_settings.activity_id)
+        query = query.join(User.activity_settings)
+        for s in user.activity_settings.filter(Activity_Setting.activity_id==
+            user.search_settings.activity_id).all():
+            #make this show an intersection of lower and upper values, not equality
+            query = query.filter(and_(ActivitySetting.question_id==s.question_id,
+                                      or_(ActivitySetting.lower_value==s.lower_value,
+                                          ActivitySetting.upper_value==s.upper_value)))
 
         #right now this only matches if questions have the same answers
         if len(args.question_ids) == len(args.answers):
