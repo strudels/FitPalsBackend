@@ -21,50 +21,46 @@ class MatchesAPI(Resource):
         """
         Get matches for a user
 
-        :reqheader Authorization: fb_id token needed here
+        :reqheader Authorization: facebook token
 
-        :query int user_id: User id for owner of matches.
         :query bool liked: If specified,
-            returns matches that correspond with liked.
+            returns matches that correspond with liked. Set to 0 for False,
+            1 for True.
 
-        :status 404: User not found.
+        :status 401: Not Authorized.
         :status 200: Matches found.
         """
         parser = reqparse.RequestParser()
-        parser.add_argument("user_id",
-            type=int, location="args", required=True)
         parser.add_argument("liked",
-            type=bool, location="args", required=False)
+            type=int, location="args", required=False)
         parser.add_argument("Authorization",
             type=str, location="headers", required=True)
         args = parser.parse_args()
 
         #get user from the database
-        user = User.query.get(args.user_id)
+        user = User.query.filter(User.fb_id==args.Authorization).first()
         if not user:
-            return Response(status=404, message="User not found.").__dict__,404
-            
-        #ensure user is authorized
-        if user.fb_id != args.Authorization:
             return Response(status=401,
                 message="Not Authorized.").__dict__, 401
-
+            
         #apply liked filter if specified
         query = user.matches
         if args.liked != None:
-            query = query.filter(Match.liked==args.liked)
+            query = query.filter(Match.liked==bool(args.liked))
 
         return Response(status=200, message="Matches found.",
             value=[m.dict_repr() for m in query.all()]).__dict__,200
 
     def post(self):
         """
-        :reqheader Authorization: fb_id token needed here
+        Create new match
+
+        :reqheader Authorization: facebook token
 
         :form int user_id: User id for owner of matches.
         :form int matched_user_id: User id for matched user.
         :form bool liked: If specified,
-            returns matches that correspond with liked.
+            sets new match liked. Set to 0 for False, 1 for True.
 
         :status 400: Could not create match.
         :status 401: Not Authorized.
@@ -78,7 +74,7 @@ class MatchesAPI(Resource):
         parser.add_argument("match_user_id",
             type=int, location="form", required=True)
         parser.add_argument("liked",
-            type=bool, location="form", required=True)
+            type=int, location="form", required=True)
         parser.add_argument("Authorization",
             type=str, location="headers", required=True)
         args = parser.parse_args()
@@ -89,7 +85,7 @@ class MatchesAPI(Resource):
             return Response(status=404, message="User not found.").__dict__,404
         match_user = User.query.get(args.match_user_id)
         if not match_user:
-            return Response(status=404, message="Matched user not found.")\
+            return Response(status=404, message="Match user not found.")\
                 .__dict__,404
 
         #ensure user is authorized
@@ -99,7 +95,7 @@ class MatchesAPI(Resource):
 
         #add match to user's matches
         try:
-            match = Match(user, match_user, args.liked)
+            match = Match(user, match_user, bool(args.liked))
             user.matches.append(match)
             db.session.commit()
         except:
@@ -127,7 +123,9 @@ class MatchesAPI(Resource):
 class MatchAPI(Resource):
     def delete(self, match_id):
         """
-        :reqheader Authorization: fb_id token needed here
+        Delete match
+
+        :reqheader Authorization: facebook token
 
         :param int match_id: Id for specific match.
 
