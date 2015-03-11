@@ -2,10 +2,6 @@ from tests.utils.FitPalsTestCase import *
 
 class MatchApiTestCase(FitPalsTestCase):
     def test_add_match(self):
-        #log in test_user1 to chat web socke
-        client = socketio.test_client(app)
-        client.emit("join", self.test_user1)
-
         fb_id = self.test_user1["fb_id"]
         resp = self.app.post("/matches",
                              data={"user_id":self.test_user1["id"],
@@ -15,18 +11,12 @@ class MatchApiTestCase(FitPalsTestCase):
         assert resp.status_code == 201
         assert json.loads(resp.data)["message"]=="Match created."
 
-        #ensure that test_user1 websocket client got update
-        received = client.get_received()
+        #ensure that test_user1 websocket self.websocket_client1 got update
+        received = self.websocket_client1.get_received()
         assert len(received) != 0
         assert received[-1]["name"] == "match_added"
 
     def test_add_match_mutual_match(self):
-        #log in test_user1 to chat web socke
-        client = socketio.test_client(app)
-        client.emit("join", self.test_user1)
-        client2 = socketio.test_client(app)
-        client2.emit("join", self.test_user2)
-
         fb_id = self.test_user1["fb_id"]
         resp = self.app.post("/matches",
                              data={"user_id":self.test_user1["id"],
@@ -41,13 +31,13 @@ class MatchApiTestCase(FitPalsTestCase):
                                    "liked":True},
                              headers={"Authorization":fb_id2})
 
-        #ensure that test_user1 websocket client got update
-        received = client.get_received()
+        #ensure that test_user1 websocket self.websocket_client1 got update
+        received = self.websocket_client1.get_received()
         assert len(received) != 0
         assert received[-1]["name"] == "mutual_match_added"
 
-        #ensure that test_user2 websocket client got update
-        received = client2.get_received()
+        #ensure that test_user2 websocket self.websocket_client1 got update
+        received = self.websocket_client2.get_received()
         assert len(received) != 0
         assert received[-1]["name"] == "mutual_match_added"
         
@@ -121,10 +111,6 @@ class MatchApiTestCase(FitPalsTestCase):
         assert json.loads(resp.data)["message"]=="Matches found."
         
     def test_delete_match(self):
-        #log in test_user1 to chat web socke
-        client = socketio.test_client(app)
-        client.emit("join", self.test_user1)
-
         #create match
         fb_id = self.test_user1["fb_id"]
         resp = self.app.post("/matches",
@@ -140,8 +126,8 @@ class MatchApiTestCase(FitPalsTestCase):
         assert resp.status_code == 200
         assert json.loads(resp.data)["message"]=="Match deleted."
 
-        #ensure that test_user1 websocket client got update
-        received = client.get_received()
+        #ensure that test_user1 websocket self.websocket_client1 got update
+        received = self.websocket_client1.get_received()
         assert len(received) != 0
         assert received[-1]["name"] == "match_deleted"
         
