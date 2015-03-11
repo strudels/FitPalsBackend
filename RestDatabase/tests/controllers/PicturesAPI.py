@@ -1,41 +1,12 @@
-import unittest
-import simplejson as json
-from app import app,db,reset_app,socketio
-from app.models import *
-from datetime import date
+from tests.utils.FitPalsTestCase import *
 
-class PicturesApiTestCase(unittest.TestCase):
-    def setUp(self):
-        reset_app()
-        app.testing = True
-        self.app = app.test_client()
-
-        self.test_user1 = User.query.filter(User.fb_id=="fbTestUser1").first()
-        if not self.test_user1:
-            self.test_user1 = User("fbTestUser1",dob=date(1990,1,1))
-            db.session.add(self.test_user1)
-            db.session.commit()
-        self.test_user1_private = self.test_user1.dict_repr(public=False)
-        self.test_user1 = self.test_user1.dict_repr()
-
-        self.test_user2 = User.query.filter(User.fb_id=="fbTestUser2").first()
-        if not self.test_user2:
-            self.test_user2 = User("fbTestUser2",dob=date(1990,1,1))
-            db.session.add(self.test_user2)
-            db.session.commit()
-        self.test_user2_private = self.test_user2.dict_repr(public=False)
-        self.test_user2 = self.test_user2.dict_repr()
-
+class PicturesApiTestCase(FitPalsTestCase):
     def tearDown(self):
         reset_app()
 
     def test_add_picture(self):
-        #log in test_user1 to chat web socket
-        client = socketio.test_client(app)
-        client.emit("join", self.test_user1_private)
-
         #add picture
-        fb_id = self.test_user1_private["fb_id"]
+        fb_id = self.test_user1["fb_id"]
         resp = self.app.post("/pictures",
                              data={"user_id":self.test_user1["id"],
                                    "uri":"some uri",
@@ -48,13 +19,13 @@ class PicturesApiTestCase(unittest.TestCase):
         assert resp.status_code==201
         assert json.loads(resp.data)["message"]=="Picture added."
 
-        #ensure that test_user1 websocket client got update
-        received = client.get_received()
+        #ensure that test_user1 websocket self.websocket_client1 got update
+        received = self.websocket_client1.get_received()
         assert len(received) != 0
         assert received[-1]["name"] == "picture_added"
 
     def test_add_picture_user_not_found(self):
-        fb_id = self.test_user1_private["fb_id"]
+        fb_id = self.test_user1["fb_id"]
         resp = self.app.post("/pictures",
                              data={"user_id":0,
                                    "uri":"some uri",
@@ -68,7 +39,7 @@ class PicturesApiTestCase(unittest.TestCase):
         assert json.loads(resp.data)["message"]=="User not found."
 
     def test_add_picture_not_authorized(self):
-        fb_id = self.test_user1_private["fb_id"] + "junk"
+        fb_id = self.test_user1["fb_id"] + "junk"
         resp = self.app.post("/pictures",
                              data={"user_id":self.test_user1["id"],
                                    "uri":"some uri",
@@ -82,7 +53,7 @@ class PicturesApiTestCase(unittest.TestCase):
         assert json.loads(resp.data)["message"]=="Not Authorized."
 
     def test_add_picture_invalid_data(self):
-        fb_id = self.test_user1_private["fb_id"]
+        fb_id = self.test_user1["fb_id"]
         resp = self.app.post("/pictures",
                              data={"user_id":self.test_user1["id"],
                                    "uri":"some uri",
@@ -106,12 +77,8 @@ class PicturesApiTestCase(unittest.TestCase):
         assert json.loads(resp.data)["message"]=="User not found."
         
     def test_update_picture(self):
-        #log in test_user1 to chat web socket
-        client = socketio.test_client(app)
-        client.emit("join", self.test_user1_private)
-
         #create picture 1
-        fb_id = self.test_user1_private["fb_id"]
+        fb_id = self.test_user1["fb_id"]
         resp = self.app.post("/pictures",
                              data={"user_id":self.test_user1["id"],
                                    "uri":"some uri",
@@ -124,7 +91,7 @@ class PicturesApiTestCase(unittest.TestCase):
         pic1_id = json.loads(resp.data)["value"]["id"]
 
         #create picture 2
-        fb_id = self.test_user1_private["fb_id"]
+        fb_id = self.test_user1["fb_id"]
         resp = self.app.post("/pictures",
                              data={"user_id":self.test_user1["id"],
                                    "uri":"some uri 2",
@@ -148,13 +115,13 @@ class PicturesApiTestCase(unittest.TestCase):
         assert resp.status_code==202
         assert json.loads(resp.data)["message"]=="Picture updated."
 
-        #ensure that test_user1 websocket client got update
-        received = client.get_received()
+        #ensure that test_user1 websocket self.websocket_client1 got update
+        received = self.websocket_client1.get_received()
         assert len(received) != 0
         assert received[-1]["name"] == "picture_updated"
 
     def test_update_picture_not_found(self):
-        fb_id = self.test_user1_private["fb_id"]
+        fb_id = self.test_user1["fb_id"]
         resp = self.app.put("/pictures/%d" % 0,
                              data={"uri":"some other uri",
                                    "ui_index":0,
@@ -168,7 +135,7 @@ class PicturesApiTestCase(unittest.TestCase):
 
     def test_update_picture_not_authorized(self):
         #create picture 1
-        fb_id = self.test_user1_private["fb_id"]
+        fb_id = self.test_user1["fb_id"]
         resp = self.app.post("/pictures",
                              data={"user_id":self.test_user1["id"],
                                    "uri":"some uri",
@@ -194,7 +161,7 @@ class PicturesApiTestCase(unittest.TestCase):
 
     def test_update_picture_invalid(self):
         #create picture 1
-        fb_id = self.test_user1_private["fb_id"]
+        fb_id = self.test_user1["fb_id"]
         resp = self.app.post("/pictures",
                              data={"user_id":self.test_user1["id"],
                                    "uri":"some uri",
@@ -219,11 +186,7 @@ class PicturesApiTestCase(unittest.TestCase):
         assert json.loads(resp.data)["message"]=="Picture data invalid."
        
     def test_delete_picture(self):
-        fb_id = self.test_user1_private["fb_id"]
-
-        #log in test_user1 to chat web socket
-        client = socketio.test_client(app)
-        client.emit("join", self.test_user1_private)
+        fb_id = self.test_user1["fb_id"]
 
         #add picture to delete
         resp = self.app.post("/pictures",
@@ -244,13 +207,13 @@ class PicturesApiTestCase(unittest.TestCase):
         assert resp.status_code==200
         assert json.loads(resp.data)["message"]=="Picture removed."
 
-        #ensure that test_user1 websocket client got update
-        received = client.get_received()
+        #ensure that test_user1 websocket self.websocket_client1 got update
+        received = self.websocket_client1.get_received()
         assert len(received) != 0
         assert received[-1]["name"] == "picture_deleted"
 
     def test_delete_picture_not_found(self):
-        fb_id = self.test_user1_private["fb_id"]
+        fb_id = self.test_user1["fb_id"]
         #delete picture
         resp = self.app.delete("/pictures/%d" % 0,
             headers={"Content-Type": "application/x-www-form-urlencoded",
@@ -259,7 +222,7 @@ class PicturesApiTestCase(unittest.TestCase):
         assert json.loads(resp.data)["message"]=="Picture not found."
 
     def test_delete_picture_not_authorized(self):
-        fb_id = self.test_user1_private["fb_id"]
+        fb_id = self.test_user1["fb_id"]
 
         #add picture to delete
         resp = self.app.post("/pictures",
