@@ -26,22 +26,22 @@ class UserActivitySettingsAPI(Resource):
     #get's all activities for a specific user
     def get(self):
         """
-        Get all activity settings for a user
+        Get all activity settings for a user, specified by Authorization
 
-        :query int user_id: User to get activity settings for
+        :reqheader Authorization: facebook token
 
-        :status 404: User not found.
+        :status 401: Not Authorized.
         :status 200: Activity settings found.
         """
         parser = reqparse.RequestParser()
-        parser.add_argument("user_id",
-            type=int, location="args", required=True)
+        parser.add_argument("Authorization",
+            type=str, location="headers", required=True)
         args = parser.parse_args()
 
         #get user via user_id
-        user = User.query.get(args.user_id)
+        user = User.query.filter(User.fb_id == args.Authorization).first()
         if not user:
-            return Response(status=404,message="User not found.").__dict__,404
+            return Response(status=401,message="Not Authorized.").__dict__,401
 
         return Response(status=200, message="Activity settings found.",
             value=[a.dict_repr() for a in user.activity_settings]).__dict__,200
@@ -51,7 +51,7 @@ class UserActivitySettingsAPI(Resource):
         """
         Post new activity setting for user
 
-        :reqheader Authorization: fb_id token needed here
+        :reqheader Authorization: facebook token
 
         :form int user_id: Id of user.
         :form int question_id: Id of question.
@@ -59,7 +59,10 @@ class UserActivitySettingsAPI(Resource):
         :form float upper_value: Upper value answer for question.
 
         :status 401: Not Authorized.
-        :status 202: Activity setting created.
+        :status 404: Question not found.
+        :status 404: User not found.
+        :status 500: Could not create activity setting.
+        :status 201: Activity setting created.
         """
 
         parser = reqparse.RequestParser()

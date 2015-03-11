@@ -30,7 +30,7 @@ class ActivitySettingsAPITestCase(FitPalsTestCase):
 
         #get activity settings
         resp =\
-            self.app.get("/activity_settings?user_id=%d" % self.test_user1["id"])
+            self.app.get("/activity_settings", headers={"Authorization":fb_id})
         assert resp.status_code==200
         assert json.loads(resp.data)["message"]=="Activity settings found."
         setting = json.loads(resp.data)["value"][0]
@@ -41,10 +41,12 @@ class ActivitySettingsAPITestCase(FitPalsTestCase):
         assert setting["upper_value"] == 20.6
 
     def test_get_activitys_setting_user_not_found(self):
+        fb_id = self.test_user1["fb_id"]
         resp =\
-            self.app.get("/activity_settings?user_id=%d" % 0)
-        assert resp.status_code==404
-        assert json.loads(resp.data)["message"]=="User not found."
+            self.app.get("/activity_settings",
+                         headers={"Authorization":fb_id + "junk"})
+        assert resp.status_code==401
+        assert json.loads(resp.data)["message"]=="Not Authorized."
         
     def test_create_activity_setting(self):
         #create activity
@@ -58,11 +60,18 @@ class ActivitySettingsAPITestCase(FitPalsTestCase):
                              headers = {"Authorization":fb_id})
         assert resp.status_code==201
         assert json.loads(resp.data)["message"]=="Activity setting created."
+        setting = json.loads(resp.data)["value"]
+        assert setting["id"]==1
+        assert setting["user_id"]==self.test_user1["id"]
+        assert setting["question_id"] == activity["questions"][0]["id"]
+        assert setting["lower_value"] == 8.3
+        assert setting["upper_value"] == 20.6
 
         #ensure that test_user1 websocket self.websocket_client1 got update
         received = self.websocket_client1.get_received()
         assert len(received) != 0
         assert received[-1]["name"] == "activity_setting_added"
+        assert received[-1]["args"][0] == setting
         
     def test_create_activity_setting_question_not_found(self):
         fb_id = self.test_user1["fb_id"]
