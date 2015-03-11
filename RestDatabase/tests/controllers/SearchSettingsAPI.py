@@ -37,13 +37,21 @@ class SearchSettingsApiTestCase(FitPalsTestCase):
     def test_update_search_settings(self):
         fb_id = self.test_user1["fb_id"]
         setting_id = self.test_user1["search_settings_id"]
-        resp = self.app.put("/search_settings/%d" % setting_id,
+
+        #get settings previous state
+        resp = self.app.get("/search_settings/%d" % setting_id,
+                            headers={"Authorization":fb_id})
+        settings = json.loads(resp.data)["value"]
+
+        #update settings
+        resp = self.app.put("/search_settings/%d" % settings["id"],
                             data={"men_only":0, "women_only":1},
                             headers={"Authorization":fb_id})
         assert resp.status_code == 202
         assert json.loads(resp.data)["message"] == "Search settings updated."
-        assert json.loads(resp.data)["value"]["men_only"] == False
-        assert json.loads(resp.data)["value"]["women_only"] == True
+        settings["men_only"] = False
+        settings["women_only"] = True
+        assert json.loads(resp.data)["value"] == settings
 
         #ensure that test_user websocket self.websocket_client1 got new user update
         received = self.websocket_client1.get_received()

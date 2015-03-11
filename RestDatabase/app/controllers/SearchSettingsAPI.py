@@ -51,7 +51,7 @@ class SearchSettingsAPI(Resource):
         NOTE bool fields friends_only, men_only, and women_only are encoded as int
         because reqparse is dumb and I should've used something else.
 
-        :reqheader Authorization: Facebook token.
+        :reqheader Authorization: facebook token
         
         :param int settings_id: Id of search settings.
         
