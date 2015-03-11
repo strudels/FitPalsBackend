@@ -118,7 +118,7 @@ class ActivitySettingAPI(Resource):
         """
         Get specific activity setting
         
-        :reqheader Authorization: fb_id token needed here
+        :reqheader Authorization: facebook token
 
         :status 401: Not Authorized.
         :status 404: Activity setting not found.
@@ -146,7 +146,7 @@ class ActivitySettingAPI(Resource):
         """
         Update specific activity setting
 
-        :reqheader Authorization: fb_id token needed here
+        :reqheader Authorization: facebook token
 
         :form float lower_value: Lower value answer to question.
         :form float upper_value: Upper value answer to question.
@@ -194,13 +194,15 @@ class ActivitySettingAPI(Resource):
     #delete user's specific activity
     def delete(self, setting_id):
         """
-        Delete user's activity settings for a specific activity
+        Delete Activity Setting
 
-        :reqheader Authorization: fb_id token needed here
+        :reqheader Authorization: facebook token
 
         :param int setting_id: Id of activity setting.
 
-        :status 400: User not found.
+        :status 401: Not Authorized.
+        :status 404: Activity setting not found.
+        :status 500: Internal error. Changes not committed.
         :status 202: Activity setting deleted.
         """
 
@@ -220,8 +222,14 @@ class ActivitySettingAPI(Resource):
         if setting.user.fb_id != args.Authorization:
             return Response(status=401,message="Not Authorized.").__dict__,401
             
-        setting.user.activity_settings.remove(setting)
-        db.session.commit()
+        try:
+            setting.user.activity_settings.remove(setting)
+            db.session.delete(setting)
+            db.session.commit()
+        except:
+            db.session.rollback()
+            return Response(status=500,
+                message="Internal error. Changes not committed.").__dict__,500
 
         socketio.emit("activity_setting_deleted",setting_id,
                       room=str(user.id))

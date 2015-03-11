@@ -296,3 +296,9 @@ class ActivitySettingsAPITestCase(FitPalsTestCase):
                                headers={"Authorization":fb_id})
         assert resp.status_code==200
         assert json.loads(resp.data)["message"]=="Activity setting deleted."
+
+        #ensure setting id was deleted
+        fb_id = self.test_user1["fb_id"]
+        resp = self.app.get("/activity_settings/%d" % setting_id,
+                            headers={"Authorization":fb_id})
+        assert resp.status_code==404

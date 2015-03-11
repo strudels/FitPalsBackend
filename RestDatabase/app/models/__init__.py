@@ -73,7 +73,6 @@ class User(db.Model):
         cascade="save-update, merge, delete")
     activity_settings = relationship("ActivitySetting", lazy="dynamic",
         cascade="save-update, merge, delete")
-    
 
     @hybrid_property
     def password(self):
