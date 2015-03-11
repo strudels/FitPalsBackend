@@ -2,17 +2,44 @@ from tests.utils.FitPalsTestCase import *
 
 class UsersApiTestCase(FitPalsTestCase):
     def test_create_user(self):
-        resp = self.app.post("/users",data={"fb_id":"some fb_id",
-                                            "dob_year":1990,
-                                            "dob_month":2,
-                                            "dob_day":17})
+        user = {"fb_id":"some fb_id",
+                "dob_year":1990,
+                "dob_month":2,
+                "dob_day":17,
+                "longitude":20.0,
+                "latitude":20.0}
+        resp = self.app.post("/users",data=user)
         assert resp.status_code==201
         assert json.loads(resp.data)["message"] == "User created."
+        received_user = json.loads(resp.data)["value"]
+        for key in user.keys():
+            assert user[key] == received_user[key]
 
     def test_create_user_found(self):
         resp = self.app.post("/users",data={"fb_id":self.test_user1["fb_id"]})
         assert resp.status_code==200
         assert json.loads(resp.data)["message"] == "User found."
+        
+    def test_create_user_no_dob(self):
+        user = {"fb_id":"some fb_id",
+                "dob_month":2,
+                "dob_day":17,
+                "longitude":20.0,
+                "latitude":20.0}
+        resp = self.app.post("/users",data=user)
+        assert resp.status_code==400
+        assert json.loads(resp.data)["message"] == "Must specify DOB."
+        
+    def test_create_user_bad_coords(self):
+        user = {"fb_id":"some fb_id",
+                "dob_year":1990,
+                "dob_month":2,
+                "dob_day":17,
+                "longitude":200.0,
+                "latitude":200.0}
+        resp = self.app.post("/users",data=user)
+        assert resp.status_code==400
+        assert json.loads(resp.data)["message"] == "Coordinates invalid."
 
     def test_get_users(self):
         fb_id = self.test_user1["fb_id"]

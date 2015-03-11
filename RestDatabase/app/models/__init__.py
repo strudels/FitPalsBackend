@@ -104,7 +104,7 @@ class User(db.Model):
     def __init__(self,fb_id,longitude=None,latitude=None,about_me=None,
         dob=None, available=False, name=None, gender=None):
         self.fb_id = fb_id
-        if longitude and latitude:
+        if longitude!=None and latitude!=None:
             self.location = WKTElement("POINT(%f %f)"%(longitude,latitude))
         self.search_settings = SearchSettings(self)
         if about_me: self.about_me = about_me

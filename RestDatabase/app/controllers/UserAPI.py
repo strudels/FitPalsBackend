@@ -22,9 +22,10 @@ class UsersAPI(Resource):
 
     def get(self):
         """
-        Gets users that fall inside the specified parameters.
+        Gets users that fall inside the specified parameters
+             and the authorized user's search settings
         
-        :reqheader Authorization: Facebook token.
+        :reqheader Authorization: facebook token
 
         :query float longitude: Specify a longitude to search by.
         :query float latitude: Specify a latitude to search by.
@@ -130,14 +131,18 @@ class UsersAPI(Resource):
         :form float latitude: Specify a latitude to search by.
         :form str about_me: "About me" description of the user.
         :form str primary_picture: Picture ID string for primary picture.
-        :form int dob: Integer number to represent DOB. THIS MAY CHANGE!
+        :form int dob_year: Integer number to represent DOB year.
+        :form int dob_month: Integer number to represent DOB month.
+        :form int dob_day: Integer number to represent DOB day.
         :form bool available: Specify whether or not user is available.
         :form str name: Specify user name
         :form str gender: Specify user gender; I DON'T THINK THIS WORKS
 
         :status 200: User found.
         :status 201: User created.
+        :status 400: Must specify DOB.
         :status 400: Could not create user.
+        :status 500: Internal error. Changes not committed.
         """
 
         parser = reqparse.RequestParser()
@@ -176,20 +181,31 @@ class UsersAPI(Resource):
         #ensure user specifys date of birth
         if args.dob_year==None or args.dob_month==None or args.dob_day==None:
             return Response(status=400, message="Must specify DOB.").__dict__,400
+            
+        if args.longitude!=None and args.latitude!=None\
+            and (not (-180 <= args.longitude <= 180)\
+                 or not (-90 <= args.latitude <= 90)):
+            return Response(status=400, message="Coordinates invalid.")\
+                .__dict__,400
 
-        #create new user
-        new_user = User(
-            fb_id=args.fb_id,
-            longitude=args.longitude,
-            latitude=args.latitude,
-            about_me=args.about_me,
-            dob=date(args.dob_year,args.dob_month,args.dob_day),
-            available=args.available,
-            name=args.name,
-            gender=args.gender
-        )
-        db.session.add(new_user)
-        db.session.commit()
+        #add user to db
+        try:
+            new_user = User(
+                fb_id=args.fb_id,
+                longitude=args.longitude,
+                latitude=args.latitude,
+                about_me=args.about_me,
+                dob=date(args.dob_year,args.dob_month,args.dob_day),
+                available=args.available,
+                name=args.name,
+                gender=args.gender
+            )
+            db.session.add(new_user)
+            db.session.commit()
+        except:
+            db.session.rollback()
+            return Response(status=500,
+                message="Internal error. Changes not committed.").__dict__,500
 
         #return json for new user
         return Response(status=201,
