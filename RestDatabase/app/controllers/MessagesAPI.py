@@ -240,10 +240,6 @@ class MessageThreadAPI(Resource):
         else:
             return Response(status=401,message="Not Authorized.").__dict__,401
             
-        #if both user's have opt'ed to delete the thread, delete from db
-        if thread.user1_deleted and thread.user2_deleted:
-            thread.delete()
-            
         #commit changes to the db
         db.session.commit()
         

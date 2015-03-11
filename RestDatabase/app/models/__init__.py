@@ -1,4 +1,4 @@
-from sqlalchemy import ForeignKey, DateTime, UniqueConstraint, CheckConstraint
+from sqlalchemy import ForeignKey, DateTime, UniqueConstraint, CheckConstraint, event
 import geoalchemy2
 from geoalchemy2.types import Geography
 from geoalchemy2.elements import WKTElement
@@ -47,8 +47,6 @@ class SearchSettings(db.Model):
             "age_upper_limit":self.age_upper_limit
         }
 
-
-
 class User(db.Model):
     __tablename__ = "users"
     id = db.Column(db.Integer, primary_key=True)
@@ -74,6 +72,7 @@ class User(db.Model):
         cascade="save-update, merge, delete")
     activity_settings = relationship("ActivitySetting", lazy="dynamic",
         cascade="save-update, merge, delete")
+    
 
     @hybrid_property
     def password(self):
@@ -129,6 +128,16 @@ class User(db.Model):
             dict_repr["fb_id"] = self.fb_id
             dict_repr["password"] = self.password
         return dict_repr
+        
+@event.listens_for(User, "before_delete")
+def user_message_thread_cascade_delete(mapper, connection, user):
+    #delete all message threads where user is thread.user1
+    threads = MessageThread.query.filter(MessageThread.user1_id==user.id).all()
+    for thread in threads: thread.user1_deleted = True
+
+    #delete all message threads where user is thread.user2
+    threads = MessageThread.query.filter(MessageThread.user2_id==user.id).all()
+    for thread in threads: thread.user2_deleted = True
 
 class Picture(db.Model):
     __tablename__ = "pictures"
@@ -331,3 +340,13 @@ class MessageThread(db.Model):
             "user1_id":self.user1_id,
             "user2_id":self.user2_id,
         }
+
+#These 2 events ensure that a MessageThread gets deleted if both it's
+# user1_deleted and user2_deleted fields are True
+@event.listens_for(MessageThread.user1_deleted, "set")
+def message_threads_user1_delete(thread, value, old_value, initiator):
+        if thread.user2_deleted: db.session.delete(thread)
+
+@event.listens_for(MessageThread.user2_deleted, "set")
+def message_threads_user2_delete(thread, value, old_value, initiator):
+        if thread.user1_deleted: db.session.delete(thread)
