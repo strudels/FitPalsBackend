@@ -7,17 +7,22 @@ class PicturesApiTestCase(FitPalsTestCase):
     def test_add_picture(self):
         #add picture
         fb_id = self.test_user1["fb_id"]
+        picture = {"user_id":self.test_user1["id"],
+                   "uri":"some uri",
+                   "ui_index":0,
+                   "top":0.5,
+                   "bottom":0.5,
+                   "left":0.5,
+                   "right":0.5}
         resp = self.app.post("/pictures",
-                             data={"user_id":self.test_user1["id"],
-                                   "uri":"some uri",
-                                   "ui_index":0,
-                                   "top":0.5,
-                                   "bottom":0.5,
-                                   "left":0.5,
-                                   "right":0.5},
+                             data=picture,
                              headers={"Authorization":fb_id})
         assert resp.status_code==201
         assert json.loads(resp.data)["message"]=="Picture added."
+        picture_added = json.loads(resp.data)["value"]
+        assert type(picture_added["id"]) == int
+        picture["id"] = picture_added["id"]
+        assert picture == picture_added
 
         #ensure that test_user1 websocket self.websocket_client1 got update
         received = self.websocket_client1.get_received()

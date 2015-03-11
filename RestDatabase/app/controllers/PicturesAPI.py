@@ -38,9 +38,9 @@ class PicturesAPI(Resource):
 
     def post(self):
         """
-        Post new (secondary)picture for a user.
+        Post new picture.
 
-        :reqheader Authorization: fb_id token needed here
+        :reqheader Authorization: facebook token
 
         :form int user_id: Id of user.
         :form str uri: Facebook Picture Id string.
@@ -52,7 +52,7 @@ class PicturesAPI(Resource):
 
         :status 400: Picture data invalid.
         :status 401: Not Authorized.
-        :status 404: Could not find user.
+        :status 404: User not found.
         :status 201: Picture added.
         """
 
