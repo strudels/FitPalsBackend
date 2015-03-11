@@ -1,23 +1,6 @@
-import unittest
-import simplejson as json
-from app import app,db,socketio,reset_app
-from app.models import *
-from datetime import date
+from tests.utils.FitPalsTestCase import *
 
-class SearchSettingsApiTestCase(unittest.TestCase):
-    def setUp(self):
-        app.testing = True
-        self.app = app.test_client()
-
-        self.test_user1 = User.query.filter(User.fb_id=="fbTestUser1").first()
-        if not self.test_user1:
-            self.test_user1 = User("fbTestUser1",dob=date(1990,1,1))
-            db.session.add(self.test_user1)
-            db.session.commit()
-            self.test_user1 = self.test_user1.dict_repr(public=False)
-    def tearDown(self):
-        reset_app()
-        
+class SearchSettingsApiTestCase(FitPalsTestCase):
     def test_get_search_settings(self):
         fb_id = self.test_user1["fb_id"]
         setting_id = self.test_user1["search_settings_id"]
@@ -43,10 +26,6 @@ class SearchSettingsApiTestCase(unittest.TestCase):
         assert json.loads(resp.data)["message"] == "Not Authorized."
 
     def test_update_search_settings(self):
-        #log in test_user1 to chat web socket
-        client = socketio.test_client(app)
-        client.emit("join", self.test_user1)
-
         fb_id = self.test_user1["fb_id"]
         setting_id = self.test_user1["search_settings_id"]
         resp = self.app.put("/search_settings/%d" % setting_id,
@@ -57,8 +36,8 @@ class SearchSettingsApiTestCase(unittest.TestCase):
         assert json.loads(resp.data)["value"]["men_only"] == False
         assert json.loads(resp.data)["value"]["women_only"] == True
 
-        #ensure that test_user websocket client got new user update
-        received = client.get_received()
+        #ensure that test_user websocket self.websocket_client1 got new user update
+        received = self.websocket_client1.get_received()
         assert len(received) != 0
         assert received[-1]["name"] == "search_settings_update"
         assert received[-1]["args"][0] == json.loads(resp.data)["value"]
