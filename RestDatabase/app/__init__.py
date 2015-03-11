@@ -43,6 +43,7 @@ from controllers.MatchAPI import *
 from controllers.MessagesAPI import *
 from controllers.PicturesAPI import *
 from controllers.SearchSettingsAPI import *
+from controllers.FriendsAPI import *
 
 #import websocket events
 from websockets import *

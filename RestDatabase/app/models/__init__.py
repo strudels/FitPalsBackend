@@ -151,20 +151,20 @@ class Friend(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, ForeignKey("users.id"))
     user = relationship("User",foreign_keys=[user_id])
-    friend_id = db.Column(db.Integer, ForeignKey("users.id"))
-    friend = relationship("User",foreign_keys=[friend_id])
+    friend_user_id = db.Column(db.Integer, ForeignKey("users.id"))
+    friend_user = relationship("User",foreign_keys=[friend_user_id])
     
-    __table_args__ = (UniqueConstraint("user_id","friend_id"),)
+    __table_args__ = (UniqueConstraint("user_id","friend_user_id"),)
     
-    def __init__(self, user, friend):
+    def __init__(self, user, friend_user):
         self.user = user
-        self.friend = friend
+        self.friend_user = friend_user
 
     def dict_repr(self):
         return {
             "id": self.id,
             "user_id": self.user_id,
-            "friend_id": self.friend_id
+            "friend_user_id": self.friend_user_id
         }
 
 class Picture(db.Model):

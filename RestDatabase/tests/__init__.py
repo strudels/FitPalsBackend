@@ -5,6 +5,7 @@ from controllers.MatchAPI import *
 from controllers.DevicesAPI import *
 from controllers.ActivityAPI import *
 from controllers.SearchSettingsAPI import *
+from controllers.FriendsAPI import *
 
 from websockets import *
 
