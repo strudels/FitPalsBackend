@@ -112,7 +112,7 @@ class PicturesApiTestCase(FitPalsTestCase):
                                    "left":0.5,
                                    "right":0.5},
                              headers={"Authorization":fb_id})
-        pic1_id = json.loads(resp.data)["value"]["id"]
+        pic1 = json.loads(resp.data)["value"]
 
         #create picture 2
         fb_id = self.test_user1["fb_id"]
@@ -125,19 +125,24 @@ class PicturesApiTestCase(FitPalsTestCase):
                                    "left":0.5,
                                    "right":0.5},
                              headers={"Authorization":fb_id})
-        pic1_id = json.loads(resp.data)["value"]["id"]
+        pic2 = json.loads(resp.data)["value"]["id"]
         
         #update picture
         resp = self.app.put("/pictures/%d" % self.test_user1["id"],
                              data={"uri":"some other uri",
                                    "ui_index":0,
                                    "top":0.6,
-                                   "bottom":0.6,
-                                   "left":0.6,
-                                   "right":0.6},
+                                   "bottom":0.5,
+                                   "left":0.5,
+                                   "right":0.5},
                              headers={"Authorization":fb_id})
         assert resp.status_code==202
         assert json.loads(resp.data)["message"]=="Picture updated."
+        pic_updated = json.loads(resp.data)["value"]
+        pic1["top"] = 0.6
+        pic1["uri"] = "some other uri"
+        assert pic_updated == pic1
+
 
         #ensure that test_user1 websocket self.websocket_client1 got update
         received = self.websocket_client1.get_received()

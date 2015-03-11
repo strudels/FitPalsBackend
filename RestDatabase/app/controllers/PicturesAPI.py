@@ -116,9 +116,9 @@ class PicturesAPI(Resource):
 class PictureAPI(Resource):
     def put(self, pic_id):
         """
-        Delete picture for a user.
+        Delete picture.
 
-        :reqheader Authorization: fb_id token needed here
+        :reqheader Authorization: facebook token
 
         :param int pic_id: Id of user.
         
@@ -181,8 +181,8 @@ class PictureAPI(Resource):
         #send pic update to user's other devices
         socketio.emit("picture_updated",pic.dict_repr(),room=str(pic.user.id))
         
-        return Response(status=202, message="Picture updated.")\
-            .__dict__, 202
+        return Response(status=202, message="Picture updated.",
+                        value=pic.dict_repr()).__dict__, 202
 
     #delete either a single, or all pictures for a user
     def delete(self, pic_id):
