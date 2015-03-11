@@ -117,16 +117,27 @@ class ActivitySettingAPI(Resource):
     def get(self, setting_id):
         """
         Get specific activity setting
+        
+        :reqheader Authorization: fb_id token needed here
 
-        :status 400: Activity setting not found.
+        :status 401: Not Authorized.
+        :status 404: Activity setting not found.
         :status 202: Activity setting found.
         """
+        parser = reqparse.RequestParser()
+        parser.add_argument("Authorization",
+            type=str, location="headers", required=True)
+        args = parser.parse_args()
         
         #get setting
         setting = ActivitySetting.query.get(setting_id)
         if not setting:
             return Response(status=404,message="Activity setting not found.")\
                 .__dict__, 404
+            
+        #Ensure that user is authorized
+        if setting.user.fb_id != args.Authorization:
+            return Response(status=401,message="Not Authorized.").__dict__,401
 
         return Response(status=200, message="Activity setting found.",
                         value=setting.dict_repr()).__dict__, 200

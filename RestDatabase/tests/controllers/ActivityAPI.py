@@ -134,16 +134,42 @@ class ActivitySettingsAPITestCase(FitPalsTestCase):
         setting_id = json.loads(resp.data)["value"]["id"]
 
         #get setting
-        resp = self.app.get("/activity_settings/%d" % setting_id)
+        resp = self.app.get("/activity_settings/%d" % setting_id,
+                            headers={"Authorization":fb_id})
         assert resp.status_code==200
         assert json.loads(resp.data)["message"]=="Activity setting found."
+        setting = json.loads(resp.data)["value"]
+        assert setting["id"] == 1
+        assert setting["user_id"]==self.test_user1["id"]
+        assert setting["question_id"] == activity["questions"][0]["id"]
+        assert setting["lower_value"] == 8.3
+        assert setting["upper_value"] == 20.6
         
     def test_get_activity_setting_not_found(self):
         #get setting
-        resp = self.app.get("/activity_settings/%d" % 0)
+        fb_id = self.test_user1["fb_id"]
+        resp = self.app.get("/activity_settings/%d" % 0,
+                            headers={"Authorization":fb_id})
         assert resp.status_code==404
         assert json.loads(resp.data)["message"]=="Activity setting not found."
         
+    def test_get_activity_setting_not_authorized(self):
+        #create setting
+        fb_id = self.test_user1["fb_id"]
+        activity = json.loads(self.app.get("/activities").data)["value"][0]
+        resp = self.app.post("/activity_settings",
+                             data = {"user_id":self.test_user1["id"],
+                                     "question_id":activity["questions"][0]["id"],
+                                     "lower_value":8.3,
+                                     "upper_value":20.6,},
+                             headers = {"Authorization":fb_id})
+        setting_id = json.loads(resp.data)["value"]["id"]
+        
+        #get setting
+        resp = self.app.get("/activity_settings/%d" % setting_id,
+                            headers={"Authorization":fb_id + "junk"})
+        assert resp.status_code==401
+        assert json.loads(resp.data)["message"]=="Not Authorized."
 
     def test_update_activity_setting(self):
         #create setting
