@@ -1,38 +1,6 @@
-import unittest
-import simplejson as json
-from app import app,db,socketio,reset_app
-from app.models import *
-from datetime import date
+from tests.utils.FitPalsTestCase import *
 
-class MessagesApiTestCase(unittest.TestCase):
-    def setUp(self):
-        app.testing = True
-        self.app = app.test_client()
-
-        self.test_user1 = User.query.filter(User.fb_id=="fbTestUser1").first()
-        if not self.test_user1:
-            self.test_user1 = User("fbTestUser1",dob=date(1990,1,1))
-            db.session.add(self.test_user1)
-            db.session.commit()
-            self.test_user1 = self.test_user1.dict_repr(public=False)
-
-        self.test_user2 = User.query.filter(User.fb_id=="fbTestUser2").first()
-        if not self.test_user2:
-            self.test_user2 = User("fbTestUser2",dob=date(1990,1,1))
-            db.session.add(self.test_user2)
-            db.session.commit()
-            self.test_user2 = self.test_user2.dict_repr(public=False)
-            
-        self.test_user3 = User.query.filter(User.fb_id=="fbTestUser3").first()
-        if not self.test_user3:
-            self.test_user3 = User("fbTestUser3",dob=date(1990,1,1))
-            db.session.add(self.test_user3)
-            db.session.commit()
-            self.test_user3 = self.test_user3.dict_repr(public=False)
-
-    def tearDown(self):
-        reset_app()
-        
+class MessagesApiTestCase(FitPalsTestCase):
     def test_get_message_threads(self):
         resp = self.app.get("/message_threads?user2_id=%s"\
                              % self.test_user1["fb_id"],
@@ -160,16 +128,29 @@ class MessagesApiTestCase(unittest.TestCase):
 
     def test_get_messages(self):
         #create thread
-        resp = self.app.post("/message_threads",
+        resp = self.app.post("/message_threads?since=0",
                              headers={"Authorization":self.test_user1["fb_id"]},
                              data={"user2_id":self.test_user2["id"]})
         thread_id = json.loads(resp.data)["value"]["id"]
+        
+        message = {"message_thread_id":thread_id,
+                   "body":"sup",
+                   "direction":0}
+        #create message in thread
+        resp = self.app.post("/messages",
+                             data=message,
+                             headers={"Authorization":self.test_user1["fb_id"]})
 
         #get messages for user
         resp = self.app.get("/messages?message_thread_id=%d" % thread_id,
                              headers={"Authorization":self.test_user1["fb_id"]})
         assert resp.status_code==200
         assert json.loads(resp.data)["message"]=="Messages found."
+        message_received = json.loads(resp.data)["value"][0]
+        assert type(message_received["id"]) == type(int())
+        assert type(datetime.fromtimestamp(message_received["time"])) == datetime
+        for key in message.keys():
+            assert message_received[key] == message[key]
         
     def test_get_messages_thread_not_found(self):
         #get messages for user
@@ -183,8 +164,8 @@ class MessagesApiTestCase(unittest.TestCase):
         resp = self.app.get("/messages?message_thread_id=%d" % -1,
                              headers={"Authorization":
                                       self.test_user1["fb_id"] + "junk"})
-        assert resp.status_code==400
-        assert json.loads(resp.data)["message"]=="Invalid Authorization Token."
+        assert resp.status_code==401
+        assert json.loads(resp.data)["message"]=="Not Authorized."
         
     def test_get_messages_not_authorized(self):
         #create thread

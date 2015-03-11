@@ -7,6 +7,7 @@ from flask import Flask
 from flask.ext.sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import relationship, backref, validates
 from sqlalchemy.ext.hybrid import hybrid_property
+from datetime import datetime
 
 from app import db
 
@@ -303,18 +304,22 @@ class Message(db.Model):
     message_thread_id = db.Column(db.Integer, ForeignKey("message_threads.id"))
     message_thread =\
         relationship("MessageThread",foreign_keys=[message_thread_id])
+    
+    @hybrid_property
+    def epoch(self):
+        return int((self.time - datetime(1970,1,1)).total_seconds())
 
     def __init__(self, message_thread, direction, body):
         self.message_thread = message_thread
         self.direction = direction
         self.body = body
-
+        
     def dict_repr(self):
         return {
             "id":self.id,
             "direction":self.direction,
             "body":self.body,
-            "time":self.time,
+            "time":self.epoch,
             "message_thread_id":self.message_thread_id
         }
 

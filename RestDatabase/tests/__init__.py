@@ -7,3 +7,9 @@ from controllers.ActivityAPI import *
 from controllers.SearchSettingsAPI import *
 
 from websockets import *
+
+import unittest
+import simplejson as json
+from app import app,db,socketio,reset_app
+from app.models import *
+from datetime import date
