@@ -187,15 +187,16 @@ class PictureAPI(Resource):
     #delete either a single, or all pictures for a user
     def delete(self, pic_id):
         """
-        Delete picture for a user.
+        Delete picture.
 
-        :reqheader Authorization: fb_id token needed here
+        :reqheader Authorization: facebook token
 
         :param int pic_id: Id of user.
 
         :status 401: Not Authorized.
-        :status 404: "Picture not found.".
-        :status 201: "Picture removed."
+        :status 404: Picture not found.
+        :status 500: Internal error. Changes not committed.
+        :status 201: Picture removed.
         """
         parser = reqparse.RequestParser()
         parser.add_argument("Authorization",
@@ -212,9 +213,15 @@ class PictureAPI(Resource):
         if user.fb_id != args.Authorization:
             return Response(status=401,message="Not Authorized.").__dict__,401
 
-        #delete picture
-        user.pictures.remove(pic)
-        db.session.commit()
+        try:
+            #delete picture
+            user.pictures.remove(pic)
+            db.session.delete(pic)
+            db.session.commit()
+        except:
+            db.session.rollback()
+            return Response(status=500,
+                message="Internal error. Changes not committed.").__dict__,500
 
         #alert user that picture has been deleted
         socketio.emit("picture_deleted",pic_id,room=str(user.id))

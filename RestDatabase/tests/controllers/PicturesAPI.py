@@ -240,6 +240,10 @@ class PicturesApiTestCase(FitPalsTestCase):
         received = self.websocket_client1.get_received()
         assert len(received) != 0
         assert received[-1]["name"] == "picture_deleted"
+        
+        #ensure picture was actually deleted
+        resp = self.app.get("/pictures?user_id=%d" % self.test_user1["id"])
+        assert len(json.loads(resp.data)["value"]) == 0
 
     def test_delete_picture_not_found(self):
         fb_id = self.test_user1["fb_id"]
