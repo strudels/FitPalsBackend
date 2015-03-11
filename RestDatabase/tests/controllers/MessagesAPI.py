@@ -2,17 +2,29 @@ from tests.utils.FitPalsTestCase import *
 
 class MessagesApiTestCase(FitPalsTestCase):
     def test_get_message_threads(self):
+        #create thread to get
+        resp = self.app.post("/message_threads",
+                             headers={"Authorization":self.test_user1["fb_id"]},
+                             data={"user2_id":self.test_user2["id"]})
+
+        #get threads
         resp = self.app.get("/message_threads?user2_id=%s"\
                              % self.test_user1["fb_id"],
                              headers={"Authorization":self.test_user1["fb_id"]})
         assert resp.status_code==200
+        assert json.loads(resp.data)["message"] == "Message threads found."
+        received_thread = json.loads(resp.data)["value"]
+        assert type(received_thread[0]["id"]) == type(int())
+        assert received_thread[0]["user1_id"] == self.test_user1["id"]
+        assert received_thread[0]["user2_id"] == self.test_user2["id"]
 
     def test_get_message_threads_invalid_auth_token(self):
         resp = self.app.get("/message_threads?user2_id=%s"\
                              % self.test_user1["fb_id"],
                              headers={"Authorization":
                                       self.test_user1["fb_id"] + "junk"})
-        assert resp.status_code==400
+        assert resp.status_code==401
+        assert json.loads(resp.data)["message"] == "Not Authorized."
 
     def test_create_message_thread(self):
         #log in test_user1 to chat web socket

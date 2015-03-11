@@ -130,6 +130,7 @@ class MessageThreadsAPI(Resource):
         
         :reqheader Authorization: fb_id token needed here
 
+        :status 401: Not Authorized.
         :status 200: Message threads found.
         """
         parser = reqparse.RequestParser()
@@ -140,8 +141,8 @@ class MessageThreadsAPI(Resource):
         #get user from Authorization
         user = User.query.filter(User.fb_id==args.Authorization).first()
         if not user:
-            return Response(status=400, message="Invalid Authorization Token.")\
-                .__dict__, 400
+            return Response(status=401, message="Not Authorized.")\
+                .__dict__, 401
         
         #get threads for user
         threads = MessageThread.query\
