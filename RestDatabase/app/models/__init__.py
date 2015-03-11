@@ -66,6 +66,9 @@ class User(db.Model):
         db.Column(db.DateTime, default=db.func.now(), onupdate=db.func.now())
     dob = db.Column(db.Date,nullable=False)
     available = db.Column(db.Boolean, default=False)
+    friends = relationship("Friend",
+        primaryjoin="User.id==Friend.user_id", lazy="dynamic",
+        cascade="save-update, merge, delete")
     matches = relationship("Match",
         primaryjoin="User.id==Match.user_id", lazy="dynamic",
         cascade="save-update, merge, delete")
@@ -133,11 +136,36 @@ class User(db.Model):
 def user_message_thread_cascade_delete(mapper, connection, user):
     #delete all message threads where user is thread.user1
     threads = MessageThread.query.filter(MessageThread.user1_id==user.id).all()
-    for thread in threads: thread.user1_deleted = True
+    for thread in threads:
+        thread.user1_deleted = True
+        db.session.commit()
 
     #delete all message threads where user is thread.user2
     threads = MessageThread.query.filter(MessageThread.user2_id==user.id).all()
-    for thread in threads: thread.user2_deleted = True
+    for thread in threads:
+        thread.user2_deleted = True
+        db.session.commit()
+    
+class Friend(db.Model):
+    __tablename__ = "friends"
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, ForeignKey("users.id"))
+    user = relationship("User",foreign_keys=[user_id])
+    friend_id = db.Column(db.Integer, ForeignKey("users.id"))
+    friend = relationship("User",foreign_keys=[friend_id])
+    
+    __table_args__ = (UniqueConstraint("user_id","friend_id"),)
+    
+    def __init__(self, user, friend):
+        self.user = user
+        self.friend = friend
+
+    def dict_repr(self):
+        return {
+            "id": self.id,
+            "user_id": self.user_id,
+            "friend_id": self.friend_id
+        }
 
 class Picture(db.Model):
     __tablename__ = "pictures"
