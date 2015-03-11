@@ -345,8 +345,8 @@ class MessageThread(db.Model):
 # user1_deleted and user2_deleted fields are True
 @event.listens_for(MessageThread.user1_deleted, "set")
 def message_threads_user1_delete(thread, value, old_value, initiator):
-        if thread.user2_deleted: db.session.delete(thread)
+    if thread.user2_deleted: db.session.delete(thread)
 
 @event.listens_for(MessageThread.user2_deleted, "set")
 def message_threads_user2_delete(thread, value, old_value, initiator):
-        if thread.user1_deleted: db.session.delete(thread)
+    if thread.user1_deleted: db.session.delete(thread)

@@ -40,9 +40,9 @@ class NewMessagesAPI(Resource):
         if not thread or\
            (thread.user1==user and thread.user1_deleted==True) or\
            (thread.user2==user and thread.user2_deleted==True):
-            return Response(status=400,
+            return Response(status=404,
                 message="Message thread not found.")\
-                .__dict__, 400
+                .__dict__, 404
 
         #ensure user is authorized to read thread
         if thread.user1 != user and thread.user2 != user:
