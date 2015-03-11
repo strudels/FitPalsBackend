@@ -16,7 +16,7 @@ class DevicesAPI(Resource):
         """
         Post new device
 
-        :reqheader Authorization: fb_id token needed here
+        :reqheader Authorization: facebook token
 
         :form int user_id: Id of user.
         :form str token: device token to be posted
@@ -69,11 +69,11 @@ class DeviceAPI(Resource):
         """
         Delete device
 
-        :reqheader Authorization: fb_id token needed here
+        :reqheader Authorization: facebook token
 
         :status 400: Could not delete device.
         :status 401: Not Authorized.
-        :status 404: User not found.
+        :status 404: Device not found.
         :status 200: Device deleted.
         """
 
@@ -95,6 +95,7 @@ class DeviceAPI(Resource):
             
         try:
             device.user.devices.remove(device)
+            db.session.delete(device)
             db.session.commit()
         except:
             return Response(status=400, 
