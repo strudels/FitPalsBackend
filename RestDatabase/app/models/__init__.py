@@ -248,6 +248,24 @@ class Activity(db.Model):
             "questions":[q.dict_repr() for q in self.questions]
         }
 
+class Question(db.Model):
+    __tablename__ = "activity_questions"
+    id = db.Column(db.Integer, primary_key=True)
+    activity_id = db.Column(db.Integer, ForeignKey("activities.id"))
+    activity = relationship("Activity", foreign_keys=[activity_id])
+    question = db.Column(db.String(2048), nullable=False)
+
+    def __init__(self, activity, question_string):
+        self.question = question_string
+        self.activity = activity
+
+    def dict_repr(self):
+        return {
+            "id":self.id,
+            "activity_id":self.activity_id,
+            "question":self.question
+        }
+
 class ActivitySetting(db.Model):
     __tablename__ = "activity_settings"
     id = db.Column(db.Integer, primary_key=True)
@@ -273,24 +291,6 @@ class ActivitySetting(db.Model):
             "question_id":self.question_id,
             "lower_value":self.lower_value,
             "upper_value":self.upper_value
-        }
-
-class Question(db.Model):
-    __tablename__ = "activity_questions"
-    id = db.Column(db.Integer, primary_key=True)
-    activity_id = db.Column(db.Integer, ForeignKey("activities.id"))
-    activity = relationship("Activity", foreign_keys=[activity_id])
-    question = db.Column(db.String(2048), nullable=False)
-
-    def __init__(self, activity, question_string):
-        self.question = question_string
-        self.activity = activity
-
-    def dict_repr(self):
-        return {
-            "id":self.id,
-            "activity_id":self.activity_id,
-            "question":self.question
         }
 
 class Message(db.Model):

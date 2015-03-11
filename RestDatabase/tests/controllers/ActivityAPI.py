@@ -4,6 +4,18 @@ class ActivitySettingsAPITestCase(FitPalsTestCase):
     def test_get_activities(self):
         resp = self.app.get("/activities")
         assert resp.status_code==200
+        assert json.loads(resp.data)["message"] == "Activites found."
+        activity = json.loads(resp.data)["value"][0]
+        
+        #These values are based off of the reset_app() function in app/__init__.py
+        assert activity["id"] == 1
+        assert activity["name"] == "running"
+        assert activity["questions"][0]["id"] == 1
+        assert activity["questions"][0]["activity_id"] == 1
+        assert activity["questions"][0]["question"] == "How much time do you want to spend running?"
+        assert activity["questions"][1]["id"] == 2
+        assert activity["questions"][1]["activity_id"] == 1
+        assert activity["questions"][1]["question"] == "How far do you want to run?"
     
     def test_get_activity_settings(self):
         resp =\
