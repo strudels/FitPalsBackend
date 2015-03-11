@@ -18,10 +18,27 @@ class ActivitySettingsAPITestCase(FitPalsTestCase):
         assert activity["questions"][1]["question"] == "How far do you want to run?"
     
     def test_get_activity_settings(self):
+        #create activity setting to get
+        fb_id = self.test_user1["fb_id"]
+        activity = json.loads(self.app.get("/activities").data)["value"][0]
+        resp = self.app.post("/activity_settings",
+                             data = {"user_id":self.test_user1["id"],
+                                     "question_id":activity["questions"][0]["id"],
+                                     "lower_value":8.3,
+                                     "upper_value":20.6,},
+                             headers = {"Authorization":fb_id})
+
+        #get activity settings
         resp =\
             self.app.get("/activity_settings?user_id=%d" % self.test_user1["id"])
         assert resp.status_code==200
         assert json.loads(resp.data)["message"]=="Activity settings found."
+        setting = json.loads(resp.data)["value"][0]
+        assert setting["id"]==1
+        assert setting["user_id"]==self.test_user1["id"]
+        assert setting["question_id"] == activity["questions"][0]["id"]
+        assert setting["lower_value"] == 8.3
+        assert setting["upper_value"] == 20.6
 
     def test_get_activitys_setting_user_not_found(self):
         resp =\

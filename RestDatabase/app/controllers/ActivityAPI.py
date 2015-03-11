@@ -30,7 +30,7 @@ class UserActivitySettingsAPI(Resource):
 
         :query int user_id: User to get activity settings for
 
-        :status 400: User not found.
+        :status 404: User not found.
         :status 200: Activity settings found.
         """
         parser = reqparse.RequestParser()
