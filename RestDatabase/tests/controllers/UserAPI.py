@@ -21,9 +21,11 @@ class UsersApiTestCase(unittest.TestCase):
     def tearDown(self):
         reset_app()
 
-    """
     def test_create_user(self):
-        resp = self.app.post("/users",data={"fb_id":"some fb_id"})
+        resp = self.app.post("/users",data={"fb_id":"some fb_id",
+                                            "dob_year":1990,
+                                            "dob_month":2,
+                                            "dob_day":17})
         assert resp.status_code==201
         assert json.loads(resp.data)["message"] == "User created."
 
@@ -31,7 +33,6 @@ class UsersApiTestCase(unittest.TestCase):
         resp = self.app.post("/users",data={"fb_id":self.test_user["fb_id"]})
         assert resp.status_code==200
         assert json.loads(resp.data)["message"] == "User found."
-    """
 
     def test_get_users(self):
         fb_id = self.test_user["fb_id"]
@@ -69,7 +70,6 @@ class UsersApiTestCase(unittest.TestCase):
                             headers={"Authorization":fb_id})
         assert resp.status_code==400
         
-    """
     def test_get_user(self):
         resp = self.app.get("/users/" + str(self.test_user["id"]))
         assert resp.status_code==200
@@ -119,7 +119,7 @@ class UsersApiTestCase(unittest.TestCase):
         received = client.get_received()
         assert len(received) != 0
         assert received[-1]["name"] == "user_update"
-        assert received[-1]["args"][0] == self.test_user_public
+        assert received[-1]["args"][0] == json.loads(resp.data)["value"]
         
     def test_update_user_not_found(self):
         user_id = 0
@@ -171,4 +171,3 @@ class UsersApiTestCase(unittest.TestCase):
                                         "Authorization":fb_id})
         assert resp.status_code==401
         assert json.loads(resp.data)["message"] == "Not Authorized."
-    """

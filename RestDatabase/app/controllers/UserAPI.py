@@ -146,13 +146,17 @@ class UsersAPI(Resource):
         parser.add_argument("longitude",
             type=float, location='form', required=False)
         parser.add_argument("latitude",
-            type=float, location='form', required=False)
+            type=float, location="form", required=False)
         parser.add_argument("about_me",
-            type=str, location='form', required=False)
+            type=str, location="form", required=False)
         parser.add_argument("primary_picture",
-            type=str, location='form', required=False)
-        parser.add_argument("dob",
-            type=int, location='form', required=False)
+            type=str, location="form", required=False)
+        parser.add_argument("dob_year",
+            type=int, location="form", required=False)
+        parser.add_argument("dob_month",
+            type=int, location="form", required=False)
+        parser.add_argument("dob_day",
+            type=int, location="form", required=False)
         parser.add_argument("available",
             type=bool, location='form', required=False)
         parser.add_argument("name",
@@ -167,6 +171,10 @@ class UsersAPI(Resource):
             return Response(status=200,
                 message="User found.",
                 value=user.dict_repr(public=False)).__dict__,200
+            
+        #ensure user specifys date of birth
+        if args.dob_year==None or args.dob_month==None or args.dob_day==None:
+            return Response(status=400, message="Must specify DOB.").__dict__,400
 
         #create new user
         new_user = User(
@@ -174,7 +182,7 @@ class UsersAPI(Resource):
             longitude=args.longitude,
             latitude=args.latitude,
             about_me=args.about_me,
-            dob=args.dob,
+            dob=date(args.dob_year,args.dob_month,args.dob_day),
             available=args.available,
             name=args.name,
             gender=args.gender
@@ -211,7 +219,7 @@ class UserAPI(Resource):
         args = parser.parse_args()
         
         #Get user from db
-        user = User.query.filter(User.id==user_id).first()
+        user = User.query.get(user_id)
         if not user:
             return Response(status=404,message="User not found.").__dict__,404
             
@@ -269,7 +277,11 @@ class UserAPI(Resource):
             type=str, location='form', required=False)
         parser.add_argument("available",
             type=bool, location='form', required=False)
-        parser.add_argument("dob",
+        parser.add_argument("dob_year",
+            type=int, location='form', required=False)
+        parser.add_argument("dob_month",
+            type=int, location='form', required=False)
+        parser.add_argument("dob_day",
             type=int, location='form', required=False)
         args = parser.parse_args()
 
@@ -289,7 +301,8 @@ class UserAPI(Resource):
         if args.primary_picture: user.primary_picture = args.primary_picture
         if args.about_me: user.about_me = args.about_me
         if args.available: user.available = args.available
-        if args.dob: user.dob = args.dob
+        if args.dob_year!=None and args.dob_month!=None and args.dob_day!=None:
+            user.dob = date(args.dob_year,args.dob_month,args.dob_day)
         if args.secondary_pictures:
             for pic in args.secondary_pictures:
                 self.secondary_pictures.append(Picture(user,pic))
@@ -302,7 +315,8 @@ class UserAPI(Resource):
         #reflect update in user's other clients
         socketio.emit("user_update", user.dict_repr(), room=str(user.id))
 
-        return Response(status=202,message="User updated").__dict__,202
+        return Response(status=202,message="User updated",
+                        value=user.dict_repr()).__dict__,202
 
     def delete(self, user_id):
         """
