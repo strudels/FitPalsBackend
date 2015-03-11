@@ -142,17 +142,18 @@ class ActivitySettingAPI(Resource):
         return Response(status=200, message="Activity setting found.",
                         value=setting.dict_repr()).__dict__, 200
 
-    #update user's specific activity
     def put(self, setting_id):
         """
-        Update specific activity
+        Update specific activity setting
 
         :reqheader Authorization: fb_id token needed here
 
         :form float lower_value: Lower value answer to question.
         :form float upper_value: Upper value answer to question.
 
-        :status 400: "Activity setting not found."
+        :status 400: Could not update activity setting.
+        :status 401: Not Authorized.
+        :status 404: Activity setting not found.
         :status 202: Activity setting updated.
         """
         parser = reqparse.RequestParser()
@@ -182,7 +183,7 @@ class ActivitySettingAPI(Resource):
             db.session.rollback()
             return Response(status=400,
                 message="Could not update activity setting.").__dict__,400
-
+            
         socketio.emit("activity_setting_updated",setting.dict_repr(),
                       room=str(setting.user.id))
 

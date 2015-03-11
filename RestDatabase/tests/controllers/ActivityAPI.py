@@ -189,11 +189,18 @@ class ActivitySettingsAPITestCase(FitPalsTestCase):
                             headers={"Authorization":fb_id})
         assert resp.status_code==202
         assert json.loads(resp.data)["message"]=="Activity setting updated."
+        setting = json.loads(resp.data)["value"]
+        assert setting["id"] == 1
+        assert setting["user_id"]==self.test_user1["id"]
+        assert setting["question_id"] == activity["questions"][0]["id"]
+        assert setting["lower_value"] == 4.6
+        assert setting["upper_value"] == 5.7
 
         #ensure that test_user1 websocket self.websocket_client1 got update
         received = self.websocket_client1.get_received()
         assert len(received) != 0
         assert received[-1]["name"] == "activity_setting_updated"
+        assert setting == received[-1]["args"][0]
 
     def test_update_activity_setting_not_found(self):
         fb_id = self.test_user1["fb_id"]
