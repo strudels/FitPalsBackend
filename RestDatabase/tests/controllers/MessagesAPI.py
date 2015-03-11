@@ -81,6 +81,17 @@ class MessagesApiTestCase(FitPalsTestCase):
         assert len(received) != 0
         assert received[-1]["name"] == "message_thread_deleted"
 
+        #ensure test_user2 cannot create new messages for thread
+        message = {"message_thread_id":thread_id,
+                   "direction":1,
+                   "body":"yo dawg"}
+        resp = self.app.post("/messages",
+                             headers={"Authorization":self.test_user2["fb_id"]},
+                             data=message)
+        assert resp.status_code==403
+        assert json.loads(resp.data)["message"]=="Message thread has been closed."
+
+
         #ensure thread is still present for user 2
         resp = self.app.get("/messages?message_thread_id=%d" % thread_id,
                             headers={"Authorization":self.test_user2["fb_id"]})
