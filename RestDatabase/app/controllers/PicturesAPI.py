@@ -14,11 +14,11 @@ class PicturesAPI(Resource):
     #get all pictures for user_id
     def get(self):
         """
-        Get all (secondary)pictures for a user.
+        Get all pictures for a user.
 
         :param int user_id: Id of user.
 
-        :status 400: Could not find user.
+        :status 404: User not found.
         :status 200: Pictures found.
         """
         parser = reqparse.RequestParser()

@@ -67,9 +67,28 @@ class PicturesApiTestCase(FitPalsTestCase):
         assert json.loads(resp.data)["message"]=="Picture data invalid."
 
     def test_get_pictures(self):
+        #add picture to get
+        fb_id = self.test_user1["fb_id"]
+        picture = {"user_id":self.test_user1["id"],
+                   "uri":"some uri",
+                   "ui_index":0,
+                   "top":0.5,
+                   "bottom":0.5,
+                   "left":0.5,
+                   "right":0.5}
+        resp = self.app.post("/pictures",
+                             data=picture,
+                             headers={"Authorization":fb_id})
+        assert resp.status_code==201
+        assert json.loads(resp.data)["message"]=="Picture added."
+
         resp = self.app.get("/pictures?user_id=%d" % self.test_user1["id"])
         assert resp.status_code==200
         assert json.loads(resp.data)["message"]=="Pictures found."
+        received_picture = json.loads(resp.data)["value"][0]
+        assert type(received_picture["id"]) == int
+        picture["id"] = received_picture["id"]
+        assert picture == received_picture
 
     def test_get_pictures_user_not_found(self):
         resp = self.app.get("/pictures?user_id=%d" % 0)
