@@ -4,10 +4,19 @@ class SearchSettingsApiTestCase(FitPalsTestCase):
     def test_get_search_settings(self):
         fb_id = self.test_user1["fb_id"]
         setting_id = self.test_user1["search_settings_id"]
+        setting = {"id":setting_id,
+                   "user_id":self.test_user1["id"],
+                   "activity_id":None,
+                   "friends_only":False,
+                   "men_only":False,
+                   "women_only":False,
+                   "age_lower_limit":18,
+                   "age_upper_limit":130}
         resp = self.app.get("/search_settings/%d" % setting_id,
                             headers={"Authorization":fb_id})
         assert resp.status_code == 200
         assert json.loads(resp.data)["message"] == "Search settings found."
+        assert json.loads(resp.data)["value"] == setting
 
     def test_get_search_settings_not_found(self):
         fb_id = self.test_user1["fb_id"]

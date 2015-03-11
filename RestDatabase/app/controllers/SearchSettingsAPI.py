@@ -17,7 +17,7 @@ class SearchSettingsAPI(Resource):
         """
         Get search settings.
 
-        :reqheader Authorization: Facebook token.
+        :reqheader Authorization: facebook token
 
         :param int settings_id: Id of search settings.
         
