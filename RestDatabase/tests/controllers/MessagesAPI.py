@@ -182,14 +182,6 @@ class MessagesApiTestCase(FitPalsTestCase):
         assert json.loads(resp.data)["message"]=="Not Authorized."
 
     def test_create_message(self):
-        #log in test_user1 to chat web socket
-        client1 = socketio.test_client(app)
-        client1.emit("join", self.test_user1)
-
-        #log in test_user2 to chat web socket
-        client2 = socketio.test_client(app)
-        client2.emit("join", self.test_user2)
-
         #create thread
         resp = self.app.post("/message_threads",
                              headers={"Authorization":self.test_user1["fb_id"]},
@@ -197,22 +189,31 @@ class MessagesApiTestCase(FitPalsTestCase):
         thread_id = json.loads(resp.data)["value"]["id"]
 
         #ensure message was created correctly
+        message = {"message_thread_id":thread_id,
+                   "direction":0,
+                   "body":"yo dawg"}
         resp = self.app.post("/messages",
                              headers={"Authorization":self.test_user1["fb_id"]},
-                             data={"message_thread_id":thread_id,
-                                   "direction":0,
-                                   "body":"yo dawg"})
+                             data=message)
         assert resp.status_code == 201
+        assert json.loads(resp.data)["message"]=="Message created."
+        message_received = json.loads(resp.data)["value"]
+        assert type(message_received["id"]) == type(int())
+        assert type(datetime.fromtimestamp(message_received["time"])) == datetime
+        for key in message.keys():
+            assert message_received[key] == message[key]
 
         #ensure that test_user1 websocket client got new message
-        received = client1.get_received()
+        received = self.websocket_client1.get_received()
         assert len(received) != 0
         assert received[-1]["name"] == "message_received"
+        assert received[-1]['args'][0] == message_received
 
         #ensure that test_user2 websocket client got new message
-        received = client2.get_received()
+        received = self.websocket_client2.get_received()
         assert len(received) != 0
         assert received[-1]["name"] == "message_received"
+        assert received[-1]['args'][0] == message_received
         
     def test_create_message_invalid_auth_token(self):
         #create thread
@@ -227,8 +228,8 @@ class MessagesApiTestCase(FitPalsTestCase):
                              data={"message_thread_id":thread_id,
                                    "direction":0,
                                    "body":"yo dawg"})
-        assert resp.status_code==400
-        assert json.loads(resp.data)["message"]=="Invalid Authorization Token."
+        assert resp.status_code==401
+        assert json.loads(resp.data)["message"]=="Not Authorized."
         
     def test_create_message_not_found(self):
         #create thread
@@ -242,7 +243,7 @@ class MessagesApiTestCase(FitPalsTestCase):
                              data={"message_thread_id":-1,
                                    "direction":0,
                                    "body":"yo dawg"})
-        assert resp.status_code==400
+        assert resp.status_code==404
         assert json.loads(resp.data)["message"]=="Message thread not found."
 
     def test_create_message_not_authorized(self):

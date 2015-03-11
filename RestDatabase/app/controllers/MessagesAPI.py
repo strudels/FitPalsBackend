@@ -68,10 +68,9 @@ class NewMessagesAPI(Resource):
         :form bool direction: direction that message goes between users 1 and 
                               2 in a thread. False:1->2, True:2->1
 
-        :status 400: Invalid Authorization Token.
-        :status 400: Message thread <message_thread_id> not found.
         :status 400: Message thread has been closed.
         :status 401: Not Authorized.
+        :status 404: Message thread not found.
         :status 201: Message created.
         """
         parser = reqparse.RequestParser()
@@ -88,14 +87,14 @@ class NewMessagesAPI(Resource):
         #get user from Authorization
         user = User.query.filter(User.fb_id==args.Authorization).first()
         if not user:
-            return Response(status=400, message="Invalid Authorization Token.")\
-                .__dict__, 400
+            return Response(status=401, message="Not Authorized.")\
+                .__dict__, 401
         
         #get thread from message_thread_id
         thread = MessageThread.query.get(args.message_thread_id)
         if not thread:
-            return Response(status=400,
-                message="Message thread not found.").__dict__, 400
+            return Response(status=404,
+                message="Message thread not found.").__dict__, 404
 
         #ensure that user is authorized to add the message to the thread
         if not ((user == thread.user1 and args.direction==0) or\
@@ -119,8 +118,8 @@ class NewMessagesAPI(Resource):
                       room=str(thread.user2.id))
         
         #return success
-        return Response(status=201,
-            message="Message created.").__dict__, 201
+        return Response(status=201,message="Message created.",
+                        value=new_message.dict_repr()).__dict__, 201
         
 @api.resource("/message_threads")
 class MessageThreadsAPI(Resource):
