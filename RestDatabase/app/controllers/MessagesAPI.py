@@ -9,15 +9,15 @@ from sqlalchemy import or_, and_
 class NewMessagesAPI(Resource):
     def get(self):
         """
-        Get owner's messages with other user
+        Get owner's messages from a thread
         
-        :reqheader Authorization: fb_id token needed here
+        :reqheader Authorization: facebook token
 
-        :param int message_thread_id: Id of specific thread to get messages from.
-        :param int since: Optional time to get messages 'since' then.
+        :query int message_thread_id: Id of specific thread to get messages from.
+        :query int since: Optional time to get messages 'since' then.
 
-        :status 400: Message thread <message_thread_id> not found.
         :status 401: Not Authorized.
+        :status 404: Message thread not found.
         :status 200: Messages found.
         """
         parser = reqparse.RequestParser()
@@ -61,16 +61,20 @@ class NewMessagesAPI(Resource):
         """
         Post new message to thread
         
-        :reqheader Authorization: fb_id token needed here
+        :reqheader Authorization: facebook token
 
         :form int message_thread_id: Id of specific thread to get messages from.
         :form str body: Message body
-        :form bool direction: direction that message goes between users 1 and 
-                              2 in a thread. False:1->2, True:2->1
+        :form int direction: direction that message goes between users 1 and 
+                              2 in a thread. Set to 0 for user1->user2; Set
+                              to 1 for user2->user1. Note: direction's type 
+                              in the model is actually boolean, where 0->False
+                              and 1->True.
 
-        :status 400: Message thread has been closed.
         :status 401: Not Authorized.
+        :status 403: Message thread has been closed.
         :status 404: Message thread not found.
+        :status 500: Internal Error. Changes not committed.
         :status 201: Message created.
         """
         parser = reqparse.RequestParser()
@@ -103,14 +107,21 @@ class NewMessagesAPI(Resource):
             
         #Don't allow a user to send messages to a thread deleted by another user
         if thread.user1_deleted or thread.user2_deleted:
-            return Response(status=400,
-                message="Message thread has been closed.").__dict__, 400
+            return Response(status=403,
+                message="Message thread has been closed.").__dict__, 403
 
         #add message to thread
         new_message = Message(thread, bool(args.direction), args.body)
         thread.messages.append(new_message)
-        db.session.commit()
-        
+
+        #commit changes to the db
+        try:
+            db.session.commit()
+        except:
+            db.session.rollback()
+            return Response(status=500,
+                message="Internal Error. Changes not committed.")\
+
         #send update over websocket
         socketio.emit("message_received", new_message.dict_repr(),
                       room=str(thread.user1.id))
@@ -126,9 +137,9 @@ class MessageThreadsAPI(Resource):
     #return all message threads for a user
     def get(self):
         """
-        Get all message threads for a specific user
+        Get all message threads for a user, specified by Authorization
         
-        :reqheader Authorization: fb_id token needed here
+        :reqheader Authorization: facebook token
 
         :status 401: Not Authorized.
         :status 200: Message threads found.
@@ -161,10 +172,13 @@ class MessageThreadsAPI(Resource):
         """
         Create new message thread between 2 users.
         
-        :reqheader Authorization: fb_id token needed here
+        :reqheader Authorization: facebook token
         
-        :form int user2_id: User.id of user2 for new message thread.
+        :form int user2_id: Id of user2 for new message thread.
         
+        :status 401: Not Authorized.
+        :status 404: user2_id not found.
+        :status 500: Internal Error. Changes not committed.
         :status 201: Message thread created.
         """
         parser = reqparse.RequestParser()
@@ -177,19 +191,26 @@ class MessageThreadsAPI(Resource):
         #get user from Authorization
         user1 = User.query.filter(User.fb_id==args.Authorization).first()
         if not user1:
-            return Response(status=400, message="Invalid Authorization Token.")\
-                .__dict__, 400
+            return Response(status=401, message="Not Authorized.")\
+                .__dict__, 401
             
         #get user 2
         user2 = User.query.get(args.user2_id)
         if not user2:
-            return Response(status=400,
-                            message="user2_id does not exist.").__dict__,400
-        
-        #create new thread and save to db
+            return Response(status=404,
+                            message="user2_id not found.").__dict__,404
+
         new_thread = MessageThread(user1, user2)
         db.session.add(new_thread)
-        db.session.commit()
+        
+        #commit changes to the db
+        try:
+            db.session.commit()
+        except:
+            db.session.rollback()
+            return Response(status=500,
+                message="Internal Error. Changes not committed.")\
+                .__dict__, 500
 
         #update user's other client's with new thread
         socketio.emit("message_thread_created", new_thread.dict_repr(),
@@ -206,11 +227,11 @@ class MessageThreadAPI(Resource):
         """
         Delete a message thread
         
-        :reqheader Authorization: fb_id token needed here
+        :reqheader Authorization: facebook token
 
-        :status 400: Invalid Authorization Token.
-        :status 400: Message thread <message_thread_id> not found.
         :status 401: Not Authorized.
+        :status 404: Message thread not found.
+        :status 500: Internal Error. Changes not committed.
         :status 200: Message thread deleted.
         """
 
@@ -222,15 +243,15 @@ class MessageThreadAPI(Resource):
         #get user from Authorization
         user = User.query.filter(User.fb_id==args.Authorization).first()
         if not user:
-            return Response(status=400, message="Invalid Authorization Token.")\
-                .__dict__, 400
+            return Response(status=401, message="Not Authorized.")\
+                .__dict__, 401
 
         #get thread from database
         thread = MessageThread.query.get(thread_id)
         if not thread:
-            return Response(status=400,
+            return Response(status=404,
                 message="Message thread not found.")\
-                .__dict__, 400
+                .__dict__, 404
             
         #delete thread for user if user is authorized
         if user == thread.user1:
@@ -241,7 +262,12 @@ class MessageThreadAPI(Resource):
             return Response(status=401,message="Not Authorized.").__dict__,401
             
         #commit changes to the db
-        db.session.commit()
+        try:
+            db.session.commit()
+        except:
+            db.session.rollback()
+            return Response(status=500,
+                            message="Internal Error. Changes not committed."),500
         
         #push delete to user's other devices
         socketio.emit("message_thread_deleted",

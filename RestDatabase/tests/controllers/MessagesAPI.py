@@ -35,13 +35,14 @@ class MessagesApiTestCase(FitPalsTestCase):
         resp = self.app.post("/message_threads",
                              headers={"Authorization":self.test_user1["fb_id"]},
                              data={"user2_id":self.test_user2["id"]})
+        received_thread = json.loads(resp.data)["value"]
         
         #ensure request worked correctly
         assert resp.status_code==201
         value = json.loads(resp.data)["value"]
         assert value["user1_id"] == self.test_user1["id"]
         assert value["user2_id"] == self.test_user2["id"]
-        thread_id = value["id"]
+        assert type(value["id"]) == int
         
         #ensure that test_user1 websocket client got update
         received = client.get_received()
@@ -52,21 +53,17 @@ class MessagesApiTestCase(FitPalsTestCase):
         resp = self.app.post("/message_threads",
                              headers={"Authorization":self.test_user1["fb_id"] + "junk"},
                              data={"user2_id":self.test_user2["id"]})
-        assert resp.status_code==400
-        assert json.loads(resp.data)["message"]=="Invalid Authorization Token."
+        assert resp.status_code==401
+        assert json.loads(resp.data)["message"]=="Not Authorized."
         
     def test_create_message_thread_no_user2(self):
         resp = self.app.post("/message_threads",
                              headers={"Authorization":self.test_user1["fb_id"]},
                              data={"user2_id":-1})
-        assert resp.status_code==400
-        assert json.loads(resp.data)["message"]=="user2_id does not exist."
+        assert resp.status_code==404
+        assert json.loads(resp.data)["message"]=="user2_id not found."
         
     def test_delete_message_thread(self):
-        #log in test_user1 to chat web socket
-        client = socketio.test_client(app)
-        client.emit("join", self.test_user1)
-
         #create thread
         resp = self.app.post("/message_threads",
                              headers={"Authorization":self.test_user1["fb_id"]},
@@ -79,8 +76,8 @@ class MessagesApiTestCase(FitPalsTestCase):
         assert resp.status_code==200
         assert json.loads(resp.data)["message"]=="Message thread deleted."
         
-        #ensure that test_user1 websocket client got update
-        received = client.get_received()
+        #ensure that test_user1 websocket self.websocket_client1 got update
+        received = self.websocket_client1.get_received()
         assert len(received) != 0
         assert received[-1]["name"] == "message_thread_deleted"
 
@@ -113,15 +110,15 @@ class MessagesApiTestCase(FitPalsTestCase):
         resp = self.app.delete("/message_threads/%d" % thread_id,
                              headers={"Authorization":
                                       self.test_user1["fb_id"] + "junk"})
-        assert resp.status_code==400
-        assert json.loads(resp.data)["message"]=="Invalid Authorization Token."
+        assert resp.status_code==401
+        assert json.loads(resp.data)["message"]=="Not Authorized."
 
     def test_delete_message_thread_not_found(self):
         #attempt thread delete
         resp = self.app.delete("/message_threads/0",
                              headers={"Authorization":
                                       self.test_user1["fb_id"]})
-        assert resp.status_code==400
+        assert resp.status_code==404
         assert json.loads(resp.data)["message"]=="Message thread not found."
         
     def test_delete_message_thread_not_authorized(self):
@@ -290,5 +287,5 @@ class MessagesApiTestCase(FitPalsTestCase):
                              data={"message_thread_id":thread_id,
                                    "direction":0,
                                    "body":"yo dawg"})
-        assert resp.status_code==400
+        assert resp.status_code==403
         assert json.loads(resp.data)["message"]=="Message thread has been closed."
