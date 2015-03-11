@@ -19,15 +19,54 @@ class UsersApiTestCase(FitPalsTestCase):
         setting_id = self.test_user1["search_settings_id"]
         activity_id = json.loads(self.app.get("/activities").data)["value"][0]["id"]
 
-        #update search settings
-        resp = self.app.put("/search_settings/%d" % setting_id,
-                            data={"activity_id":activity_id,
-                                  "men_only":0, "women_only":1},
-                            headers={"Authorization":fb_id})
+        #update search settings and location for each user to be the same
+        resp = self.app.put("/search_settings/%d"
+                            % self.test_user1["search_settings_id"],
+                            data={"activity_id":activity_id},
+                            headers={"Authorization":self.test_user1["fb_id"]})
+        resp = self.app.put("/users/%d" % self.test_user1["id"],
+                            data={"longitude":40, "latitude":20},
+                            headers={"Authorization":self.test_user1["fb_id"]})
+        self.test_user1["longitude"] = 40.0
+        self.test_user1["latitude"] = 20.0
+        resp = self.app.put("/search_settings/%d"
+                            % self.test_user2["search_settings_id"],
+                            data={"activity_id":activity_id},
+                            headers={"Authorization":self.test_user2["fb_id"]})
+        resp = self.app.put("/users/%d" % self.test_user2["id"],
+                            data={"longitude":40, "latitude":20},
+                            headers={"Authorization":self.test_user2["fb_id"]})
+        self.test_user2["longitude"] = 40.0
+        self.test_user2["latitude"] = 20.0
+        resp = self.app.put("/search_settings/%d"
+                            % self.test_user3["search_settings_id"],
+                            data={"activity_id":activity_id},
+                            headers={"Authorization":self.test_user3["fb_id"]})
+        resp = self.app.put("/users/%d" % self.test_user3["id"],
+                            data={"longitude":40, "latitude":20},
+                            headers={"Authorization":self.test_user3["fb_id"]})
+        self.test_user3["longitude"] = 40.0
+        self.test_user3["latitude"] = 20.0
+        
+        #delete private fields from test_users
+        del self.test_user1["fb_id"]
+        del self.test_user1["password"]
+        del self.test_user2["fb_id"]
+        del self.test_user2["password"]
+        del self.test_user3["fb_id"]
+        del self.test_user3["password"]
 
-        resp = self.app.get("/users?longitude=20&latitude=20&radius=17000",
+        #import pdb; pdb.set_trace()
+        resp = self.app.get("/users?longitude=40&latitude=20&radius=17000",
                             headers={"Authorization":fb_id})
         assert resp.status_code==200
+        assert json.loads(resp.data)["message"] == "Users found."
+        users = json.loads(resp.data)["value"]
+        #there are 3 users created by FitPalsTestCase setUp()
+        assert len(users) == 3
+        assert users[0] == self.test_user1
+        assert users[1] == self.test_user2
+        assert users[2] == self.test_user3
         
     def test_get_users_not_authorized(self):
         fb_id = self.test_user1["fb_id"]

@@ -78,6 +78,7 @@ class UsersAPI(Resource):
         query = query.filter(SearchSettings.activity_id==
                              user.search_settings.activity_id)
 
+        #import pdb; pdb.set_trace()
         #filter by activity preferences
         or_expr = None
         query = query.join(User.activity_settings)
@@ -118,7 +119,7 @@ class UsersAPI(Resource):
         else: users = query.all()
         #return matches' ids
         return Response(status=200,message="Users found.",
-            value={"users":[u.dict_repr() for u in users]}).__dict__,200
+            value=[u.dict_repr() for u in users]).__dict__,200
 
     def post(self):
         """
