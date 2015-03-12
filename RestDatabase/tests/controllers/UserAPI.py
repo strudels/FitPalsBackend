@@ -122,6 +122,7 @@ class UsersApiTestCase(FitPalsTestCase):
         del test_user1_public["password"]
         resp = self.app.get("/users/" + str(self.test_user1["id"]))
         assert resp.status_code==200
+        assert json.loads(resp.data)["message"] == "User found."
         assert json.loads(resp.data)["value"] == test_user1_public
 
     def test_get_user_name(self):
@@ -134,19 +135,6 @@ class UsersApiTestCase(FitPalsTestCase):
         resp = self.app.get("/users/0")
         assert resp.status_code==404
         assert json.loads(resp.data)["message"] == "User not found."
-        
-    def test_get_user_authorized(self):
-        resp = self.app.get("/users/" + str(self.test_user1["id"]),
-                            headers={"Authorization":self.test_user1["fb_id"]})
-        assert resp.status_code==200
-        assert json.loads(resp.data)["value"] == self.test_user1
-
-    def test_get_user_not_authorized(self):
-        resp = self.app.get("/users/" + str(self.test_user1["id"]),
-                            headers={"Authorization":
-                                     self.test_user1["fb_id"] + "junk"})
-        assert resp.status_code==401
-        assert json.loads(resp.data)["message"] == "Not Authorized."
 
     def test_update_user(self):
         #update the user
@@ -156,14 +144,22 @@ class UsersApiTestCase(FitPalsTestCase):
                             data={
                                 "longitude":20,
                                 "latitude":20,
-                                "about me":"I'm a test user!"},
+                                "about_me":"I'm a test user!"},
                             headers = {"Authorization":fb_id})
         assert resp.status_code==202
+        
+        #update user on our end
+        self.test_user1["longitude"] = 20.0
+        self.test_user1["latitude"] = 20.0
+        self.test_user1["about_me"] = "I'm a test user!"
+        del self.test_user1["password"]
+        del self.test_user1["fb_id"]
         
         #ensure that test_user websocket self.websocket_client1 got new user update
         received = self.websocket_client1.get_received()
         assert len(received) != 0
         assert received[-1]["name"] == "user_update"
+        assert received[-1]["args"][0] == self.test_user1
         assert received[-1]["args"][0] == json.loads(resp.data)["value"]
         
     def test_update_user_not_found(self):
@@ -175,8 +171,8 @@ class UsersApiTestCase(FitPalsTestCase):
                                 "latitude":20,
                                 "about me":"I'm a test user!"},
                             headers = {"Authorization":fb_id})
-        assert resp.status_code==400
-        assert json.loads(resp.data)["message"] == "Could not find user."
+        assert resp.status_code==404
+        assert json.loads(resp.data)["message"] == "User not found."
         
     def test_update_user_not_authorized(self):
         user_id = self.test_user1["id"]
@@ -191,6 +187,7 @@ class UsersApiTestCase(FitPalsTestCase):
         assert json.loads(resp.data)["message"] == "Not Authorized."
         
     def test_delete_user(self):
+        #delete test_user1
         user_id = self.test_user1["id"]
         fb_id = self.test_user1["fb_id"]
         resp = self.app.delete("/users/" + str(user_id),
@@ -199,6 +196,12 @@ class UsersApiTestCase(FitPalsTestCase):
         assert resp.status_code==200
         assert json.loads(resp.data)["message"] == "User deleted."
         
+        #ensure that user was deleted
+        resp = self.app.get("/users/%d" % user_id)
+        assert resp.status_code == 404
+        assert json.loads(resp.data)["message"] == "User not found."
+
+        
     def test_delete_user_not_found(self):
         user_id = 0
         fb_id = self.test_user1["fb_id"]
@@ -206,7 +209,7 @@ class UsersApiTestCase(FitPalsTestCase):
                                headers={"Content-Type": "application/x-www-form-urlencoded",
                                         "Authorization":fb_id})
         assert resp.status_code==404
-        assert json.loads(resp.data)["message"] == "Could not find user."
+        assert json.loads(resp.data)["message"] == "User not found."
 
     def test_delete_user_not_authorized(self):
         user_id = self.test_user1["id"]

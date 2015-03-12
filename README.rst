@@ -4,6 +4,78 @@ Welcome to Fitpals Web API's documentation!
 
 Contents:
 
+``GET /activity_settings``
+
+   Get all activity settings for a user, specified by Authorization
+
+   :Request Headers:
+      * Authorization -- facebook token
+
+   :Status Codes:
+      * 401 Unauthorized -- Not Authorized.
+
+      * 200 OK -- Activity settings found.
+
+``POST /activity_settings``
+
+   Post new activity setting for user
+
+   :Request Headers:
+      * Authorization -- facebook token
+
+   :Form Parameters:
+      * **int user_id** -- Id of user.
+
+      * **int question_id** -- Id of question.
+
+      * **float lower_value** -- Lower value answer for question.
+
+      * **float upper_value** -- Upper value answer for question.
+
+   :Status Codes:
+      * 401 Unauthorized -- Not Authorized.
+
+      * 404 Not Found -- Question not found.
+
+      * 404 Not Found -- User not found.
+
+      * 500 Internal Server Error -- Could not create activity
+        setting.
+
+      * 201 Created -- Activity setting created.
+
+``GET /message_threads``
+
+   Get all message threads for a user, specified by Authorization
+
+   :Request Headers:
+      * Authorization -- facebook token
+
+   :Status Codes:
+      * 401 Unauthorized -- Not Authorized.
+
+      * 200 OK -- Message threads found.
+
+``POST /message_threads``
+
+   Create new message thread between 2 users.
+
+   :Request Headers:
+      * Authorization -- facebook token
+
+   :Form Parameters:
+      * **int user2_id** -- Id of user2 for new message thread.
+
+   :Status Codes:
+      * 401 Unauthorized -- Not Authorized.
+
+      * 404 Not Found -- user2_id not found.
+
+      * 500 Internal Server Error -- Internal Error. Changes not
+        committed.
+
+      * 201 Created -- Message thread created.
+
 ``GET /activities``
 
    Get all possible activities.
@@ -11,9 +83,206 @@ Contents:
    :Status Codes:
       * 200 OK -- Activities found.
 
+``GET /messages``
+
+   Get owner's messages from a thread
+
+   :Request Headers:
+      * Authorization -- facebook token
+
+   :Query Parameters:
+      * **message_thread_id** (*int*) -- Id of specific thread to get
+        messages from.
+
+      * **since** (*int*) -- Optional time to get messages 'since'
+        then.
+
+   :Status Codes:
+      * 401 Unauthorized -- Not Authorized.
+
+      * 404 Not Found -- Message thread not found.
+
+      * 200 OK -- Messages found.
+
+``POST /messages``
+
+   Post new message to thread
+
+   :Request Headers:
+      * Authorization -- facebook token
+
+   :Form Parameters:
+      * **int message_thread_id** -- Id of specific thread to get
+        messages from.
+
+      * **str body** -- Message body
+
+      * **int direction** -- direction that message goes between users
+        1 and  2 in a thread. Set to 0 for user1->user2; Set to 1 for
+        user2->user1. Note: direction's type  in the model is actually
+        boolean, where 0->False and 1->True.
+
+   :Status Codes:
+      * 401 Unauthorized -- Not Authorized.
+
+      * 403 Forbidden -- Message thread has been closed.
+
+      * 404 Not Found -- Message thread not found.
+
+      * 500 Internal Server Error -- Internal Error. Changes not
+        committed.
+
+      * 201 Created -- Message created.
+
+``GET /pictures``
+
+   Get all pictures for a user.
+
+   :Parameters:
+      * **user_id** (*int*) -- Id of user.
+
+   :Status Codes:
+      * 404 Not Found -- User not found.
+
+      * 200 OK -- Pictures found.
+
+``POST /pictures``
+
+   Post new picture.
+
+   :Request Headers:
+      * Authorization -- facebook token
+
+   :Form Parameters:
+      * **int user_id** -- Id of user.
+
+      * **str uri** -- Facebook Picture Id string.
+
+      * **int ui_index** -- Index of the ui.
+
+      * **float top** -- Top position for crop
+
+      * **float bottom** -- Bottom position for crop
+
+      * **float left** -- Left position for crop
+
+      * **float right** -- Right position for crop
+
+   :Status Codes:
+      * 400 Bad Request -- Picture data invalid.
+
+      * 401 Unauthorized -- Not Authorized.
+
+      * 404 Not Found -- User not found.
+
+      * 201 Created -- Picture added.
+
+``POST /devices``
+
+   Post new device
+
+   :Request Headers:
+      * Authorization -- facebook token
+
+   :Form Parameters:
+      * **int user_id** -- Id of user.
+
+      * **str token** -- device token to be posted
+
+   :Status Codes:
+      * 400 Bad Request -- Could not register device.
+
+      * 401 Unauthorized -- Not Authorized.
+
+      * 404 Not Found -- User not found.
+
+      * 200 OK -- Device already registered.
+
+      * 201 Created -- Device registered.
+
+``GET /matches``
+
+   Get matches for a user
+
+   :Request Headers:
+      * Authorization -- facebook token
+
+   :Query Parameters:
+      * **liked** (*bool*) -- If specified, returns matches that
+        correspond with liked. Set to 0 for False, 1 for True.
+
+   :Status Codes:
+      * 401 Unauthorized -- Not Authorized.
+
+      * 200 OK -- Matches found.
+
+``POST /matches``
+
+   Create new match
+
+   :Request Headers:
+      * Authorization -- facebook token
+
+   :Form Parameters:
+      * **int user_id** -- User id for owner of matches.
+
+      * **int matched_user_id** -- User id for matched user.
+
+      * **bool liked** -- If specified, sets new match liked. Set to 0
+        for False, 1 for True.
+
+   :Status Codes:
+      * 400 Bad Request -- Could not create match.
+
+      * 401 Unauthorized -- Not Authorized.
+
+      * 404 Not Found -- User not found.
+
+      * 404 Not Found -- Match user not found.
+
+      * 201 Created -- Match created.
+
+``GET /friends``
+
+   Get friends for a user specified by Authorization.
+
+   :Request Headers:
+      * Authorization -- facebook token
+
+   :Status Codes:
+      * 200 OK -- Friends found.
+
+      * 401 Unauthorized -- Not Authorized.
+
+``POST /friends``
+
+   Add friend to friends list.
+
+   :Request Headers:
+      * Authorization -- facebook token
+
+   :Form Parameters:
+      * **int user_id** -- Id of user creating friend.
+
+      * **int friend_user_id** -- Id of user to be friend.
+
+   :Status Codes:
+      * 401 Unauthorized -- Not Authorized.
+
+      * 404 Not Found -- User not found.
+
+      * 500 Internal Server Error -- Internal error. Changes not
+        committed.
+
+      * 201 Created -- Friends added.
+
 ``GET /users``
 
-   Gets users that fall inside the specified parameters.
+   Gets users that fall inside the specified parameters
+      and the authorized user's search settings
+
+   :Request Headers:
+      * Authorization -- facebook token
 
    :Query Parameters:
       * **longitude** (*float*) -- Specify a longitude to search by.
@@ -29,20 +298,9 @@ Contents:
       * **last_updated** (*int*) -- Number of seconds since epoch;
         Return users that were updated before a given time.
 
-      * **jabber_id** (*string*) -- Return users with specific
-        jabber_id.
-
-      * **activity_name** (*string*) -- Return users with matching
-        activity_name
-
-      * **question_ids** (*int-list*) -- Must be same length as
-        answers; specify activity_setting questions to filter by.
-
-      * **answers** (*float-list*) -- Must be same length as
-        question_ids; specify answers for activity_settings questions
-        to filter by.
-
    :Status Codes:
+      * 400 Bad Request -- Invalid GPS parameters.
+
       * 200 OK -- Users found.
 
 ``POST /users``
@@ -62,8 +320,11 @@ Contents:
       * **str primary_picture** -- Picture ID string for primary
         picture.
 
-      * **int dob** -- Integer number to represent DOB. THIS MAY
-        CHANGE!
+      * **int dob_year** -- Integer number to represent DOB year.
+
+      * **int dob_month** -- Integer number to represent DOB month.
+
+      * **int dob_day** -- Integer number to represent DOB day.
 
       * **bool available** -- Specify whether or not user is
         available.
@@ -74,308 +335,261 @@ Contents:
         WORKS
 
    :Status Codes:
+      * 400 Bad Request -- Must specify DOB.
+
+      * 400 Bad Request -- Could not create user.
+
+      * 500 Internal Server Error -- Internal error. Changes not
+        committed.
+
       * 200 OK -- User found.
 
       * 201 Created -- User created.
 
-      * 400 Bad Request -- Could not create user.
+``GET /activity_settings/(int: setting_id)``
 
-``GET /users/(int: user_id)/activity_settings/(int: activity_id)``
-
-   Get user's activity settings for a specific activity
-
-   :Parameters:
-      * **user_id** (*int*) -- Id of user.
-
-      * **activity_id** (*int*) -- Id of acitivity.
-
-   :Query Parameters:
-      * **question_id** (*int*) -- Id of question.
-
-   :Status Codes:
-      * 400 Bad Request -- User not found.
-
-      * 202 Accepted -- Activity found.
-
-``PUT /users/(int: user_id)/activity_settings/(int: activity_id)``
-
-   Update user's activity settings for a specific activity
+   Get specific activity setting
 
    :Request Headers:
-      * Authorization -- fb_id token needed here
-
-   :Parameters:
-      * **user_id** (*int*) -- Id of user.
-
-      * **activity_id** (*int*) -- Id of acitivity.
-
-   :Form Parameters:
-      * **int-list question_ids** -- Ids of questions. Must zip with
-        answers
-
-      * **int-list answers** -- Answer to question. Must zip with
-        question_ids
+      * Authorization -- facebook token
 
    :Status Codes:
-      * 400 Bad Request -- "User not found" or "Inequal amounts of
-        questions and answers".
+      * 401 Unauthorized -- Not Authorized.
+
+      * 404 Not Found -- Activity setting not found.
+
+      * 202 Accepted -- Activity setting found.
+
+``PUT /activity_settings/(int: setting_id)``
+
+   Update specific activity setting
+
+   :Request Headers:
+      * Authorization -- facebook token
+
+   :Form Parameters:
+      * **float lower_value** -- Lower value answer to question.
+
+      * **float upper_value** -- Upper value answer to question.
+
+   :Status Codes:
+      * 400 Bad Request -- Could not update activity setting.
+
+      * 401 Unauthorized -- Not Authorized.
+
+      * 404 Not Found -- Activity setting not found.
 
       * 202 Accepted -- Activity setting updated.
 
-``DELETE /users/(int: user_id)/activity_settings/(int: activity_id)``
+``DELETE /activity_settings/(int: setting_id)``
 
-   Delete user's activity settings for a specific activity
+   Delete Activity Setting
 
    :Request Headers:
-      * Authorization -- fb_id token needed here
+      * Authorization -- facebook token
 
    :Parameters:
-      * **user_id** (*int*) -- Id of user.
-
-      * **activity_id** (*int*) -- Id of acitivity.
-
-   :Form Parameters:
-      * **int-list question_ids** -- Ids of questions.
+      * **setting_id** (*int*) -- Id of activity setting.
 
    :Status Codes:
-      * 400 Bad Request -- User not found.
+      * 401 Unauthorized -- Not Authorized.
+
+      * 404 Not Found -- Activity setting not found.
+
+      * 500 Internal Server Error -- Internal error. Changes not
+        committed.
 
       * 202 Accepted -- Activity setting deleted.
 
-``GET /users/(int: owner_id)/messages/(int: other_id)``
+``DELETE /message_threads/(int: thread_id)``
 
-   Get owner's messages with other user
-
-   :Parameters:
-      * **owner_id** (*int*) -- User id for owner.
-
-      * **other_id** (*int*) -- User id for other user.
-
-   :Status Codes:
-      * 400 Bad Request -- User not found.
-
-      * 500 Internal Server Error -- Message lookup failed.
-
-      * 200 OK -- Messages found.
-
-``DELETE /users/(int: owner_id)/messages/(int: other_id)``
-
-   Delete owner's messages with other user
-
-   :Parameters:
-      * **owner_id** (*int*) -- User id for owner.
-
-      * **other_id** (*int*) -- User id for other user.
-
-   :Status Codes:
-      * 400 Bad Request -- User not found.
-
-      * 500 Internal Server Error -- Messages not deleted.
-
-      * 200 OK -- Messages deleted.
-
-``GET /users/(int: user_id)/activity_settings``
-
-   Get all activity settings for a user
-
-   :Parameters:
-      * **user_id** (*int*) -- User to get activity settings for
-
-   :Status Codes:
-      * 400 Bad Request -- User not found.
-
-      * 200 OK -- Activity settings found.
-
-``POST /users/(int: user_id)/activity_settings``
-
-   Post new activity setting for user
+   Delete a message thread
 
    :Request Headers:
-      * Authorization -- fb_id token needed here
-
-   :Parameters:
-      * **user_id** (*int*) -- Id of user.
-
-   :Form Parameters:
-      * **int activity_id** -- Id of activity.
-
-      * **int-list question_ids** -- List of question_ids, must zip
-        with answers
-
-      * **float-list answers** -- List of answers, must zip with
-        question_ids
+      * Authorization -- facebook token
 
    :Status Codes:
       * 401 Unauthorized -- Not Authorized.
 
-      * 400 Bad Request -- "Inequal numbers of questions and answers"
-        or "Activity not found" or "Activity question not found".
+      * 404 Not Found -- Message thread not found.
 
-      * 202 Accepted -- Activity setting created.
+      * 500 Internal Server Error -- Internal Error. Changes not
+        committed.
 
-``DELETE /users/(int: user_id)/activity_settings``
+      * 200 OK -- Message thread deleted.
 
-   Delete activity settings for user
+``GET /search_settings/(int: settings_id)``
+
+   Get search settings.
 
    :Request Headers:
-      * Authorization -- fb_id token needed here
+      * Authorization -- facebook token
 
    :Parameters:
-      * **user_id** (*int*) -- Id of user.
+      * **settings_id** (*int*) -- Id of search settings.
 
    :Status Codes:
       * 401 Unauthorized -- Not Authorized.
 
-      * 400 Bad Request -- User not found.
+      * 404 Not Found -- Search settings not found.
 
-      * 202 Accepted -- Activity settings created.
+      * 200 OK -- Search settings found.
 
-``GET /users/(int: user_id)/pictures``
+``PUT /search_settings/(int: settings_id)``
 
-   Get all (secondary)pictures for a user.
+   Create new search setting.
 
-   :Parameters:
-      * **user_id** (*int*) -- Id of user.
-
-   :Status Codes:
-      * 400 Bad Request -- Could not find user.
-
-      * 200 OK -- Pictures found.
-
-``POST /users/(int: user_id)/pictures``
-
-   Post new (secondary)picture for a user.
+   NOTE bool fields friends_only, men_only, and women_only are encoded
+   as int because reqparse is dumb and I should've used something
+   else.
 
    :Request Headers:
-      * Authorization -- fb_id token needed here
+      * Authorization -- facebook token
 
    :Parameters:
-      * **user_id** (*int*) -- Id of user.
+      * **settings_id** (*int*) -- Id of search settings.
 
    :Form Parameters:
-      * **str picture_id** -- Facebook Picture Id string.
+      * **int activity_id** -- Activity id.
+
+      * **int friends_only** -- Set to 1 if user wants friends only;
+        Default is 0
+
+      * **int men_only** -- Set to 1 if user wants men only; Default
+        is 0
+
+      * **int women_only** -- Set to 1 if user wants women only;
+        Default is 0
+
+      * **int age_lower_limit** -- Set if user want lower age limit.
+        Default is 18.
+
+      * **int age_upper_limit** -- Set if user want upper age limit.
+        Default is 130.
+
+   http://en.wikipedia.org/wiki/Oldest_people
+
+   :Status Codes:
+      * 400 Bad Request -- Search settings could not be updated.
+
+      * 401 Unauthorized -- Not Authorized.
+
+      * 404 Not Found -- Search settings not found.
+
+      * 202 Accepted -- Search settings updated.
+
+``PUT /pictures/(int: pic_id)``
+
+   Delete picture.
+
+   :Request Headers:
+      * Authorization -- facebook token
+
+   :Parameters:
+      * **pic_id** (*int*) -- Id of user.
+
+   :Form Parameters:
+      * **int user_id** -- Id of user.
+
+      * **str uri** -- Facebook Picture Id string.
+
+      * **int ui_index** -- Index of the ui.
+
+      * **float top** -- Top position for crop
+
+      * **float bottom** -- Bottom position for crop
+
+      * **float left** -- Left position for crop
+
+      * **float right** -- Right position for crop
+
+   :Status Codes:
+      * 400 Bad Request -- Picture data invalid.
+
+      * 401 Unauthorized -- Not Authorized.
+
+      * 404 Not Found -- Picture not found.
+
+      * 201 Created -- Picture removed.
+
+``DELETE /pictures/(int: pic_id)``
+
+   Delete picture.
+
+   :Request Headers:
+      * Authorization -- facebook token
+
+   :Parameters:
+      * **pic_id** (*int*) -- Id of user.
 
    :Status Codes:
       * 401 Unauthorized -- Not Authorized.
 
-      * 400 Bad Request -- Could not find user.
+      * 404 Not Found -- Picture not found.
 
-      * 201 Created -- Picture added.
+      * 500 Internal Server Error -- Internal error. Changes not
+        committed.
 
-``DELETE /users/(int: user_id)/pictures``
+      * 201 Created -- Picture removed.
 
-   Delete (secondary)picture for a user.
+``DELETE /devices/(int: device_id)``
+
+   Delete device
 
    :Request Headers:
-      * Authorization -- fb_id token needed here
+      * Authorization -- facebook token
+
+   :Status Codes:
+      * 400 Bad Request -- Could not delete device.
+
+      * 401 Unauthorized -- Not Authorized.
+
+      * 404 Not Found -- Device not found.
+
+      * 200 OK -- Device deleted.
+
+``DELETE /matches/(int: match_id)``
+
+   Delete match
+
+   :Request Headers:
+      * Authorization -- facebook token
 
    :Parameters:
-      * **user_id** (*int*) -- Id of user.
+      * **match_id** (*int*) -- Id for specific match.
 
-   :Form Parameters:
-      * **str picture_id** -- Facebook Picture Id string.
+   :Status Codes:
+      * 400 Bad Request -- Match could not be deleted.
+
+      * 401 Unauthorized -- Not Authorized.
+
+      * 404 Not Found -- Match not found.
+
+      * 200 OK -- Match deleted.
+
+``DELETE /friends/(int: friend_id)``
+
+   Delete a friend.
+
+   :Request Headers:
+      * Authorization -- facebook token
+
+   :Parameters:
+      * **friend_id** (*int*) -- Id of friend to delete.
 
    :Status Codes:
       * 401 Unauthorized -- Not Authorized.
 
-      * 400 Bad Request -- "Could not find user" or "Picture not
-        found".
+      * 404 Not Found -- Friend not found.
 
-      * 201 Created -- "Picture removed" or "Pictures removed".
+      * 500 Internal Server Error -- Internal error. Changes not
+        committed.
 
-``GET /users/(int: user_id)/matches``
-
-   :Parameters:
-      * **user_id** (*int*) -- User id for owner of matches.
-
-   :Query Parameters:
-      * **liked** (*bool*) -- If specified, returns matches that
-        correspond with liked.
-
-   :Status Codes:
-      * 400 Bad Request -- User not found.
-
-      * 200 OK -- Matches retrieved.
-
-``POST /users/(int: user_id)/matches``
-
-   :Request Headers:
-      * Authorization -- fb_id token needed here
-
-   :Parameters:
-      * **user_id** (*int*) -- User id for owner of matches.
-
-   :Form Parameters:
-      * **int match_id** -- User id for match.
-
-      * **bool liked** -- If specified, returns matches that
-        correspond with liked.
-
-   :Status Codes:
-      * 400 Bad Request -- "User not found" or "Match not found".
-
-      * 200 OK -- Match posted.
-
-``DELETE /users/(int: user_id)/matches``
-
-   :Request Headers:
-      * Authorization -- fb_id token needed here
-
-   :Parameters:
-      * **user_id** (*int*) -- User id for owner of matches.
-
-   :Form Parameters:
-      * **int match_id** -- User id for match.
-
-   :Status Codes:
-      * 400 Bad Request -- User not found.
-
-      * 200 OK -- User match decisions deleted.
-
-``POST /users/(user_id)/apn_tokens``
-
-   Post new APN token for user
-
-   :Request Headers:
-      * Authorization -- fb_id token needed here
-
-   :Parameters:
-      * **user_id** (*int*) -- Id of user.
-
-   :Form Parameters:
-      * **str token** -- apn_token to be posted
-
-   :Status Codes:
-      * 400 Bad Request -- Could not find user.
-
-      * 201 Created -- APN token stored.
-
-``DELETE /users/(user_id)/apn_tokens``
-
-   Delete APN token for user
-
-   :Request Headers:
-      * Authorization -- fb_id token needed here
-
-   :Parameters:
-      * **user_id** (*int*) -- Id of user.
-
-   :Form Parameters:
-      * **str token** -- apn_token to be deleted. If not specified,
-        all apn_tokens will be deleted.
-
-   :Status Codes:
-      * 400 Bad Request -- Could not find user.
-
-      * 201 Created -- APN token stored.
+      * 200 OK -- Friend deleted.
 
 ``GET /users/(int: user_id)``
 
    Get a user object by user_id
-
-   :Request Headers:
-      * Authorization -- fb_id token needed for private values;
-        currently does nothing
 
    :Parameters:
       * **user_id** (*int*) -- User to delete.
@@ -387,14 +601,14 @@ Contents:
    :Status Codes:
       * 200 OK -- User found.
 
-      * 400 Bad Request -- User not found.
+      * 404 Not Found -- User not found.
 
 ``PUT /users/(int: user_id)``
 
    Update a user
 
    :Request Headers:
-      * Authorization -- fb_id token needed here
+      * Authorization -- facebook token
 
    :Parameters:
       * **user_id** (*int*) -- User to delete.
@@ -415,10 +629,12 @@ Contents:
       * **int dob** -- Update user's DOB; THIS WILL LIKELY CHANGE
 
    :Status Codes:
-      * 400 Bad Request -- "Could not find user" or "User updated
-        failed".
-
       * 401 Unauthorized -- Not Authorized.
+
+      * 404 Not Found -- User not found.
+
+      * 500 Internal Server Error -- Internal error. Changes not
+        committed.
 
       * 202 Accepted -- User updated.
 
@@ -427,15 +643,15 @@ Contents:
    Delete a user
 
    :Request Headers:
-      * Authorization -- fb_id token needed here
+      * Authorization -- facebook token
 
    :Parameters:
       * **user_id** (*int*) -- User to delete.
 
    :Status Codes:
-      * 400 Bad Request -- Could not find user.
-
       * 401 Unauthorized -- Not Authorized.
+
+      * 404 Not Found -- User not found.
 
       * 500 Internal Server Error -- User not deleted.
 

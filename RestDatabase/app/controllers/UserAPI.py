@@ -35,6 +35,7 @@ class UsersAPI(Resource):
         :query int last_updated: Number of seconds since epoch;
             Return users that were updated before a given time.
 
+        :status 400: Invalid GPS parameters.
         :status 200: Users found.
         """
         parser = reqparse.RequestParser()
@@ -104,7 +105,7 @@ class UsersAPI(Resource):
             #ensure GPS parameters are valid
             if (args.radius <= 0) or not (-180 <= args.longitude <= 180)\
                 or not (-90 <= args.latitude <= 90):
-                return Response(status=400,message="Invalid GPS parameters")\
+                return Response(status=400,message="Invalid GPS parameters.")\
                     .__dict__,400
             point = func.ST_GeomFromText("POINT(%f %f)" %\
                                          (args.longitude,args.latitude)) 
@@ -138,11 +139,11 @@ class UsersAPI(Resource):
         :form str name: Specify user name
         :form str gender: Specify user gender; I DON'T THINK THIS WORKS
 
-        :status 200: User found.
-        :status 201: User created.
         :status 400: Must specify DOB.
         :status 400: Could not create user.
         :status 500: Internal error. Changes not committed.
+        :status 200: User found.
+        :status 201: User created.
         """
 
         parser = reqparse.RequestParser()
@@ -218,8 +219,6 @@ class UserAPI(Resource):
         """
         Get a user object by user_id
 
-        :reqheader Authorization: Facebook token.
-
         :param int user_id: User to delete.
 
         :query str-list attributes: list of user attribute names to receive;
@@ -231,22 +230,13 @@ class UserAPI(Resource):
         parser = reqparse.RequestParser()
         parser.add_argument("attributes",
             type=str, location='args', required=False, action="append")
-        parser.add_argument("Authorization",
-            type=str, location="headers", required=False)
         args = parser.parse_args()
         
         #Get user from db
         user = User.query.get(user_id)
         if not user:
             return Response(status=404,message="User not found.").__dict__,404
-            
-        if args.Authorization != None:
-            #ensure user is valid by checking if fb_id is correct
-            if user.fb_id != args.Authorization:
-                return Response(status=401,message="Not Authorized.").__dict__,401
-            user_dict = user.dict_repr(public=False)
-        else:
-            user_dict = user.dict_repr()
+        user_dict = user.dict_repr()
 
         #apply any attribute filters specified
         #CHANGE THIS TO user_dict=user.dict_repr(public=is_authorized)
@@ -262,7 +252,7 @@ class UserAPI(Resource):
         """
         Update a user
         
-        :reqheader Authorization: fb_id token needed here
+        :reqheader Authorization: facebook token
 
         :param int user_id: User to delete.
 
@@ -275,8 +265,9 @@ class UserAPI(Resource):
         :form bool available: Update user's availability
         :form int dob: Update user's DOB; THIS WILL LIKELY CHANGE
 
-        :status 400: "Could not find user" or "User updated failed".
         :status 401: Not Authorized.
+        :status 404: User not found.
+        :status 500: Internal error. Changes not committed.
         :status 202: User updated.
         """
         parser = reqparse.RequestParser()
@@ -305,7 +296,7 @@ class UserAPI(Resource):
         #get user to update from db
         user = User.query.filter(User.id==user_id).first()
         if not user:
-            return Response(status=400,message="Could not find user.").__dict__,400
+            return Response(status=404,message="User not found.").__dict__,404
 
         #ensure user is valid by checking if fb_id is correct
         if user.fb_id != args.Authorization:
@@ -326,8 +317,10 @@ class UserAPI(Resource):
 
         #Update database and return whether or not the update was a success
         try: db.session.commit()
-        except: return Response(status=400,
-            message="User update failed.").__dict__, 400
+        except:
+            db.session.rollback()
+            return Response(status=500,
+                message="Internal error. Changes not committed.").__dict__, 500
         
         #reflect update in user's other clients
         socketio.emit("user_update", user.dict_repr(), room=str(user.id))
@@ -339,12 +332,12 @@ class UserAPI(Resource):
         """
         Delete a user
         
-        :reqheader Authorization: fb_id token needed here
+        :reqheader Authorization: facebook token
 
         :param int user_id: User to delete.
 
-        :status 400: Could not find user.
         :status 401: Not Authorized.
+        :status 404: User not found.
         :status 500: User not deleted.
         :status 202: User updated.
         """
@@ -356,15 +349,20 @@ class UserAPI(Resource):
         #get user from database
         user = User.query.filter(User.id==user_id).first()
         if not user:
-            return Response(status=400,
-                message="Could not find user.").__dict__,404
+            return Response(status=404,
+                message="User not found.").__dict__,404
 
         #ensure user is authorized to delete
         if user.fb_id != args.Authorization:
             return Response(status=401,
                 message="Not Authorized.").__dict__,401
             
-        db.session.delete(user)
-        db.session.commit()
+        try:
+            db.session.delete(user)
+            db.session.commit()
+        except: 
+            db.session.rollback()
+            return Response(status=500,
+                message="Internal error. Changes not committed.").__dict__, 500
 
         return Response(status=200, message="User deleted.").__dict__,200
