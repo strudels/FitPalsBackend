@@ -9,7 +9,7 @@ from sqlalchemy.orm import relationship, backref, validates
 from sqlalchemy.ext.hybrid import hybrid_property
 from datetime import datetime
 
-from app import db
+from app import db, socketio
 
 class SearchSettings(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -76,11 +76,11 @@ class User(db.Model):
         cascade="save-update, merge, delete")
     activity_settings = relationship("ActivitySetting", lazy="dynamic",
         cascade="save-update, merge, delete")
-
+    
     @hybrid_property
     def password(self):
         return self.fb_id
-        
+
     @hybrid_property
     def longitude(self):
         return db.session.query(ST_X(self.location)).first()[0]
@@ -100,6 +100,10 @@ class User(db.Model):
     @hybrid_property
     def dob_day(self):
         return self.dob.day
+    
+    @hybrid_property
+    def online(self):
+        return str(self.id) in socketio.rooms[""] if socketio.rooms!={} else False
 
     def __init__(self,fb_id,longitude=None,latitude=None,about_me=None,
         dob=None, available=False, name=None, gender=None):
@@ -125,7 +129,8 @@ class User(db.Model):
             "dob_day":self.dob_day,
             "available":self.available,
             "name":self.name,
-            "gender":self.gender
+            "gender":self.gender,
+            "online":self.online
         }
         if not public:
             dict_repr["fb_id"] = self.fb_id
