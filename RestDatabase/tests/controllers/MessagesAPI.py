@@ -4,13 +4,13 @@ class MessagesApiTestCase(FitPalsTestCase):
     def test_get_message_threads(self):
         #create thread to get
         resp = self.app.post("/message_threads",
-                             headers={"Authorization":self.test_user1["fb_id"]},
+                             headers={"Authorization":self.test_user1["fb_secret"]},
                              data={"user2_id":self.test_user2["id"]})
 
         #get threads
         resp = self.app.get("/message_threads?user2_id=%s"\
-                             % self.test_user1["fb_id"],
-                             headers={"Authorization":self.test_user1["fb_id"]})
+                             % self.test_user1["fb_secret"],
+                             headers={"Authorization":self.test_user1["fb_secret"]})
         assert resp.status_code==200
         assert json.loads(resp.data)["message"] == "Message threads found."
         received_thread = json.loads(resp.data)["value"]
@@ -20,9 +20,9 @@ class MessagesApiTestCase(FitPalsTestCase):
 
     def test_get_message_threads_invalid_auth_token(self):
         resp = self.app.get("/message_threads?user2_id=%s"\
-                             % self.test_user1["fb_id"],
+                             % self.test_user1["fb_secret"],
                              headers={"Authorization":
-                                      self.test_user1["fb_id"] + "junk"})
+                                      self.test_user1["fb_secret"] + "junk"})
         assert resp.status_code==401
         assert json.loads(resp.data)["message"] == "Not Authorized."
 
@@ -33,7 +33,7 @@ class MessagesApiTestCase(FitPalsTestCase):
 
         #make request
         resp = self.app.post("/message_threads",
-                             headers={"Authorization":self.test_user1["fb_id"]},
+                             headers={"Authorization":self.test_user1["fb_secret"]},
                              data={"user2_id":self.test_user2["id"]})
         received_thread = json.loads(resp.data)["value"]
         
@@ -49,16 +49,16 @@ class MessagesApiTestCase(FitPalsTestCase):
         assert len(received) != 0
         assert received[-1]["name"] == "message_thread_created"
         
-    def test_create_message_thread_invalid_fb_id(self):
+    def test_create_message_thread_invalid_fb_secret(self):
         resp = self.app.post("/message_threads",
-                             headers={"Authorization":self.test_user1["fb_id"] + "junk"},
+                             headers={"Authorization":self.test_user1["fb_secret"] + "junk"},
                              data={"user2_id":self.test_user2["id"]})
         assert resp.status_code==401
         assert json.loads(resp.data)["message"]=="Not Authorized."
         
     def test_create_message_thread_no_user2(self):
         resp = self.app.post("/message_threads",
-                             headers={"Authorization":self.test_user1["fb_id"]},
+                             headers={"Authorization":self.test_user1["fb_secret"]},
                              data={"user2_id":-1})
         assert resp.status_code==404
         assert json.loads(resp.data)["message"]=="user2_id not found."
@@ -66,13 +66,13 @@ class MessagesApiTestCase(FitPalsTestCase):
     def test_delete_message_thread(self):
         #create thread
         resp = self.app.post("/message_threads",
-                             headers={"Authorization":self.test_user1["fb_id"]},
+                             headers={"Authorization":self.test_user1["fb_secret"]},
                              data={"user2_id":self.test_user2["id"]})
         thread_id = json.loads(resp.data)["value"]["id"]
 
         #delete thread for user 1
         resp = self.app.delete("/message_threads/%d" % thread_id,
-                             headers={"Authorization":self.test_user1["fb_id"]})
+                             headers={"Authorization":self.test_user1["fb_secret"]})
         assert resp.status_code==200
         assert json.loads(resp.data)["message"]=="Message thread deleted."
         
@@ -86,7 +86,7 @@ class MessagesApiTestCase(FitPalsTestCase):
                    "direction":1,
                    "body":"yo dawg"}
         resp = self.app.post("/messages",
-                             headers={"Authorization":self.test_user2["fb_id"]},
+                             headers={"Authorization":self.test_user2["fb_secret"]},
                              data=message)
         assert resp.status_code==403
         assert json.loads(resp.data)["message"]=="Message thread has been closed."
@@ -94,33 +94,33 @@ class MessagesApiTestCase(FitPalsTestCase):
 
         #ensure thread is still present for user 2
         resp = self.app.get("/messages?message_thread_id=%d" % thread_id,
-                            headers={"Authorization":self.test_user2["fb_id"]})
+                            headers={"Authorization":self.test_user2["fb_secret"]})
         assert resp.status_code==200
         assert json.loads(resp.data)["message"]=="Messages found."
 
         #delete thread for user 2
         resp = self.app.delete("/message_threads/%d" % thread_id,
-                             headers={"Authorization":self.test_user2["fb_id"]})
+                             headers={"Authorization":self.test_user2["fb_secret"]})
         assert resp.status_code==200
         assert json.loads(resp.data)["message"]=="Message thread deleted."
                             
         #ensure thread is deleted
         resp = self.app.get("/messages?message_thread_id=%d" % thread_id,
-                            headers={"Authorization":self.test_user2["fb_id"]})
+                            headers={"Authorization":self.test_user2["fb_secret"]})
         assert resp.status_code==404
         assert json.loads(resp.data)["message"]=="Message thread not found."
         
     def test_delete_message_thread_invalid_auth_token(self):
         #create thread
         resp = self.app.post("/message_threads",
-                             headers={"Authorization":self.test_user1["fb_id"]},
+                             headers={"Authorization":self.test_user1["fb_secret"]},
                              data={"user2_id":self.test_user2["id"]})
         thread_id = json.loads(resp.data)["value"]["id"]
 
         #attempt thread delete
         resp = self.app.delete("/message_threads/%d" % thread_id,
                              headers={"Authorization":
-                                      self.test_user1["fb_id"] + "junk"})
+                                      self.test_user1["fb_secret"] + "junk"})
         assert resp.status_code==401
         assert json.loads(resp.data)["message"]=="Not Authorized."
 
@@ -128,28 +128,28 @@ class MessagesApiTestCase(FitPalsTestCase):
         #attempt thread delete
         resp = self.app.delete("/message_threads/0",
                              headers={"Authorization":
-                                      self.test_user1["fb_id"]})
+                                      self.test_user1["fb_secret"]})
         assert resp.status_code==404
         assert json.loads(resp.data)["message"]=="Message thread not found."
         
     def test_delete_message_thread_not_authorized(self):
         #create thread
         resp = self.app.post("/message_threads",
-                             headers={"Authorization":self.test_user1["fb_id"]},
+                             headers={"Authorization":self.test_user1["fb_secret"]},
                              data={"user2_id":self.test_user2["id"]})
         thread_id = json.loads(resp.data)["value"]["id"]
 
         #attempt thread delete
         resp = self.app.delete("/message_threads/%d" % thread_id,
                              headers={"Authorization":
-                                      self.test_user3["fb_id"]})
+                                      self.test_user3["fb_secret"]})
         assert resp.status_code==401
         assert json.loads(resp.data)["message"]=="Not Authorized."
 
     def test_get_messages(self):
         #create thread
         resp = self.app.post("/message_threads?since=0",
-                             headers={"Authorization":self.test_user1["fb_id"]},
+                             headers={"Authorization":self.test_user1["fb_secret"]},
                              data={"user2_id":self.test_user2["id"]})
         thread_id = json.loads(resp.data)["value"]["id"]
         
@@ -159,11 +159,11 @@ class MessagesApiTestCase(FitPalsTestCase):
         #create message in thread
         resp = self.app.post("/messages",
                              data=message,
-                             headers={"Authorization":self.test_user1["fb_id"]})
+                             headers={"Authorization":self.test_user1["fb_secret"]})
 
         #get messages for user
         resp = self.app.get("/messages?message_thread_id=%d" % thread_id,
-                             headers={"Authorization":self.test_user1["fb_id"]})
+                             headers={"Authorization":self.test_user1["fb_secret"]})
         assert resp.status_code==200
         assert json.loads(resp.data)["message"]=="Messages found."
         message_received = json.loads(resp.data)["value"][0]
@@ -175,7 +175,7 @@ class MessagesApiTestCase(FitPalsTestCase):
     def test_get_messages_thread_not_found(self):
         #get messages for user
         resp = self.app.get("/messages?message_thread_id=%d" % -1,
-                             headers={"Authorization":self.test_user1["fb_id"]})
+                             headers={"Authorization":self.test_user1["fb_secret"]})
         assert resp.status_code==404
         assert json.loads(resp.data)["message"]=="Message thread not found."
         
@@ -183,28 +183,28 @@ class MessagesApiTestCase(FitPalsTestCase):
         #get messages for user
         resp = self.app.get("/messages?message_thread_id=%d" % -1,
                              headers={"Authorization":
-                                      self.test_user1["fb_id"] + "junk"})
+                                      self.test_user1["fb_secret"] + "junk"})
         assert resp.status_code==401
         assert json.loads(resp.data)["message"]=="Not Authorized."
         
     def test_get_messages_not_authorized(self):
         #create thread
         resp = self.app.post("/message_threads",
-                             headers={"Authorization":self.test_user1["fb_id"]},
+                             headers={"Authorization":self.test_user1["fb_secret"]},
                              data={"user2_id":self.test_user2["id"]})
         thread_id = json.loads(resp.data)["value"]["id"]
 
         #get messages for user
         resp = self.app.get("/messages?message_thread_id=%d" % thread_id,
                              headers={"Authorization":
-                                      self.test_user3["fb_id"]})
+                                      self.test_user3["fb_secret"]})
         assert resp.status_code==401
         assert json.loads(resp.data)["message"]=="Not Authorized."
 
     def test_create_message(self):
         #create thread
         resp = self.app.post("/message_threads",
-                             headers={"Authorization":self.test_user1["fb_id"]},
+                             headers={"Authorization":self.test_user1["fb_secret"]},
                              data={"user2_id":self.test_user2["id"]})
         thread_id = json.loads(resp.data)["value"]["id"]
 
@@ -213,7 +213,7 @@ class MessagesApiTestCase(FitPalsTestCase):
                    "direction":0,
                    "body":"yo dawg"}
         resp = self.app.post("/messages",
-                             headers={"Authorization":self.test_user1["fb_id"]},
+                             headers={"Authorization":self.test_user1["fb_secret"]},
                              data=message)
         assert resp.status_code == 201
         assert json.loads(resp.data)["message"]=="Message created."
@@ -238,13 +238,13 @@ class MessagesApiTestCase(FitPalsTestCase):
     def test_create_message_invalid_auth_token(self):
         #create thread
         resp = self.app.post("/message_threads",
-                             headers={"Authorization":self.test_user1["fb_id"]},
+                             headers={"Authorization":self.test_user1["fb_secret"]},
                              data={"user2_id":self.test_user2["id"]})
         thread_id = json.loads(resp.data)["value"]["id"]
 
         #create message
         resp = self.app.post("/messages",
-                             headers={"Authorization":self.test_user1["fb_id"] + "junk"},
+                             headers={"Authorization":self.test_user1["fb_secret"] + "junk"},
                              data={"message_thread_id":thread_id,
                                    "direction":0,
                                    "body":"yo dawg"})
@@ -254,12 +254,12 @@ class MessagesApiTestCase(FitPalsTestCase):
     def test_create_message_not_found(self):
         #create thread
         resp = self.app.post("/message_threads",
-                             headers={"Authorization":self.test_user1["fb_id"]},
+                             headers={"Authorization":self.test_user1["fb_secret"]},
                              data={"user2_id":self.test_user2["id"]})
         
         #create message
         resp = self.app.post("/messages",
-                             headers={"Authorization":self.test_user1["fb_id"]},
+                             headers={"Authorization":self.test_user1["fb_secret"]},
                              data={"message_thread_id":-1,
                                    "direction":0,
                                    "body":"yo dawg"})
@@ -269,13 +269,13 @@ class MessagesApiTestCase(FitPalsTestCase):
     def test_create_message_not_authorized(self):
         #create thread
         resp = self.app.post("/message_threads",
-                             headers={"Authorization":self.test_user1["fb_id"]},
+                             headers={"Authorization":self.test_user1["fb_secret"]},
                              data={"user2_id":self.test_user2["id"]})
         thread_id = json.loads(resp.data)["value"]["id"]
         
         #create message
         resp = self.app.post("/messages",
-                             headers={"Authorization":self.test_user2["fb_id"]},
+                             headers={"Authorization":self.test_user2["fb_secret"]},
                              data={"message_thread_id":thread_id,
                                    "direction":0,
                                    "body":"yo dawg"})
@@ -285,7 +285,7 @@ class MessagesApiTestCase(FitPalsTestCase):
     def test_create_message_for_closed_thread(self):
         #create thread
         resp = self.app.post("/message_threads",
-                             headers={"Authorization":self.test_user1["fb_id"]},
+                             headers={"Authorization":self.test_user1["fb_secret"]},
                              data={"user2_id":self.test_user2["id"]})
         thread_id = json.loads(resp.data)["value"]["id"]
         thread = MessageThread.query.get(thread_id)
@@ -294,7 +294,7 @@ class MessagesApiTestCase(FitPalsTestCase):
         
         #create message
         resp = self.app.post("/messages",
-                             headers={"Authorization":self.test_user1["fb_id"]},
+                             headers={"Authorization":self.test_user1["fb_secret"]},
                              data={"message_thread_id":thread_id,
                                    "direction":0,
                                    "body":"yo dawg"})

@@ -128,6 +128,7 @@ class UsersAPI(Resource):
         Create new user if not already exists; return user
 
         :form str fb_id: Specify fb_id for user; must be unique for every user.
+        :form str fb_secret: Specify fb_secret for user; must be unique for every user.
         :form float longitude: Specify a longitude to search by.
         :form float latitude: Specify a latitude to search by.
         :form str about_me: "About me" description of the user.
@@ -141,6 +142,7 @@ class UsersAPI(Resource):
 
         :status 400: Must specify DOB.
         :status 400: Could not create user.
+        :status 401: Not Authorized.
         :status 500: Internal error. Changes not committed.
         :status 200: User found.
         :status 201: User created.
@@ -149,6 +151,8 @@ class UsersAPI(Resource):
         parser = reqparse.RequestParser()
         #skip these args for now
         parser.add_argument("fb_id",
+            type=str, location='form', required=True)
+        parser.add_argument("fb_secret",
             type=str, location='form', required=True)
         parser.add_argument("longitude",
             type=float, location='form', required=False)
@@ -175,6 +179,10 @@ class UsersAPI(Resource):
         #return user if already exists
         user = User.query.filter(User.fb_id==args.fb_id).first()
         if user:
+            #if user fb_secret is incorrect, 401
+            if user.fb_secret != args.fb_secret:
+                return Response(status=401, message="Not Authorized.")\
+                    .__dict__,401
             return Response(status=200,
                 message="User found.",
                 value=user.dict_repr(public=False)).__dict__,200
@@ -193,6 +201,7 @@ class UsersAPI(Resource):
         try:
             new_user = User(
                 fb_id=args.fb_id,
+                fb_secret=args.fb_secret,
                 longitude=args.longitude,
                 latitude=args.latitude,
                 about_me=args.about_me,

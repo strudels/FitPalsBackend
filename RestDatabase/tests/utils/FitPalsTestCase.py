@@ -10,25 +10,22 @@ class FitPalsTestCase(unittest.TestCase):
         app.testing = True
         self.app = app.test_client()
 
-        self.test_user1 = User.query.filter(User.fb_id=="fbTestUser1").first()
-        if not self.test_user1:
-            self.test_user1 = User("fbTestUser1",dob=date(1990,1,1))
-            db.session.add(self.test_user1)
-            db.session.commit()
+        #create test_user1
+        self.test_user1 = User("fbTestUser1","fbTestUser1",dob=date(1990,1,1))
+        db.session.add(self.test_user1)
+        db.session.commit()
         self.test_user1 = self.test_user1.dict_repr(public=False)
 
-        self.test_user2 = User.query.filter(User.fb_id=="fbTestUser2").first()
-        if not self.test_user2:
-            self.test_user2 = User("fbTestUser2",dob=date(1990,1,1))
-            db.session.add(self.test_user2)
-            db.session.commit()
+        #create test_user2
+        self.test_user2 = User("fbTestUser2","fbTestUser2",dob=date(1990,1,1))
+        db.session.add(self.test_user2)
+        db.session.commit()
         self.test_user2 = self.test_user2.dict_repr(public=False)
             
-        self.test_user3 = User.query.filter(User.fb_id=="fbTestUser3").first()
-        if not self.test_user3:
-            self.test_user3 = User("fbTestUser3",dob=date(1990,1,1))
-            db.session.add(self.test_user3)
-            db.session.commit()
+        #create test_user3
+        self.test_user3 = User("fbTestUser3","fbTestUser3",dob=date(1990,1,1))
+        db.session.add(self.test_user3)
+        db.session.commit()
         self.test_user3 = self.test_user3.dict_repr(public=False)
 
         #log in test_user1 to chat web socket

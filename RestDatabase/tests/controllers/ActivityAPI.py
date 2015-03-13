@@ -19,18 +19,18 @@ class ActivitySettingsAPITestCase(FitPalsTestCase):
     
     def test_get_activity_settings(self):
         #create activity setting to get
-        fb_id = self.test_user1["fb_id"]
+        fb_secret = self.test_user1["fb_secret"]
         activity = json.loads(self.app.get("/activities").data)["value"][0]
         resp = self.app.post("/activity_settings",
                              data = {"user_id":self.test_user1["id"],
                                      "question_id":activity["questions"][0]["id"],
                                      "lower_value":8.3,
                                      "upper_value":20.6,},
-                             headers = {"Authorization":fb_id})
+                             headers = {"Authorization":fb_secret})
 
         #get activity settings
         resp =\
-            self.app.get("/activity_settings", headers={"Authorization":fb_id})
+            self.app.get("/activity_settings", headers={"Authorization":fb_secret})
         assert resp.status_code==200
         assert json.loads(resp.data)["message"]=="Activity settings found."
         setting = json.loads(resp.data)["value"][0]
@@ -41,23 +41,23 @@ class ActivitySettingsAPITestCase(FitPalsTestCase):
         assert setting["upper_value"] == 20.6
 
     def test_get_activitys_setting_user_not_found(self):
-        fb_id = self.test_user1["fb_id"]
+        fb_secret = self.test_user1["fb_secret"]
         resp =\
             self.app.get("/activity_settings",
-                         headers={"Authorization":fb_id + "junk"})
+                         headers={"Authorization":fb_secret + "junk"})
         assert resp.status_code==401
         assert json.loads(resp.data)["message"]=="Not Authorized."
         
     def test_create_activity_setting(self):
         #create activity
-        fb_id = self.test_user1["fb_id"]
+        fb_secret = self.test_user1["fb_secret"]
         activity = json.loads(self.app.get("/activities").data)["value"][0]
         resp = self.app.post("/activity_settings",
                              data = {"user_id":self.test_user1["id"],
                                      "question_id":activity["questions"][0]["id"],
                                      "lower_value":8.3,
                                      "upper_value":20.6,},
-                             headers = {"Authorization":fb_id})
+                             headers = {"Authorization":fb_secret})
         assert resp.status_code==201
         assert json.loads(resp.data)["message"]=="Activity setting created."
         setting = json.loads(resp.data)["value"]
@@ -74,68 +74,68 @@ class ActivitySettingsAPITestCase(FitPalsTestCase):
         assert received[-1]["args"][0] == setting
         
     def test_create_activity_setting_question_not_found(self):
-        fb_id = self.test_user1["fb_id"]
+        fb_secret = self.test_user1["fb_secret"]
         activity = json.loads(self.app.get("/activities").data)["value"][0]
         resp = self.app.post("/activity_settings",
                              data = {"user_id":self.test_user1["id"],
                                      "question_id":0,
                                      "lower_value":8.3,
                                      "upper_value":20.6,},
-                             headers = {"Authorization":fb_id})
+                             headers = {"Authorization":fb_secret})
         assert resp.status_code==404
         assert json.loads(resp.data)["message"]=="Question not found."
 
     def test_create_activity_setting_user_not_found(self):
-        fb_id = self.test_user1["fb_id"]
+        fb_secret = self.test_user1["fb_secret"]
         activity = json.loads(self.app.get("/activities").data)["value"][0]
         resp = self.app.post("/activity_settings",
                              data = {"user_id":0,
                                      "question_id":activity["questions"][0]["id"],
                                      "lower_value":8.3,
                                      "upper_value":20.6,},
-                             headers = {"Authorization":fb_id})
+                             headers = {"Authorization":fb_secret})
         assert resp.status_code==404
         assert json.loads(resp.data)["message"]=="User not found."
         
     def test_create_activity_setting_not_authorized(self):
-        fb_id = self.test_user1["fb_id"]
+        fb_secret = self.test_user1["fb_secret"]
         activity = json.loads(self.app.get("/activities").data)["value"][0]
         resp = self.app.post("/activity_settings",
                              data = {"user_id":self.test_user1["id"],
                                      "question_id":activity["questions"][0]["id"],
                                      "lower_value":8.3,
                                      "upper_value":20.6,},
-                             headers = {"Authorization":fb_id + "junk"})
+                             headers = {"Authorization":fb_secret + "junk"})
         assert resp.status_code==401
         assert json.loads(resp.data)["message"]=="Not Authorized."
 
     def test_create_activity_setting_cant_create(self):
-        fb_id = self.test_user1["fb_id"]
+        fb_secret = self.test_user1["fb_secret"]
         activity = json.loads(self.app.get("/activities").data)["value"][0]
         resp = self.app.post("/activity_settings",
                              data = {"user_id":self.test_user1["id"],
                                      "question_id":activity["questions"][0]["id"],
                                      "lower_value":8.3,
                                      "upper_value":2.6,},
-                             headers = {"Authorization":fb_id})
+                             headers = {"Authorization":fb_secret})
         assert resp.status_code==400
         assert json.loads(resp.data)["message"]=="Could not create activity setting."
         
     def test_get_activity_setting(self):
         #create setting
-        fb_id = self.test_user1["fb_id"]
+        fb_secret = self.test_user1["fb_secret"]
         activity = json.loads(self.app.get("/activities").data)["value"][0]
         resp = self.app.post("/activity_settings",
                              data = {"user_id":self.test_user1["id"],
                                      "question_id":activity["questions"][0]["id"],
                                      "lower_value":8.3,
                                      "upper_value":20.6,},
-                             headers = {"Authorization":fb_id})
+                             headers = {"Authorization":fb_secret})
         setting_id = json.loads(resp.data)["value"]["id"]
 
         #get setting
         resp = self.app.get("/activity_settings/%d" % setting_id,
-                            headers={"Authorization":fb_id})
+                            headers={"Authorization":fb_secret})
         assert resp.status_code==200
         assert json.loads(resp.data)["message"]=="Activity setting found."
         setting = json.loads(resp.data)["value"]
@@ -147,46 +147,46 @@ class ActivitySettingsAPITestCase(FitPalsTestCase):
         
     def test_get_activity_setting_not_found(self):
         #get setting
-        fb_id = self.test_user1["fb_id"]
+        fb_secret = self.test_user1["fb_secret"]
         resp = self.app.get("/activity_settings/%d" % 0,
-                            headers={"Authorization":fb_id})
+                            headers={"Authorization":fb_secret})
         assert resp.status_code==404
         assert json.loads(resp.data)["message"]=="Activity setting not found."
         
     def test_get_activity_setting_not_authorized(self):
         #create setting
-        fb_id = self.test_user1["fb_id"]
+        fb_secret = self.test_user1["fb_secret"]
         activity = json.loads(self.app.get("/activities").data)["value"][0]
         resp = self.app.post("/activity_settings",
                              data = {"user_id":self.test_user1["id"],
                                      "question_id":activity["questions"][0]["id"],
                                      "lower_value":8.3,
                                      "upper_value":20.6,},
-                             headers = {"Authorization":fb_id})
+                             headers = {"Authorization":fb_secret})
         setting_id = json.loads(resp.data)["value"]["id"]
         
         #get setting
         resp = self.app.get("/activity_settings/%d" % setting_id,
-                            headers={"Authorization":fb_id + "junk"})
+                            headers={"Authorization":fb_secret + "junk"})
         assert resp.status_code==401
         assert json.loads(resp.data)["message"]=="Not Authorized."
 
     def test_update_activity_setting(self):
         #create setting
-        fb_id = self.test_user1["fb_id"]
+        fb_secret = self.test_user1["fb_secret"]
         activity = json.loads(self.app.get("/activities").data)["value"][0]
         resp = self.app.post("/activity_settings",
                              data = {"user_id":self.test_user1["id"],
                                      "question_id":activity["questions"][0]["id"],
                                      "lower_value":8.3,
                                      "upper_value":20.6,},
-                             headers = {"Authorization":fb_id})
+                             headers = {"Authorization":fb_secret})
         setting_id = json.loads(resp.data)["value"]["id"]
         
         #update setting
         resp = self.app.put("/activity_settings/%d" % setting_id,
                             data={"lower_value":4.6, "upper_value":5.7},
-                            headers={"Authorization":fb_id})
+                            headers={"Authorization":fb_secret})
         assert resp.status_code==202
         assert json.loads(resp.data)["message"]=="Activity setting updated."
         setting = json.loads(resp.data)["value"]
@@ -203,67 +203,67 @@ class ActivitySettingsAPITestCase(FitPalsTestCase):
         assert setting == received[-1]["args"][0]
 
     def test_update_activity_setting_not_found(self):
-        fb_id = self.test_user1["fb_id"]
+        fb_secret = self.test_user1["fb_secret"]
         #update setting
         resp = self.app.put("/activity_settings/%d" % 0,
                             data={"lower_value":4.6, "upper_value":5.7},
-                            headers={"Authorization":fb_id})
+                            headers={"Authorization":fb_secret})
         assert resp.status_code==404
         assert json.loads(resp.data)["message"]=="Activity setting not found."
 
     def test_update_activity_setting_not_authorized(self):
         #create setting
-        fb_id = self.test_user1["fb_id"]
+        fb_secret = self.test_user1["fb_secret"]
         activity = json.loads(self.app.get("/activities").data)["value"][0]
         resp = self.app.post("/activity_settings",
                              data = {"user_id":self.test_user1["id"],
                                      "question_id":activity["questions"][0]["id"],
                                      "lower_value":8.3,
                                      "upper_value":20.6,},
-                             headers = {"Authorization":fb_id})
+                             headers = {"Authorization":fb_secret})
         setting_id = json.loads(resp.data)["value"]["id"]
         
         #update setting
         resp = self.app.put("/activity_settings/%d" % setting_id,
                             data={"lower_value":4.6, "upper_value":5.7},
-                            headers={"Authorization":fb_id + "junk"})
+                            headers={"Authorization":fb_secret + "junk"})
         assert resp.status_code==401
         assert json.loads(resp.data)["message"]=="Not Authorized."
 
     def test_update_activity_setting_could_not_update(self):
         #create setting
-        fb_id = self.test_user1["fb_id"]
+        fb_secret = self.test_user1["fb_secret"]
         activity = json.loads(self.app.get("/activities").data)["value"][0]
         resp = self.app.post("/activity_settings",
                              data = {"user_id":self.test_user1["id"],
                                      "question_id":activity["questions"][0]["id"],
                                      "lower_value":8.3,
                                      "upper_value":20.6,},
-                             headers = {"Authorization":fb_id})
+                             headers = {"Authorization":fb_secret})
         setting_id = json.loads(resp.data)["value"]["id"]
         
         #update setting
         resp = self.app.put("/activity_settings/%d" % setting_id,
                             data={"lower_value":4.6, "upper_value":3.7},
-                            headers={"Authorization":fb_id})
+                            headers={"Authorization":fb_secret})
         assert resp.status_code==400
         assert json.loads(resp.data)["message"]=="Could not update activity setting."
         
     def test_delete_activity_setting(self):
         #create setting
-        fb_id = self.test_user1["fb_id"]
+        fb_secret = self.test_user1["fb_secret"]
         activity = json.loads(self.app.get("/activities").data)["value"][0]
         resp = self.app.post("/activity_settings",
                              data = {"user_id":self.test_user1["id"],
                                      "question_id":activity["questions"][0]["id"],
                                      "lower_value":8.3,
                                      "upper_value":20.6,},
-                             headers = {"Authorization":fb_id})
+                             headers = {"Authorization":fb_secret})
         setting_id = json.loads(resp.data)["value"]["id"]
 
         #delete setting
         resp = self.app.delete("/activity_settings/%d" % setting_id,
-                               headers={"Authorization":fb_id})
+                               headers={"Authorization":fb_secret})
         assert resp.status_code==200
         assert json.loads(resp.data)["message"]=="Activity setting deleted."
 
@@ -273,32 +273,32 @@ class ActivitySettingsAPITestCase(FitPalsTestCase):
         assert received[-1]["name"] == "activity_setting_deleted"
 
     def test_delete_activity_setting_not_found(self):
-        fb_id = self.test_user1["fb_id"]
+        fb_secret = self.test_user1["fb_secret"]
         resp = self.app.delete("/activity_settings/%d" % 0,
-                               headers={"Authorization":fb_id})
+                               headers={"Authorization":fb_secret})
         assert resp.status_code==404
         assert json.loads(resp.data)["message"]=="Activity setting not found."
         
     def test_delete_activity_setting_not_authorized(self):
         #create setting
-        fb_id = self.test_user1["fb_id"]
+        fb_secret = self.test_user1["fb_secret"]
         activity = json.loads(self.app.get("/activities").data)["value"][0]
         resp = self.app.post("/activity_settings",
                              data = {"user_id":self.test_user1["id"],
                                      "question_id":activity["questions"][0]["id"],
                                      "lower_value":8.3,
                                      "upper_value":20.6,},
-                             headers = {"Authorization":fb_id})
+                             headers = {"Authorization":fb_secret})
         setting_id = json.loads(resp.data)["value"]["id"]
 
         #delete setting
         resp = self.app.delete("/activity_settings/%d" % setting_id,
-                               headers={"Authorization":fb_id})
+                               headers={"Authorization":fb_secret})
         assert resp.status_code==200
         assert json.loads(resp.data)["message"]=="Activity setting deleted."
 
         #ensure setting id was deleted
-        fb_id = self.test_user1["fb_id"]
+        fb_secret = self.test_user1["fb_secret"]
         resp = self.app.get("/activity_settings/%d" % setting_id,
-                            headers={"Authorization":fb_id})
+                            headers={"Authorization":fb_secret})
         assert resp.status_code==404

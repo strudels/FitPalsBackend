@@ -2,7 +2,8 @@ from tests.utils.FitPalsTestCase import *
 
 class UsersApiTestCase(FitPalsTestCase):
     def test_create_user(self):
-        user = {"fb_id":"some fb_id",
+        user = {"fb_secret":"some fb_secret",
+                "fb_id":"some fb_id",
                 "dob_year":1990,
                 "dob_month":2,
                 "dob_day":17,
@@ -16,12 +17,20 @@ class UsersApiTestCase(FitPalsTestCase):
             assert user[key] == received_user[key]
 
     def test_create_user_found(self):
-        resp = self.app.post("/users",data={"fb_id":self.test_user1["fb_id"]})
+        resp = self.app.post("/users",data={"fb_secret":self.test_user1["fb_secret"],
+                                            "fb_id":self.test_user1["fb_id"]})
         assert resp.status_code==200
         assert json.loads(resp.data)["message"] == "User found."
         
+    def test_create_user_not_authorized(self):
+        resp = self.app.post("/users",data={"fb_secret":self.test_user1["fb_secret"] + "junk",
+                                            "fb_id":self.test_user1["fb_id"]})
+        assert resp.status_code==401
+        assert json.loads(resp.data)["message"] == "Not Authorized."
+        
     def test_create_user_no_dob(self):
-        user = {"fb_id":"some fb_id",
+        user = {"fb_secret":"some fb_secret",
+                "fb_id":"some fb_id",
                 "dob_month":2,
                 "dob_day":17,
                 "longitude":20.0,
@@ -31,7 +40,8 @@ class UsersApiTestCase(FitPalsTestCase):
         assert json.loads(resp.data)["message"] == "Must specify DOB."
         
     def test_create_user_bad_coords(self):
-        user = {"fb_id":"some fb_id",
+        user = {"fb_secret":"some fb_secret",
+                "fb_id":"some fb_id",
                 "dob_year":1990,
                 "dob_month":2,
                 "dob_day":17,
@@ -42,7 +52,7 @@ class UsersApiTestCase(FitPalsTestCase):
         assert json.loads(resp.data)["message"] == "Coordinates invalid."
 
     def test_get_users(self):
-        fb_id = self.test_user1["fb_id"]
+        fb_secret = self.test_user1["fb_secret"]
         setting_id = self.test_user1["search_settings_id"]
         activity_id = json.loads(self.app.get("/activities").data)["value"][0]["id"]
 
@@ -50,42 +60,42 @@ class UsersApiTestCase(FitPalsTestCase):
         resp = self.app.put("/search_settings/%d"
                             % self.test_user1["search_settings_id"],
                             data={"activity_id":activity_id},
-                            headers={"Authorization":self.test_user1["fb_id"]})
+                            headers={"Authorization":self.test_user1["fb_secret"]})
         resp = self.app.put("/users/%d" % self.test_user1["id"],
                             data={"longitude":40, "latitude":20},
-                            headers={"Authorization":self.test_user1["fb_id"]})
+                            headers={"Authorization":self.test_user1["fb_secret"]})
         self.test_user1["longitude"] = 40.0
         self.test_user1["latitude"] = 20.0
         resp = self.app.put("/search_settings/%d"
                             % self.test_user2["search_settings_id"],
                             data={"activity_id":activity_id},
-                            headers={"Authorization":self.test_user2["fb_id"]})
+                            headers={"Authorization":self.test_user2["fb_secret"]})
         resp = self.app.put("/users/%d" % self.test_user2["id"],
                             data={"longitude":40, "latitude":20},
-                            headers={"Authorization":self.test_user2["fb_id"]})
+                            headers={"Authorization":self.test_user2["fb_secret"]})
         self.test_user2["longitude"] = 40.0
         self.test_user2["latitude"] = 20.0
         resp = self.app.put("/search_settings/%d"
                             % self.test_user3["search_settings_id"],
                             data={"activity_id":activity_id},
-                            headers={"Authorization":self.test_user3["fb_id"]})
+                            headers={"Authorization":self.test_user3["fb_secret"]})
         resp = self.app.put("/users/%d" % self.test_user3["id"],
                             data={"longitude":40, "latitude":20},
-                            headers={"Authorization":self.test_user3["fb_id"]})
+                            headers={"Authorization":self.test_user3["fb_secret"]})
         self.test_user3["longitude"] = 40.0
         self.test_user3["latitude"] = 20.0
         
         #delete private fields from test_users
-        del self.test_user1["fb_id"]
+        del self.test_user1["fb_secret"]
         del self.test_user1["password"]
-        del self.test_user2["fb_id"]
+        del self.test_user2["fb_secret"]
         del self.test_user2["password"]
-        del self.test_user3["fb_id"]
+        del self.test_user3["fb_secret"]
         del self.test_user3["password"]
 
         #import pdb; pdb.set_trace()
         resp = self.app.get("/users?longitude=40&latitude=20&radius=17000",
-                            headers={"Authorization":fb_id})
+                            headers={"Authorization":fb_secret})
         assert resp.status_code==200
         assert json.loads(resp.data)["message"] == "Users found."
         users = json.loads(resp.data)["value"]
@@ -96,13 +106,13 @@ class UsersApiTestCase(FitPalsTestCase):
         assert users[2] == self.test_user3
         
     def test_get_users_not_authorized(self):
-        fb_id = self.test_user1["fb_id"]
+        fb_secret = self.test_user1["fb_secret"]
         resp = self.app.get("/users?longitude=20&latitude=20&radius=17000",
-                            headers={"Authorization":fb_id + "junk"})
+                            headers={"Authorization":fb_secret + "junk"})
         assert resp.status_code==401
         
     def test_get_users_invalid_gps_params(self):
-        fb_id = self.test_user1["fb_id"]
+        fb_secret = self.test_user1["fb_secret"]
         setting_id = self.test_user1["search_settings_id"]
         activity_id = json.loads(self.app.get("/activities").data)["value"][0]["id"]
 
@@ -110,15 +120,15 @@ class UsersApiTestCase(FitPalsTestCase):
         resp = self.app.put("/search_settings/%d" % setting_id,
                             data={"activity_id":activity_id,
                                   "men_only":0, "women_only":1},
-                            headers={"Authorization":fb_id})
+                            headers={"Authorization":fb_secret})
 
         resp = self.app.get("/users?longitude=200&latitude=20&radius=17000",
-                            headers={"Authorization":fb_id})
+                            headers={"Authorization":fb_secret})
         assert resp.status_code==400
         
     def test_get_user(self):
         test_user1_public = self.test_user1
-        del test_user1_public["fb_id"]
+        del test_user1_public["fb_secret"]
         del test_user1_public["password"]
         resp = self.app.get("/users/" + str(self.test_user1["id"]))
         assert resp.status_code==200
@@ -139,13 +149,13 @@ class UsersApiTestCase(FitPalsTestCase):
     def test_update_user(self):
         #update the user
         user_id = self.test_user1["id"]
-        fb_id = self.test_user1["fb_id"]
+        fb_secret = self.test_user1["fb_secret"]
         resp = self.app.put("/users/" + str(user_id),
                             data={
                                 "longitude":20,
                                 "latitude":20,
                                 "about_me":"I'm a test user!"},
-                            headers = {"Authorization":fb_id})
+                            headers = {"Authorization":fb_secret})
         assert resp.status_code==202
         
         #update user on our end
@@ -153,7 +163,7 @@ class UsersApiTestCase(FitPalsTestCase):
         self.test_user1["latitude"] = 20.0
         self.test_user1["about_me"] = "I'm a test user!"
         del self.test_user1["password"]
-        del self.test_user1["fb_id"]
+        del self.test_user1["fb_secret"]
         
         #ensure that test_user websocket self.websocket_client1 got new user update
         received = self.websocket_client1.get_received()
@@ -164,35 +174,35 @@ class UsersApiTestCase(FitPalsTestCase):
         
     def test_update_user_not_found(self):
         user_id = 0
-        fb_id = self.test_user1["fb_id"]
+        fb_secret = self.test_user1["fb_secret"]
         resp = self.app.put("/users/" + str(user_id),
                             data={
                                 "longitude":20,
                                 "latitude":20,
                                 "about me":"I'm a test user!"},
-                            headers = {"Authorization":fb_id})
+                            headers = {"Authorization":fb_secret})
         assert resp.status_code==404
         assert json.loads(resp.data)["message"] == "User not found."
         
     def test_update_user_not_authorized(self):
         user_id = self.test_user1["id"]
-        fb_id = self.test_user1["fb_id"] + "junk"
+        fb_secret = self.test_user1["fb_secret"] + "junk"
         resp = self.app.put("/users/" + str(user_id),
                             data={
                                 "longitude":20,
                                 "latitude":20,
                                 "about me":"I'm a test user!"},
-                            headers = {"Authorization":fb_id})
+                            headers = {"Authorization":fb_secret})
         assert resp.status_code==401
         assert json.loads(resp.data)["message"] == "Not Authorized."
         
     def test_delete_user(self):
         #delete test_user1
         user_id = self.test_user1["id"]
-        fb_id = self.test_user1["fb_id"]
+        fb_secret = self.test_user1["fb_secret"]
         resp = self.app.delete("/users/" + str(user_id),
                                headers={"Content-Type": "application/x-www-form-urlencoded",
-                                        "Authorization":fb_id})
+                                        "Authorization":fb_secret})
         assert resp.status_code==200
         assert json.loads(resp.data)["message"] == "User deleted."
         
@@ -204,18 +214,18 @@ class UsersApiTestCase(FitPalsTestCase):
         
     def test_delete_user_not_found(self):
         user_id = 0
-        fb_id = self.test_user1["fb_id"]
+        fb_secret = self.test_user1["fb_secret"]
         resp = self.app.delete("/users/" + str(user_id),
                                headers={"Content-Type": "application/x-www-form-urlencoded",
-                                        "Authorization":fb_id})
+                                        "Authorization":fb_secret})
         assert resp.status_code==404
         assert json.loads(resp.data)["message"] == "User not found."
 
     def test_delete_user_not_authorized(self):
         user_id = self.test_user1["id"]
-        fb_id = self.test_user1["fb_id"] + "junk"
+        fb_secret = self.test_user1["fb_secret"] + "junk"
         resp = self.app.delete("/users/" + str(user_id),
                                headers={"Content-Type": "application/x-www-form-urlencoded",
-                                        "Authorization":fb_id})
+                                        "Authorization":fb_secret})
         assert resp.status_code==401
         assert json.loads(resp.data)["message"] == "Not Authorized."

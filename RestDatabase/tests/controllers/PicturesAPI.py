@@ -6,7 +6,7 @@ class PicturesApiTestCase(FitPalsTestCase):
 
     def test_add_picture(self):
         #add picture
-        fb_id = self.test_user1["fb_id"]
+        fb_secret = self.test_user1["fb_secret"]
         picture = {"user_id":self.test_user1["id"],
                    "uri":"some uri",
                    "ui_index":0,
@@ -16,7 +16,7 @@ class PicturesApiTestCase(FitPalsTestCase):
                    "right":0.5}
         resp = self.app.post("/pictures",
                              data=picture,
-                             headers={"Authorization":fb_id})
+                             headers={"Authorization":fb_secret})
         assert resp.status_code==201
         assert json.loads(resp.data)["message"]=="Picture added."
         picture_added = json.loads(resp.data)["value"]
@@ -30,7 +30,7 @@ class PicturesApiTestCase(FitPalsTestCase):
         assert received[-1]["name"] == "picture_added"
 
     def test_add_picture_user_not_found(self):
-        fb_id = self.test_user1["fb_id"]
+        fb_secret = self.test_user1["fb_secret"]
         resp = self.app.post("/pictures",
                              data={"user_id":0,
                                    "uri":"some uri",
@@ -39,12 +39,12 @@ class PicturesApiTestCase(FitPalsTestCase):
                                    "bottom":0.5,
                                    "left":0.5,
                                    "right":0.5},
-                             headers={"Authorization":fb_id})
+                             headers={"Authorization":fb_secret})
         assert resp.status_code==404
         assert json.loads(resp.data)["message"]=="User not found."
 
     def test_add_picture_not_authorized(self):
-        fb_id = self.test_user1["fb_id"] + "junk"
+        fb_secret = self.test_user1["fb_secret"] + "junk"
         resp = self.app.post("/pictures",
                              data={"user_id":self.test_user1["id"],
                                    "uri":"some uri",
@@ -53,12 +53,12 @@ class PicturesApiTestCase(FitPalsTestCase):
                                    "bottom":0.5,
                                    "left":0.5,
                                    "right":0.5},
-                             headers={"Authorization":fb_id})
+                             headers={"Authorization":fb_secret})
         assert resp.status_code==401
         assert json.loads(resp.data)["message"]=="Not Authorized."
 
     def test_add_picture_invalid_data(self):
-        fb_id = self.test_user1["fb_id"]
+        fb_secret = self.test_user1["fb_secret"]
         resp = self.app.post("/pictures",
                              data={"user_id":self.test_user1["id"],
                                    "uri":"some uri",
@@ -67,13 +67,13 @@ class PicturesApiTestCase(FitPalsTestCase):
                                    "bottom":1.5,
                                    "left":0.5,
                                    "right":0.5},
-                             headers={"Authorization":fb_id})
+                             headers={"Authorization":fb_secret})
         assert resp.status_code==400
         assert json.loads(resp.data)["message"]=="Picture data invalid."
 
     def test_get_pictures(self):
         #add picture to get
-        fb_id = self.test_user1["fb_id"]
+        fb_secret = self.test_user1["fb_secret"]
         picture = {"user_id":self.test_user1["id"],
                    "uri":"some uri",
                    "ui_index":0,
@@ -83,7 +83,7 @@ class PicturesApiTestCase(FitPalsTestCase):
                    "right":0.5}
         resp = self.app.post("/pictures",
                              data=picture,
-                             headers={"Authorization":fb_id})
+                             headers={"Authorization":fb_secret})
         assert resp.status_code==201
         assert json.loads(resp.data)["message"]=="Picture added."
 
@@ -102,7 +102,7 @@ class PicturesApiTestCase(FitPalsTestCase):
         
     def test_update_picture(self):
         #create picture 1
-        fb_id = self.test_user1["fb_id"]
+        fb_secret = self.test_user1["fb_secret"]
         resp = self.app.post("/pictures",
                              data={"user_id":self.test_user1["id"],
                                    "uri":"some uri",
@@ -111,11 +111,11 @@ class PicturesApiTestCase(FitPalsTestCase):
                                    "bottom":0.5,
                                    "left":0.5,
                                    "right":0.5},
-                             headers={"Authorization":fb_id})
+                             headers={"Authorization":fb_secret})
         pic1 = json.loads(resp.data)["value"]
 
         #create picture 2
-        fb_id = self.test_user1["fb_id"]
+        fb_secret = self.test_user1["fb_secret"]
         resp = self.app.post("/pictures",
                              data={"user_id":self.test_user1["id"],
                                    "uri":"some uri 2",
@@ -124,7 +124,7 @@ class PicturesApiTestCase(FitPalsTestCase):
                                    "bottom":0.5,
                                    "left":0.5,
                                    "right":0.5},
-                             headers={"Authorization":fb_id})
+                             headers={"Authorization":fb_secret})
         pic2 = json.loads(resp.data)["value"]["id"]
         
         #update picture
@@ -135,7 +135,7 @@ class PicturesApiTestCase(FitPalsTestCase):
                                    "bottom":0.5,
                                    "left":0.5,
                                    "right":0.5},
-                             headers={"Authorization":fb_id})
+                             headers={"Authorization":fb_secret})
         assert resp.status_code==202
         assert json.loads(resp.data)["message"]=="Picture updated."
         pic_updated = json.loads(resp.data)["value"]
@@ -150,7 +150,7 @@ class PicturesApiTestCase(FitPalsTestCase):
         assert received[-1]["name"] == "picture_updated"
 
     def test_update_picture_not_found(self):
-        fb_id = self.test_user1["fb_id"]
+        fb_secret = self.test_user1["fb_secret"]
         resp = self.app.put("/pictures/%d" % 0,
                              data={"uri":"some other uri",
                                    "ui_index":0,
@@ -158,13 +158,13 @@ class PicturesApiTestCase(FitPalsTestCase):
                                    "bottom":0.6,
                                    "left":0.6,
                                    "right":0.6},
-                             headers={"Authorization":fb_id})
+                             headers={"Authorization":fb_secret})
         assert resp.status_code==404
         assert json.loads(resp.data)["message"]=="Picture not found."
 
     def test_update_picture_not_authorized(self):
         #create picture 1
-        fb_id = self.test_user1["fb_id"]
+        fb_secret = self.test_user1["fb_secret"]
         resp = self.app.post("/pictures",
                              data={"user_id":self.test_user1["id"],
                                    "uri":"some uri",
@@ -173,7 +173,7 @@ class PicturesApiTestCase(FitPalsTestCase):
                                    "bottom":0.5,
                                    "left":0.5,
                                    "right":0.5},
-                             headers={"Authorization":fb_id})
+                             headers={"Authorization":fb_secret})
         pic1_id = json.loads(resp.data)["value"]["id"]
 
         #update picture
@@ -184,13 +184,13 @@ class PicturesApiTestCase(FitPalsTestCase):
                                    "bottom":0.6,
                                    "left":0.6,
                                    "right":0.6},
-                             headers={"Authorization":fb_id + "junk"})
+                             headers={"Authorization":fb_secret + "junk"})
         assert resp.status_code==401
         assert json.loads(resp.data)["message"]=="Not Authorized."
 
     def test_update_picture_invalid(self):
         #create picture 1
-        fb_id = self.test_user1["fb_id"]
+        fb_secret = self.test_user1["fb_secret"]
         resp = self.app.post("/pictures",
                              data={"user_id":self.test_user1["id"],
                                    "uri":"some uri",
@@ -199,7 +199,7 @@ class PicturesApiTestCase(FitPalsTestCase):
                                    "bottom":0.5,
                                    "left":0.5,
                                    "right":0.5},
-                             headers={"Authorization":fb_id})
+                             headers={"Authorization":fb_secret})
         pic1_id = json.loads(resp.data)["value"]["id"]
 
         #update picture
@@ -210,12 +210,12 @@ class PicturesApiTestCase(FitPalsTestCase):
                                    "bottom":0.6,
                                    "left":1.6,
                                    "right":0.6},
-                             headers={"Authorization":fb_id})
+                             headers={"Authorization":fb_secret})
         assert resp.status_code==400
         assert json.loads(resp.data)["message"]=="Picture data invalid."
        
     def test_delete_picture(self):
-        fb_id = self.test_user1["fb_id"]
+        fb_secret = self.test_user1["fb_secret"]
 
         #add picture to delete
         resp = self.app.post("/pictures",
@@ -226,13 +226,13 @@ class PicturesApiTestCase(FitPalsTestCase):
                                    "bottom":0.5,
                                    "left":0.5,
                                    "right":0.5},
-                             headers={"Authorization":fb_id})
+                             headers={"Authorization":fb_secret})
         pic_id = json.loads(resp.data)["value"]["id"]
         
         #delete picture
         resp = self.app.delete("/pictures/%d" % pic_id,
             headers={"Content-Type": "application/x-www-form-urlencoded",
-                    "Authorization":fb_id})
+                    "Authorization":fb_secret})
         assert resp.status_code==200
         assert json.loads(resp.data)["message"]=="Picture removed."
 
@@ -246,16 +246,16 @@ class PicturesApiTestCase(FitPalsTestCase):
         assert len(json.loads(resp.data)["value"]) == 0
 
     def test_delete_picture_not_found(self):
-        fb_id = self.test_user1["fb_id"]
+        fb_secret = self.test_user1["fb_secret"]
         #delete picture
         resp = self.app.delete("/pictures/%d" % 0,
             headers={"Content-Type": "application/x-www-form-urlencoded",
-                    "Authorization":fb_id})
+                    "Authorization":fb_secret})
         assert resp.status_code==404
         assert json.loads(resp.data)["message"]=="Picture not found."
 
     def test_delete_picture_not_authorized(self):
-        fb_id = self.test_user1["fb_id"]
+        fb_secret = self.test_user1["fb_secret"]
 
         #add picture to delete
         resp = self.app.post("/pictures",
@@ -266,12 +266,12 @@ class PicturesApiTestCase(FitPalsTestCase):
                                    "bottom":0.5,
                                    "left":0.5,
                                    "right":0.5},
-                             headers={"Authorization":fb_id})
+                             headers={"Authorization":fb_secret})
         pic_id = json.loads(resp.data)["value"]["id"]
         
         #delete picture
         resp = self.app.delete("/pictures/%d" % pic_id,
             headers={"Content-Type": "application/x-www-form-urlencoded",
-                     "Authorization":fb_id + "junk"})
+                     "Authorization":fb_secret + "junk"})
         assert resp.status_code==401
         assert json.loads(resp.data)["message"]=="Not Authorized."

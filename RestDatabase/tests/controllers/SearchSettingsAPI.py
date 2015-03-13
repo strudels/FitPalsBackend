@@ -2,7 +2,7 @@ from tests.utils.FitPalsTestCase import *
 
 class SearchSettingsApiTestCase(FitPalsTestCase):
     def test_get_search_settings(self):
-        fb_id = self.test_user1["fb_id"]
+        fb_secret = self.test_user1["fb_secret"]
         setting_id = self.test_user1["search_settings_id"]
         setting = {"id":setting_id,
                    "user_id":self.test_user1["id"],
@@ -13,40 +13,40 @@ class SearchSettingsApiTestCase(FitPalsTestCase):
                    "age_lower_limit":18,
                    "age_upper_limit":130}
         resp = self.app.get("/search_settings/%d" % setting_id,
-                            headers={"Authorization":fb_id})
+                            headers={"Authorization":fb_secret})
         assert resp.status_code == 200
         assert json.loads(resp.data)["message"] == "Search settings found."
         assert json.loads(resp.data)["value"] == setting
 
     def test_get_search_settings_not_found(self):
-        fb_id = self.test_user1["fb_id"]
+        fb_secret = self.test_user1["fb_secret"]
         setting_id = 0
         resp = self.app.get("/search_settings/%d" % setting_id,
-                            headers={"Authorization":fb_id})
+                            headers={"Authorization":fb_secret})
         assert resp.status_code == 404
         assert json.loads(resp.data)["message"] == "Search settings not found."
         
     def test_get_search_settings_not_authorized(self):
-        fb_id = self.test_user1["fb_id"]
+        fb_secret = self.test_user1["fb_secret"]
         setting_id = self.test_user1["search_settings_id"]
         resp = self.app.get("/search_settings/%d" % setting_id,
-                            headers={"Authorization":fb_id + "junk"})
+                            headers={"Authorization":fb_secret + "junk"})
         assert resp.status_code == 401
         assert json.loads(resp.data)["message"] == "Not Authorized."
 
     def test_update_search_settings(self):
-        fb_id = self.test_user1["fb_id"]
+        fb_secret = self.test_user1["fb_secret"]
         setting_id = self.test_user1["search_settings_id"]
 
         #get settings previous state
         resp = self.app.get("/search_settings/%d" % setting_id,
-                            headers={"Authorization":fb_id})
+                            headers={"Authorization":fb_secret})
         settings = json.loads(resp.data)["value"]
 
         #update settings
         resp = self.app.put("/search_settings/%d" % settings["id"],
                             data={"men_only":0, "women_only":1},
-                            headers={"Authorization":fb_id})
+                            headers={"Authorization":fb_secret})
         assert resp.status_code == 202
         assert json.loads(resp.data)["message"] == "Search settings updated."
         settings["men_only"] = False
@@ -60,19 +60,19 @@ class SearchSettingsApiTestCase(FitPalsTestCase):
         assert received[-1]["args"][0] == json.loads(resp.data)["value"]
         
     def test_update_search_settings_not_found(self):
-        fb_id = self.test_user1["fb_id"]
+        fb_secret = self.test_user1["fb_secret"]
         setting_id = 0
         resp = self.app.put("/search_settings/%d" % setting_id,
                             data={"men_only":0, "women_only":1},
-                            headers={"Authorization":fb_id})
+                            headers={"Authorization":fb_secret})
         assert resp.status_code == 404
         assert json.loads(resp.data)["message"] == "Search settings not found."
         
     def test_update_search_settings_not_authorized(self):
-        fb_id = self.test_user1["fb_id"]
+        fb_secret = self.test_user1["fb_secret"]
         setting_id = self.test_user1["search_settings_id"]
         resp = self.app.put("/search_settings/%d" % setting_id,
                             data={"men_only":0, "women_only":1},
-                            headers={"Authorization":fb_id + "junk"})
+                            headers={"Authorization":fb_secret + "junk"})
         assert resp.status_code == 401
         assert json.loads(resp.data)["message"] == "Not Authorized."

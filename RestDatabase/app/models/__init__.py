@@ -122,7 +122,7 @@ class User(db.Model):
     def dict_repr(self,public=True):
         dict_repr = {
             "id":self.id,
-            "fb_id":self."fb_id",
+            "fb_id":self.fb_id,
             "longitude":self.longitude,
             "latitude":self.latitude,
             "search_settings_id":self.search_settings.id,
