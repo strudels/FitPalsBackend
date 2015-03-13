@@ -137,6 +137,14 @@ class User(db.Model):
             dict_repr["password"] = self.password
         return dict_repr
         
+class UserReport(db.Model):
+    __tablename__ = "user_reports"
+    id = db.Column(db.Integer, primary_key=True)
+    owner_fb_id = db.Column(db.String)
+    reported_fb_id = db.Column(db.String)
+    reason = db.Column(db.String(2048))
+    reviewed = db.Column(db.Boolean, nullable=False)
+        
 @event.listens_for(User, "before_delete")
 def user_message_thread_cascade_delete(mapper, connection, user):
     #delete all message threads where user is thread.user1
