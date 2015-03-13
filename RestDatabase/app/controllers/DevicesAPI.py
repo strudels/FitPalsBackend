@@ -16,7 +16,7 @@ class DevicesAPI(Resource):
         """
         Post new device
 
-        :reqheader Authorization: facebook token
+        :reqheader Authorization: facebook secret
 
         :form int user_id: Id of user.
         :form str token: device token to be posted
@@ -43,7 +43,7 @@ class DevicesAPI(Resource):
             return Response(status=404,
                 message="User not found.").__dict__,404
             
-        if user.fb_id != args.Authorization:
+        if user.fb_secret != args.Authorization:
             return Response(status=401,
                 message="Not Authorized.").__dict__, 401
             
@@ -69,7 +69,7 @@ class DeviceAPI(Resource):
         """
         Delete device
 
-        :reqheader Authorization: facebook token
+        :reqheader Authorization: facebook secret
 
         :status 400: Could not delete device.
         :status 401: Not Authorized.
@@ -89,7 +89,7 @@ class DeviceAPI(Resource):
                 message="Device not found.").__dict__,404
 
         #get user from database
-        if not device.user.fb_id == args.Authorization:
+        if not device.user.fb_secret == args.Authorization:
             return Response(status=401,
                 message="Not Authorized.").__dict__,401
             

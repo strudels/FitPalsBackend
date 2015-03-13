@@ -17,7 +17,7 @@ class SearchSettingsAPI(Resource):
         """
         Get search settings.
 
-        :reqheader Authorization: facebook token
+        :reqheader Authorization: facebook secret
 
         :param int settings_id: Id of search settings.
         
@@ -38,7 +38,7 @@ class SearchSettingsAPI(Resource):
         
         #Ensure user is authorized to make change to settings
         user = settings.user
-        if user.fb_id != args.Authorization:
+        if user.fb_secret != args.Authorization:
             return Response(status=401, message="Not Authorized.").__dict__,401
             
         return Response(status=200, message="Search settings found.",
@@ -51,7 +51,7 @@ class SearchSettingsAPI(Resource):
         NOTE bool fields friends_only, men_only, and women_only are encoded as int
         because reqparse is dumb and I should've used something else.
 
-        :reqheader Authorization: facebook token
+        :reqheader Authorization: facebook secret
         
         :param int settings_id: Id of search settings.
         
@@ -99,7 +99,7 @@ class SearchSettingsAPI(Resource):
             
         #Ensure user is authorized to make change to settings
         user = settings.user
-        if user.fb_id != args.Authorization:
+        if user.fb_secret != args.Authorization:
             return Response(status=401, message="Not Authorized.").__dict__,401
             
         #update search_settings

@@ -21,7 +21,7 @@ class MatchesAPI(Resource):
         """
         Get matches for a user
 
-        :reqheader Authorization: facebook token
+        :reqheader Authorization: facebook secret
 
         :query bool liked: If specified,
             returns matches that correspond with liked. Set to 0 for False,
@@ -38,7 +38,7 @@ class MatchesAPI(Resource):
         args = parser.parse_args()
 
         #get user from the database
-        user = User.query.filter(User.fb_id==args.Authorization).first()
+        user = User.query.filter(User.fb_secret==args.Authorization).first()
         if not user:
             return Response(status=401,
                 message="Not Authorized.").__dict__, 401
@@ -55,7 +55,7 @@ class MatchesAPI(Resource):
         """
         Create new match
 
-        :reqheader Authorization: facebook token
+        :reqheader Authorization: facebook secret
 
         :form int user_id: User id for owner of matches.
         :form int matched_user_id: User id for matched user.
@@ -89,7 +89,7 @@ class MatchesAPI(Resource):
                 .__dict__,404
 
         #ensure user is authorized
-        if user.fb_id != args.Authorization:
+        if user.fb_secret != args.Authorization:
             return Response(status=401,
                 message="Not Authorized.").__dict__, 401
 
@@ -125,7 +125,7 @@ class MatchAPI(Resource):
         """
         Delete match
 
-        :reqheader Authorization: facebook token
+        :reqheader Authorization: facebook secret
 
         :param int match_id: Id for specific match.
 
@@ -145,7 +145,7 @@ class MatchAPI(Resource):
         user = match.user
 
         #ensure user is authorized
-        if user.fb_id != args.Authorization:
+        if user.fb_secret != args.Authorization:
             return Response(status=401,
                 message="Not Authorized.").__dict__, 401
 

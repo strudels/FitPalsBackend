@@ -28,7 +28,7 @@ class UserActivitySettingsAPI(Resource):
         """
         Get all activity settings for a user, specified by Authorization
 
-        :reqheader Authorization: facebook token
+        :reqheader Authorization: facebook secret
 
         :status 401: Not Authorized.
         :status 200: Activity settings found.
@@ -39,7 +39,7 @@ class UserActivitySettingsAPI(Resource):
         args = parser.parse_args()
 
         #get user via user_id
-        user = User.query.filter(User.fb_id == args.Authorization).first()
+        user = User.query.filter(User.fb_secret == args.Authorization).first()
         if not user:
             return Response(status=401,message="Not Authorized.").__dict__,401
 
@@ -51,7 +51,7 @@ class UserActivitySettingsAPI(Resource):
         """
         Post new activity setting for user
 
-        :reqheader Authorization: facebook token
+        :reqheader Authorization: facebook secret
 
         :form int user_id: Id of user.
         :form int question_id: Id of question.
@@ -90,7 +90,7 @@ class UserActivitySettingsAPI(Resource):
             return Response(status=404,message="User not found.").__dict__,404
 
         #ensure user is authorized by checking if fb_id is correct
-        if user.fb_id != args.Authorization:
+        if user.fb_secret != args.Authorization:
             return Response(status=401,message="Not Authorized.").__dict__,401
 
         # add setting to user's activity settings
@@ -118,7 +118,7 @@ class ActivitySettingAPI(Resource):
         """
         Get specific activity setting
         
-        :reqheader Authorization: facebook token
+        :reqheader Authorization: facebook secret
 
         :status 401: Not Authorized.
         :status 404: Activity setting not found.
@@ -136,7 +136,7 @@ class ActivitySettingAPI(Resource):
                 .__dict__, 404
             
         #Ensure that user is authorized
-        if setting.user.fb_id != args.Authorization:
+        if setting.user.fb_secret != args.Authorization:
             return Response(status=401,message="Not Authorized.").__dict__,401
 
         return Response(status=200, message="Activity setting found.",
@@ -146,7 +146,7 @@ class ActivitySettingAPI(Resource):
         """
         Update specific activity setting
 
-        :reqheader Authorization: facebook token
+        :reqheader Authorization: facebook secret
 
         :form float lower_value: Lower value answer to question.
         :form float upper_value: Upper value answer to question.
@@ -172,7 +172,7 @@ class ActivitySettingAPI(Resource):
                 .__dict__, 404
 
         #ensure user is valid by checking if fb_id is correct
-        if setting.user.fb_id != args.Authorization:
+        if setting.user.fb_secret != args.Authorization:
             return Response(status=401,message="Not Authorized.").__dict__,401
             
         try:
@@ -196,7 +196,7 @@ class ActivitySettingAPI(Resource):
         """
         Delete Activity Setting
 
-        :reqheader Authorization: facebook token
+        :reqheader Authorization: facebook secret
 
         :param int setting_id: Id of activity setting.
 
@@ -219,7 +219,7 @@ class ActivitySettingAPI(Resource):
         user = setting.user
 
         #ensure user is valid by checking if fb_id is correct
-        if setting.user.fb_id != args.Authorization:
+        if setting.user.fb_secret != args.Authorization:
             return Response(status=401,message="Not Authorized.").__dict__,401
             
         try:

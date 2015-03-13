@@ -18,7 +18,7 @@ class FriendsAPI(Resource):
         """
         Get friends for a user specified by Authorization.
         
-        :reqheader Authorization: facebook token
+        :reqheader Authorization: facebook secret
         
         :status 200: Friends found.
         :status 401: Not Authorized.
@@ -29,7 +29,7 @@ class FriendsAPI(Resource):
         args = parser.parse_args()
         
         #Ensure user is authorized
-        user = User.query.filter(User.fb_id==args.Authorization).first()
+        user = User.query.filter(User.fb_secret==args.Authorization).first()
         if not user:
             return Response(status=401, message="Not Authorized.").__dict__,401
             
@@ -40,7 +40,7 @@ class FriendsAPI(Resource):
         """
         Add friend to friends list.
 
-        :reqheader Authorization: facebook token
+        :reqheader Authorization: facebook secret
         
         :form int user_id: Id of user creating friend.
         :form int friend_user_id: Id of user to be friend.
@@ -65,7 +65,7 @@ class FriendsAPI(Resource):
             return Response(status=404, message="User not found.").__dict__,404
             
         #ensure user is authorized
-        if not user.fb_id == args.Authorization:
+        if not user.fb_secret == args.Authorization:
             return Response(status=401, message="Not Authorized.").__dict__,401
             
         #get friend user from db
@@ -92,7 +92,7 @@ class FriendAPI(Resource):
         """
         Delete a friend.
 
-        :reqheader Authorization: facebook token
+        :reqheader Authorization: facebook secret
         
         :param int friend_id: Id of friend to delete.
         
@@ -107,8 +107,8 @@ class FriendAPI(Resource):
         args = parser.parse_args()
         
         #Get user from Authorization
-        user = User.query.filter(User.fb_id==args.Authorization).first()
-        if not user or user.fb_id != args.Authorization:
+        user = User.query.filter(User.fb_secret==args.Authorization).first()
+        if not user:
             return Response(status=401, message="Not Authorized.").__dict__,401
 
         #get friend user from db

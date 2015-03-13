@@ -40,7 +40,7 @@ class PicturesAPI(Resource):
         """
         Post new picture.
 
-        :reqheader Authorization: facebook token
+        :reqheader Authorization: facebook secret
 
         :form int user_id: Id of user.
         :form str uri: Facebook Picture Id string.
@@ -82,7 +82,7 @@ class PicturesAPI(Resource):
                 message="User not found.").__dict__,404
 
         #ensure user is valid by checking if fb_id is correct
-        if user.fb_id != args.Authorization:
+        if user.fb_secret != args.Authorization:
             return Response(status=401,message="Not Authorized.").__dict__,401
             
         if args.ui_index in [p.ui_index for p in user.pictures.all()]:
@@ -118,7 +118,7 @@ class PictureAPI(Resource):
         """
         Delete picture.
 
-        :reqheader Authorization: facebook token
+        :reqheader Authorization: facebook secret
 
         :param int pic_id: Id of user.
         
@@ -158,7 +158,7 @@ class PictureAPI(Resource):
                 message="Picture not found.").__dict__,404
 
         #ensure user is valid by checking if fb_id is correct
-        if pic.user.fb_id != args.Authorization:
+        if pic.user.fb_secret != args.Authorization:
             return Response(status=401,message="Not Authorized.").__dict__,401
             
         try:
@@ -189,7 +189,7 @@ class PictureAPI(Resource):
         """
         Delete picture.
 
-        :reqheader Authorization: facebook token
+        :reqheader Authorization: facebook secret
 
         :param int pic_id: Id of user.
 
@@ -210,7 +210,7 @@ class PictureAPI(Resource):
         user = pic.user
 
         #ensure user is valid by checking if fb_id is correct
-        if user.fb_id != args.Authorization:
+        if user.fb_secret != args.Authorization:
             return Response(status=401,message="Not Authorized.").__dict__,401
 
         try:

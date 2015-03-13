@@ -25,7 +25,7 @@ class UsersAPI(Resource):
         Gets users that fall inside the specified parameters
              and the authorized user's search settings
         
-        :reqheader Authorization: facebook token
+        :reqheader Authorization: facebook secret
 
         :query float longitude: Specify a longitude to search by.
         :query float latitude: Specify a latitude to search by.
@@ -56,7 +56,7 @@ class UsersAPI(Resource):
         args = parser.parse_args()
         
         #get user by fb_id; if no user then 401
-        user = User.query.filter(User.fb_id==args.Authorization).first()
+        user = User.query.filter(User.fb_secret==args.Authorization).first()
         if not user:
             return Response(status=401,message="Not Authorized.").__dict__,401
             
@@ -252,7 +252,7 @@ class UserAPI(Resource):
         """
         Update a user
         
-        :reqheader Authorization: facebook token
+        :reqheader Authorization: facebook secret
 
         :param int user_id: User to delete.
 
@@ -299,7 +299,7 @@ class UserAPI(Resource):
             return Response(status=404,message="User not found.").__dict__,404
 
         #ensure user is valid by checking if fb_id is correct
-        if user.fb_id != args.Authorization:
+        if user.fb_secret != args.Authorization:
             return Response(status=401,message="Not Authorized.").__dict__,401
 
         #update fields specified by client
@@ -332,7 +332,7 @@ class UserAPI(Resource):
         """
         Delete a user
         
-        :reqheader Authorization: facebook token
+        :reqheader Authorization: facebook secret
 
         :param int user_id: User to delete.
 
@@ -353,7 +353,7 @@ class UserAPI(Resource):
                 message="User not found.").__dict__,404
 
         #ensure user is authorized to delete
-        if user.fb_id != args.Authorization:
+        if user.fb_secret != args.Authorization:
             return Response(status=401,
                 message="Not Authorized.").__dict__,401
             

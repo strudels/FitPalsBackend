@@ -52,6 +52,7 @@ class User(db.Model):
     __tablename__ = "users"
     id = db.Column(db.Integer, primary_key=True)
     fb_id = db.Column(db.String(2048), unique=True, nullable=False)
+    fb_secret = db.Column(db.String(2048), unique=True, nullable=False)
     location = db.Column(Geography(geometry_type="POINT",srid=4326))
     search_settings = relationship("SearchSettings",
                                   uselist=False,
@@ -79,7 +80,7 @@ class User(db.Model):
     
     @hybrid_property
     def password(self):
-        return self.fb_id
+        return self.fb_secret
 
     @hybrid_property
     def longitude(self):
@@ -105,9 +106,10 @@ class User(db.Model):
     def online(self):
         return str(self.id) in socketio.rooms[""] if socketio.rooms!={} else False
 
-    def __init__(self,fb_id,longitude=None,latitude=None,about_me=None,
+    def __init__(self,fb_id,fb_secret,longitude=None,latitude=None,about_me=None,
         dob=None, available=False, name=None, gender=None):
         self.fb_id = fb_id
+        self.fb_secret = fb_secret
         if longitude!=None and latitude!=None:
             self.location = WKTElement("POINT(%f %f)"%(longitude,latitude))
         self.search_settings = SearchSettings(self)
@@ -120,6 +122,7 @@ class User(db.Model):
     def dict_repr(self,public=True):
         dict_repr = {
             "id":self.id,
+            "fb_id":self."fb_id",
             "longitude":self.longitude,
             "latitude":self.latitude,
             "search_settings_id":self.search_settings.id,
@@ -133,7 +136,7 @@ class User(db.Model):
             "online":self.online
         }
         if not public:
-            dict_repr["fb_id"] = self.fb_id
+            dict_repr["fb_secret"] = self.fb_secret
             dict_repr["password"] = self.password
         return dict_repr
         

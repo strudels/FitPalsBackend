@@ -11,7 +11,7 @@ class NewMessagesAPI(Resource):
         """
         Get owner's messages from a thread
         
-        :reqheader Authorization: facebook token
+        :reqheader Authorization: facebook secret
 
         :query int message_thread_id: Id of specific thread to get messages from.
         :query int since: Optional time to get messages 'since' then.
@@ -30,7 +30,7 @@ class NewMessagesAPI(Resource):
         args = parser.parse_args()
 
         #get user from Authorization
-        user = User.query.filter(User.fb_id==args.Authorization).first()
+        user = User.query.filter(User.fb_secret==args.Authorization).first()
         if not user:
             return Response(status=401, message="Not Authorized.")\
                 .__dict__, 401
@@ -61,7 +61,7 @@ class NewMessagesAPI(Resource):
         """
         Post new message to thread
         
-        :reqheader Authorization: facebook token
+        :reqheader Authorization: facebook secret
 
         :form int message_thread_id: Id of specific thread to get messages from.
         :form str body: Message body
@@ -89,7 +89,7 @@ class NewMessagesAPI(Resource):
         args = parser.parse_args()
 
         #get user from Authorization
-        user = User.query.filter(User.fb_id==args.Authorization).first()
+        user = User.query.filter(User.fb_secret==args.Authorization).first()
         if not user:
             return Response(status=401, message="Not Authorized.")\
                 .__dict__, 401
@@ -139,7 +139,7 @@ class MessageThreadsAPI(Resource):
         """
         Get all message threads for a user, specified by Authorization
         
-        :reqheader Authorization: facebook token
+        :reqheader Authorization: facebook secret
 
         :status 401: Not Authorized.
         :status 200: Message threads found.
@@ -150,7 +150,7 @@ class MessageThreadsAPI(Resource):
         args = parser.parse_args()
         
         #get user from Authorization
-        user = User.query.filter(User.fb_id==args.Authorization).first()
+        user = User.query.filter(User.fb_secret==args.Authorization).first()
         if not user:
             return Response(status=401, message="Not Authorized.")\
                 .__dict__, 401
@@ -172,7 +172,7 @@ class MessageThreadsAPI(Resource):
         """
         Create new message thread between 2 users.
         
-        :reqheader Authorization: facebook token
+        :reqheader Authorization: facebook secret
         
         :form int user2_id: Id of user2 for new message thread.
         
@@ -189,7 +189,7 @@ class MessageThreadsAPI(Resource):
         args = parser.parse_args()
         
         #get user from Authorization
-        user1 = User.query.filter(User.fb_id==args.Authorization).first()
+        user1 = User.query.filter(User.fb_secret==args.Authorization).first()
         if not user1:
             return Response(status=401, message="Not Authorized.")\
                 .__dict__, 401
@@ -227,7 +227,7 @@ class MessageThreadAPI(Resource):
         """
         Delete a message thread
         
-        :reqheader Authorization: facebook token
+        :reqheader Authorization: facebook secret
 
         :status 401: Not Authorized.
         :status 404: Message thread not found.
@@ -241,7 +241,7 @@ class MessageThreadAPI(Resource):
         args = parser.parse_args()
 
         #get user from Authorization
-        user = User.query.filter(User.fb_id==args.Authorization).first()
+        user = User.query.filter(User.fb_secret==args.Authorization).first()
         if not user:
             return Response(status=401, message="Not Authorized.")\
                 .__dict__, 401
