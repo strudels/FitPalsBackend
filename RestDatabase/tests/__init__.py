@@ -6,6 +6,7 @@ from controllers.DevicesAPI import *
 from controllers.ActivityAPI import *
 from controllers.SearchSettingsAPI import *
 from controllers.FriendsAPI import *
+from controllers.UserReportsAPI import *
 
 from websockets import *
 

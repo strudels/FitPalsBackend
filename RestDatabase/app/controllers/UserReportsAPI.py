@@ -8,8 +8,8 @@ from app import db, api
 from app.models import *
 from app.utils.Response import Response
 
-@api.resource('/users')
-class UsersAPI(Resource):
+@api.resource("/user_reports")
+class UserReportsAPI(Resource):
     def post(self):
         """
         Report User by creating new UserReport.

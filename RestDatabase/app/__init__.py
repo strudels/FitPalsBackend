@@ -44,6 +44,7 @@ from controllers.MessagesAPI import *
 from controllers.PicturesAPI import *
 from controllers.SearchSettingsAPI import *
 from controllers.FriendsAPI import *
+from controllers.UserReportsAPI import *
 
 #import websocket events
 from websockets import *
