@@ -9,7 +9,7 @@ Contents:
    Get all activity settings for a user, specified by Authorization
 
    :Request Headers:
-      * Authorization -- facebook token
+      * Authorization -- facebook secret
 
    :Status Codes:
       * 401 Unauthorized -- Not Authorized.
@@ -21,7 +21,7 @@ Contents:
    Post new activity setting for user
 
    :Request Headers:
-      * Authorization -- facebook token
+      * Authorization -- facebook secret
 
    :Form Parameters:
       * **int user_id** -- Id of user.
@@ -49,7 +49,7 @@ Contents:
    Get all message threads for a user, specified by Authorization
 
    :Request Headers:
-      * Authorization -- facebook token
+      * Authorization -- facebook secret
 
    :Status Codes:
       * 401 Unauthorized -- Not Authorized.
@@ -61,7 +61,7 @@ Contents:
    Create new message thread between 2 users.
 
    :Request Headers:
-      * Authorization -- facebook token
+      * Authorization -- facebook secret
 
    :Form Parameters:
       * **int user2_id** -- Id of user2 for new message thread.
@@ -76,6 +76,30 @@ Contents:
 
       * 201 Created -- Message thread created.
 
+``POST /user_reports``
+
+   Report User by creating new UserReport.
+
+   :Request Headers:
+      * Authorization -- facebook secret
+
+   :Form Parameters:
+      * **str owner_fb_id** -- Facebook id of person sending report
+
+      * **str reported_fb_id** -- Facebook id of person being reported
+
+      * **str reason** -- Reason for why person is being reported
+
+   :Status Codes:
+      * 401 Unauthorized -- Not Authorized.
+
+      * 404 Not Found -- fb_id not found.
+
+      * 500 Internal Server Error -- Internal error. Changes not
+        committed.
+
+      * 201 Created -- User report created.
+
 ``GET /activities``
 
    Get all possible activities.
@@ -88,7 +112,7 @@ Contents:
    Get owner's messages from a thread
 
    :Request Headers:
-      * Authorization -- facebook token
+      * Authorization -- facebook secret
 
    :Query Parameters:
       * **message_thread_id** (*int*) -- Id of specific thread to get
@@ -109,7 +133,7 @@ Contents:
    Post new message to thread
 
    :Request Headers:
-      * Authorization -- facebook token
+      * Authorization -- facebook secret
 
    :Form Parameters:
       * **int message_thread_id** -- Id of specific thread to get
@@ -151,7 +175,7 @@ Contents:
    Post new picture.
 
    :Request Headers:
-      * Authorization -- facebook token
+      * Authorization -- facebook secret
 
    :Form Parameters:
       * **int user_id** -- Id of user.
@@ -182,7 +206,7 @@ Contents:
    Post new device
 
    :Request Headers:
-      * Authorization -- facebook token
+      * Authorization -- facebook secret
 
    :Form Parameters:
       * **int user_id** -- Id of user.
@@ -205,7 +229,7 @@ Contents:
    Get matches for a user
 
    :Request Headers:
-      * Authorization -- facebook token
+      * Authorization -- facebook secret
 
    :Query Parameters:
       * **liked** (*bool*) -- If specified, returns matches that
@@ -221,7 +245,7 @@ Contents:
    Create new match
 
    :Request Headers:
-      * Authorization -- facebook token
+      * Authorization -- facebook secret
 
    :Form Parameters:
       * **int user_id** -- User id for owner of matches.
@@ -247,7 +271,7 @@ Contents:
    Get friends for a user specified by Authorization.
 
    :Request Headers:
-      * Authorization -- facebook token
+      * Authorization -- facebook secret
 
    :Status Codes:
       * 200 OK -- Friends found.
@@ -259,7 +283,7 @@ Contents:
    Add friend to friends list.
 
    :Request Headers:
-      * Authorization -- facebook token
+      * Authorization -- facebook secret
 
    :Form Parameters:
       * **int user_id** -- Id of user creating friend.
@@ -282,7 +306,7 @@ Contents:
       and the authorized user's search settings
 
    :Request Headers:
-      * Authorization -- facebook token
+      * Authorization -- facebook secret
 
    :Query Parameters:
       * **longitude** (*float*) -- Specify a longitude to search by.
@@ -310,6 +334,9 @@ Contents:
    :Form Parameters:
       * **str fb_id** -- Specify fb_id for user; must be unique for
         every user.
+
+      * **str fb_secret** -- Specify fb_secret for user; must be
+        unique for every user.
 
       * **float longitude** -- Specify a longitude to search by.
 
@@ -339,6 +366,8 @@ Contents:
 
       * 400 Bad Request -- Could not create user.
 
+      * 401 Unauthorized -- Not Authorized.
+
       * 500 Internal Server Error -- Internal error. Changes not
         committed.
 
@@ -351,7 +380,7 @@ Contents:
    Get specific activity setting
 
    :Request Headers:
-      * Authorization -- facebook token
+      * Authorization -- facebook secret
 
    :Status Codes:
       * 401 Unauthorized -- Not Authorized.
@@ -365,7 +394,7 @@ Contents:
    Update specific activity setting
 
    :Request Headers:
-      * Authorization -- facebook token
+      * Authorization -- facebook secret
 
    :Form Parameters:
       * **float lower_value** -- Lower value answer to question.
@@ -386,7 +415,7 @@ Contents:
    Delete Activity Setting
 
    :Request Headers:
-      * Authorization -- facebook token
+      * Authorization -- facebook secret
 
    :Parameters:
       * **setting_id** (*int*) -- Id of activity setting.
@@ -406,7 +435,7 @@ Contents:
    Delete a message thread
 
    :Request Headers:
-      * Authorization -- facebook token
+      * Authorization -- facebook secret
 
    :Status Codes:
       * 401 Unauthorized -- Not Authorized.
@@ -423,7 +452,7 @@ Contents:
    Get search settings.
 
    :Request Headers:
-      * Authorization -- facebook token
+      * Authorization -- facebook secret
 
    :Parameters:
       * **settings_id** (*int*) -- Id of search settings.
@@ -444,7 +473,7 @@ Contents:
    else.
 
    :Request Headers:
-      * Authorization -- facebook token
+      * Authorization -- facebook secret
 
    :Parameters:
       * **settings_id** (*int*) -- Id of search settings.
@@ -483,7 +512,7 @@ Contents:
    Delete picture.
 
    :Request Headers:
-      * Authorization -- facebook token
+      * Authorization -- facebook secret
 
    :Parameters:
       * **pic_id** (*int*) -- Id of user.
@@ -517,7 +546,7 @@ Contents:
    Delete picture.
 
    :Request Headers:
-      * Authorization -- facebook token
+      * Authorization -- facebook secret
 
    :Parameters:
       * **pic_id** (*int*) -- Id of user.
@@ -537,7 +566,7 @@ Contents:
    Delete device
 
    :Request Headers:
-      * Authorization -- facebook token
+      * Authorization -- facebook secret
 
    :Status Codes:
       * 400 Bad Request -- Could not delete device.
@@ -553,7 +582,7 @@ Contents:
    Delete match
 
    :Request Headers:
-      * Authorization -- facebook token
+      * Authorization -- facebook secret
 
    :Parameters:
       * **match_id** (*int*) -- Id for specific match.
@@ -572,7 +601,7 @@ Contents:
    Delete a friend.
 
    :Request Headers:
-      * Authorization -- facebook token
+      * Authorization -- facebook secret
 
    :Parameters:
       * **friend_id** (*int*) -- Id of friend to delete.
@@ -608,7 +637,7 @@ Contents:
    Update a user
 
    :Request Headers:
-      * Authorization -- facebook token
+      * Authorization -- facebook secret
 
    :Parameters:
       * **user_id** (*int*) -- User to delete.
@@ -643,7 +672,7 @@ Contents:
    Delete a user
 
    :Request Headers:
-      * Authorization -- facebook token
+      * Authorization -- facebook secret
 
    :Parameters:
       * **user_id** (*int*) -- User to delete.
