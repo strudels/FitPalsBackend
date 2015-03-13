@@ -22,6 +22,7 @@ class UserReportsAPI(Resource):
         
         :status 401: Not Authorized.
         :status 404: fb_id not found.
+        :status 500: Internal error. Changes not committed.
         :status 201: User report created.
         """
         parser = reqparse.RequestParser()
