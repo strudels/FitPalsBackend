@@ -139,15 +139,7 @@ class User(db.Model):
             dict_repr["fb_secret"] = self.fb_secret
             dict_repr["password"] = self.password
         return dict_repr
-        
-class UserReport(db.Model):
-    __tablename__ = "user_reports"
-    id = db.Column(db.Integer, primary_key=True)
-    owner_fb_id = db.Column(db.String)
-    reported_fb_id = db.Column(db.String)
-    reason = db.Column(db.String(2048))
-    reviewed = db.Column(db.Boolean, nullable=False)
-        
+       
 @event.listens_for(User, "before_delete")
 def user_message_thread_cascade_delete(mapper, connection, user):
     #delete all message threads where user is thread.user1
@@ -161,6 +153,28 @@ def user_message_thread_cascade_delete(mapper, connection, user):
     for thread in threads:
         thread.user2_deleted = True
         db.session.commit()
+
+class UserReport(db.Model):
+    __tablename__ = "user_reports"
+    id = db.Column(db.Integer, primary_key=True)
+    owner_fb_id = db.Column(db.String(2048))
+    reported_fb_id = db.Column(db.String(2048))
+    reason = db.Column(db.String(2048))
+    reviewed = db.Column(db.Boolean, default=False, nullable=False)
+    
+    def __init__(self,owner_fb_id,reported_fb_id,reason):
+        self.owner_fb_id = owner_fb_id
+        self.reported_fb_id = reported_fb_id
+        self.reason = reason
+        
+    def dict_repr(self):
+        return {
+            "id":self.id,
+            "owner_fb_id":self.owner_fb_id,
+            "reported_fb_id":self.reported_fb_id,
+            "reason":self.reason,
+            "reviewed":self.reviewed
+        }
     
 class Friend(db.Model):
     __tablename__ = "friends"
