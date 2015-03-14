@@ -32,6 +32,8 @@ Contents:
 
       * **float upper_value** -- Upper value answer for question.
 
+      * **str unit_type** -- Name of type of unit; i.e. meter
+
    :Status Codes:
       * 401 Unauthorized -- Not Authorized.
 
@@ -400,6 +402,8 @@ Contents:
       * **float lower_value** -- Lower value answer to question.
 
       * **float upper_value** -- Upper value answer to question.
+
+      * **str unit_type** -- Name of type of unit; i.e. meter
 
    :Status Codes:
       * 400 Bad Request -- Could not update activity setting.
