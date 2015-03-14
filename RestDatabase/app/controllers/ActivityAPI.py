@@ -153,6 +153,7 @@ class ActivitySettingAPI(Resource):
 
         :form float lower_value: Lower value answer to question.
         :form float upper_value: Upper value answer to question.
+        :form str unit_type: Name of type of unit; i.e. meter
 
         :status 400: Could not update activity setting.
         :status 401: Not Authorized.
