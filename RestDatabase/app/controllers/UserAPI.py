@@ -55,9 +55,10 @@ class UsersAPI(Resource):
             return Response(status=401,message="Not Authorized.").__dict__,401
             
         #begin creating query
-        query = User.query
+        query = User.query.filter(User.id!=user.id).join(User.search_settings)
+        query = query.join(ActivitySetting)
 
-        #apply filters in search settings
+        #apply filters in user's search settings
         #STILL NEED TO FILTER BY FRIENDS
         if user.search_settings.friends_only:
             pass
@@ -66,17 +67,26 @@ class UsersAPI(Resource):
                 query = query.filter(User.gender=="male")
             elif user.search_settings.women_only:
                 query = query.filter(User.gender=="female")
-            query = query.filter(User.dob>=self._age_to_day(
-                user.search_settings.age_lower_limit))
             query = query.filter(User.dob<=self._age_to_day(
+                user.search_settings.age_lower_limit))
+            query = query.filter(User.dob>=self._age_to_day(
                 user.search_settings.age_upper_limit))
-        query = query.join(User.search_settings)
-        query = query.filter(SearchSettings.activity_id==
-                             user.search_settings.activity_id)
+            
+        #apply filters from other user's search settings
+        if user.gender == "male":
+            query = query.filter(or_(SearchSettings.men_only==True,
+                                     SearchSettings.women_only==False))
+        elif user.gender == "female":
+            query = query.filter(or_(SearchSettings.women_only==True,
+                                     SearchSettings.men_only==False))
+        else:
+            query = query.filter(and_(SearchSettings.women_only==False,
+                                     SearchSettings.men_only==False))
 
         #filter by activity preferences
-        or_expr = None
-        query = query.join(User.activity_settings)
+        query = query.filter(SearchSettings.activity_id==
+                             user.search_settings.activity_id)
+        or_expr = True
         for s in user.activity_settings\
                      .join(ActivitySetting.question)\
                      .filter(Question.activity_id==
@@ -90,7 +100,7 @@ class UsersAPI(Resource):
                                               s.upper_value_converted,
                                           ActivitySetting.upper_value_converted >
                                               s.upper_value_converted))))
-            or_expr = or_(or_expr,an_expr)
+            or_expr = or_(or_expr,and_expr)
         query = query.filter(or_expr)
 
         #apply filters in args
@@ -98,16 +108,12 @@ class UsersAPI(Resource):
             query = query.filter(User.last_updated<=args.last_updated)
         
         #apply gps filter
-        query = User.query.join(User.search_settings)
         other_in_user_range = func.ST_DWithin(user.location, User.location,
             user.search_settings.radius_converted, True)
         user_in_other_range = func.ST_DWithin(user.location, User.location,
             SearchSettings.radius_converted, True)
         query = query.filter(and_(other_in_user_range, user_in_other_range))
         
-        #ensure user running query is not in results
-        query = query.filter(User.id!=user.id)
-
         #ensure no repeat users as a result from an earlier join
         query = query.distinct(User.id)
 

@@ -50,68 +50,110 @@ class UsersApiTestCase(FitPalsTestCase):
         resp = self.app.post("/users",data=user)
         assert resp.status_code==400
         assert json.loads(resp.data)["message"] == "Coordinates invalid."
-
-    def test_get_users(self):
-        fb_secret = self.test_user1["fb_secret"]
-        setting_id = self.test_user1["search_settings_id"]
-        activity_id = json.loads(self.app.get("/activities").data)["value"][0]["id"]
         
-        #a bit less than 12 miles apart
-        location1 = (27.924458,-82.320241)
-        location2 = (28.074511,-82.412251)
-
-        #update search settings and location for each user to be the same
-        resp = self.app.put("/search_settings/%d"
-                            % self.test_user1["search_settings_id"],
-                            data={"activity_id":activity_id,
-                                  "radius":12, 
-                                  "radius_unit":"mile"},
-                            headers={"Authorization":self.test_user1["fb_secret"]})
-        resp = self.app.put("/users/%d" % self.test_user1["id"],
-                            data={"longitude":location1[0], "latitude":location1[1]},
-                            headers={"Authorization":self.test_user1["fb_secret"]})
-        self.test_user1["longitude"] = location1[0]
-        self.test_user1["latitude"] = location1[1]
-        resp = self.app.put("/search_settings/%d"
-                            % self.test_user2["search_settings_id"],
-                            data={"activity_id":activity_id,
-                                  "radius":6,
-                                  "radius_unit":"mile"},
-                            headers={"Authorization":self.test_user2["fb_secret"]})
-        resp = self.app.put("/users/%d" % self.test_user2["id"],
-                            data={"longitude":location2[0], "latitude":location2[1]},
-                            headers={"Authorization":self.test_user2["fb_secret"]})
-        self.test_user2["longitude"] = location2[0]
-        self.test_user2["latitude"] = location2[1]
-        resp = self.app.put("/search_settings/%d"
-                            % self.test_user3["search_settings_id"],
-                            data={"activity_id":activity_id,
-                                  "radius":13,
-                                  "radius_unit":"mile"},
-                            headers={"Authorization":self.test_user3["fb_secret"]})
-        resp = self.app.put("/users/%d" % self.test_user3["id"],
-                            data={"longitude":location2[0], "latitude":location2[1]},
-                            headers={"Authorization":self.test_user3["fb_secret"]})
-        self.test_user3["longitude"] = location2[0]
-        self.test_user3["latitude"] = location2[1]
-        
-        #delete private fields from test_users
-        del self.test_user1["fb_secret"]
-        del self.test_user1["password"]
-        del self.test_user2["fb_secret"]
-        del self.test_user2["password"]
-        del self.test_user3["fb_secret"]
-        del self.test_user3["password"]
-
-        #import pdb; pdb.set_trace()
+    #helper function for running test_get_users for a bunch of diff possibilities
+    @unittest.skip("Skipping a non-test function")
+    def generate_test_user_and_get_users(self,
+                           user,
+                           activity_setting,
+                           search_settings):
+        #update search settings, activity_settings, and location for each user to be the same
+        resp = self.app.put("/search_settings/%d" % user["search_settings_id"],
+                            data=search_settings,
+                            headers={"Authorization":user["fb_secret"]})
+        resp = self.app.put("/users/%d" % user["id"],
+                            data={"longitude":user["longitude"],
+                                  "latitude":user["latitude"]},
+                            headers={"Authorization":user["fb_secret"]})
+        resp = self.app.put("/activity_settings",
+                             data=activity_setting,
+                            headers={"Authorization":user["fb_secret"]})
         resp = self.app.get("/users?longitude=40&latitude=20&radius=17000",
                             headers={"Authorization":fb_secret})
         assert resp.status_code==200
         assert json.loads(resp.data)["message"] == "Users found."
         users = json.loads(resp.data)["value"]
-        #there are 3 users created by FitPalsTestCase setUp()
-        assert len(users) == 1
-        assert users[0] == self.test_user3
+        return users
+       
+    def test_get_users(self):
+        fb_secret = self.test_user1["fb_secret"]
+        setting_id = self.test_user1["search_settings_id"]
+        activity_resp = json.loads(self.app.get("/activities").data)
+        activity_id = activity_resp["value"][0]["id"]
+        question_id = activity_resp["value"][0]["questions"][0]["id"]
+        
+        #a bit less than 12 miles away from user1
+        location1 = (27.924458,-82.320241)
+        location2 = (28.074511,-82.412251)
+
+        #initialize user1
+        user1_search_settings = {"activity_id":activity_id,
+                                  "radius":12, 
+                                  "radius_unit":"mile"}
+        self.test_user1["longitude"] = location1[0]
+        self.test_user1["latitude"] = location1[1]
+        user1_activity_setting = {"user_id":self.test_user1["id"],
+                                   "question_id":question_id,
+                                   "lower_value":5,
+                                   "upper_value":25,
+                                   "unit_type":"mile"}
+        resp = self.app.post("/activity_settings",
+                             data=user1_activity_setting,
+                             headers={"Authorization":self.test_user1["fb_secret"]})
+        
+        #initialize user2
+        user2_search_settings = {"activity_id":activity_id,
+                                  "radius":12, 
+                                  "radius_unit":"mile"}
+        self.test_user2["longitude"] = location2[0]
+        self.test_user2["latitude"] = location2[1]
+        user2_activity_setting = {"user_id":self.test_user2["id"],
+                                   "question_id":question_id,
+                                   "lower_value":5,
+                                   "upper_value":25,
+                                   "unit_type":"mile"}
+        resp = self.app.post("/activity_settings",
+                             data=user2_activity_setting,
+                             headers={"Authorization":self.test_user2["fb_secret"]})
+        
+        # GET /users while both users are the same
+        matches = self.generate_test_user_and_get_users(
+            user=self.test_user2,
+            activity_setting=user2_activity_setting,
+            search_settings=user2_search_settings
+        )
+        assert len(matches) == 1
+        match = matches[0]
+        assert match["id"] == self.test_user2["id"]
+        
+        # GET /users user2's radius too short
+        user2_search_settings["radius"] = 5
+        matches = self.generate_test_user_and_get_users(
+            user=self.test_user2,
+            activity_setting=user2_activity_setting,
+            search_settings=user2_search_settings
+        )
+        assert len(matches) == 0
+        
+        # GET /users user2's diff activity_setting
+        user2_search_settings["radius"] = 12
+        user2_activity_setting["lower_value"]=1
+        user2_activity_setting["upper_value"]=4
+        matches = self.generate_test_user_and_get_users(
+            user=self.test_user2,
+            activity_setting=user2_activity_setting,
+            search_settings=user2_search_settings
+        )
+        assert len(matches) == 0
+
+        # GET /users user2's radius too short
+        user2_search_settings["radius"] = 5
+        matches = self.generate_test_user_and_get_users(
+            user=self.test_user2,
+            activity_setting=user2_activity_setting,
+            search_settings=user2_search_settings
+        )
+        assert len(matches) == 0
         
     def test_get_users_not_authorized(self):
         fb_secret = self.test_user1["fb_secret"]
