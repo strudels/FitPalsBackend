@@ -55,35 +55,45 @@ class UsersApiTestCase(FitPalsTestCase):
         fb_secret = self.test_user1["fb_secret"]
         setting_id = self.test_user1["search_settings_id"]
         activity_id = json.loads(self.app.get("/activities").data)["value"][0]["id"]
+        
+        #a bit less than 12 miles apart
+        location1 = (27.924458,-82.320241)
+        location2 = (28.074511,-82.412251)
 
         #update search settings and location for each user to be the same
         resp = self.app.put("/search_settings/%d"
                             % self.test_user1["search_settings_id"],
-                            data={"activity_id":activity_id},
+                            data={"activity_id":activity_id,
+                                  "radius":12, 
+                                  "radius_unit":"mile"},
                             headers={"Authorization":self.test_user1["fb_secret"]})
         resp = self.app.put("/users/%d" % self.test_user1["id"],
-                            data={"longitude":40, "latitude":20},
+                            data={"longitude":location1[0], "latitude":location1[1]},
                             headers={"Authorization":self.test_user1["fb_secret"]})
-        self.test_user1["longitude"] = 40.0
-        self.test_user1["latitude"] = 20.0
+        self.test_user1["longitude"] = location1[0]
+        self.test_user1["latitude"] = location1[1]
         resp = self.app.put("/search_settings/%d"
                             % self.test_user2["search_settings_id"],
-                            data={"activity_id":activity_id},
+                            data={"activity_id":activity_id,
+                                  "radius":6,
+                                  "radius_unit":"mile"},
                             headers={"Authorization":self.test_user2["fb_secret"]})
         resp = self.app.put("/users/%d" % self.test_user2["id"],
-                            data={"longitude":40, "latitude":20},
+                            data={"longitude":location2[0], "latitude":location2[1]},
                             headers={"Authorization":self.test_user2["fb_secret"]})
-        self.test_user2["longitude"] = 40.0
-        self.test_user2["latitude"] = 20.0
+        self.test_user2["longitude"] = location2[0]
+        self.test_user2["latitude"] = location2[1]
         resp = self.app.put("/search_settings/%d"
                             % self.test_user3["search_settings_id"],
-                            data={"activity_id":activity_id},
+                            data={"activity_id":activity_id,
+                                  "radius":13,
+                                  "radius_unit":"mile"},
                             headers={"Authorization":self.test_user3["fb_secret"]})
         resp = self.app.put("/users/%d" % self.test_user3["id"],
-                            data={"longitude":40, "latitude":20},
+                            data={"longitude":location2[0], "latitude":location2[1]},
                             headers={"Authorization":self.test_user3["fb_secret"]})
-        self.test_user3["longitude"] = 40.0
-        self.test_user3["latitude"] = 20.0
+        self.test_user3["longitude"] = location2[0]
+        self.test_user3["latitude"] = location2[1]
         
         #delete private fields from test_users
         del self.test_user1["fb_secret"]
@@ -100,32 +110,15 @@ class UsersApiTestCase(FitPalsTestCase):
         assert json.loads(resp.data)["message"] == "Users found."
         users = json.loads(resp.data)["value"]
         #there are 3 users created by FitPalsTestCase setUp()
-        assert len(users) == 3
-        assert users[0] == self.test_user1
-        assert users[1] == self.test_user2
-        assert users[2] == self.test_user3
+        assert len(users) == 1
+        assert users[0] == self.test_user3
         
     def test_get_users_not_authorized(self):
         fb_secret = self.test_user1["fb_secret"]
         resp = self.app.get("/users?longitude=20&latitude=20&radius=17000",
                             headers={"Authorization":fb_secret + "junk"})
         assert resp.status_code==401
-        
-    def test_get_users_invalid_gps_params(self):
-        fb_secret = self.test_user1["fb_secret"]
-        setting_id = self.test_user1["search_settings_id"]
-        activity_id = json.loads(self.app.get("/activities").data)["value"][0]["id"]
-
-        #update search settings
-        resp = self.app.put("/search_settings/%d" % setting_id,
-                            data={"activity_id":activity_id,
-                                  "men_only":0, "women_only":1},
-                            headers={"Authorization":fb_secret})
-
-        resp = self.app.get("/users?longitude=200&latitude=20&radius=17000",
-                            headers={"Authorization":fb_secret})
-        assert resp.status_code==400
-        
+       
     def test_get_user(self):
         test_user1_public = self.test_user1
         del test_user1_public["fb_secret"]

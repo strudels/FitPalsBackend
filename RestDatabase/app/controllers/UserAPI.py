@@ -41,12 +41,6 @@ class UsersAPI(Resource):
         parser = reqparse.RequestParser()
         parser.add_argument("Authorization",
             type=str, location="headers", required=True)
-        parser.add_argument("longitude",
-            type=float, location='args', required=False)
-        parser.add_argument("latitude",
-            type=float, location='args', required=False)
-        parser.add_argument("radius",
-            type=float, location='args', required=False)
         parser.add_argument("limit",
             type=int, location="args", required=False)
         parser.add_argument("offset",
@@ -102,18 +96,18 @@ class UsersAPI(Resource):
         #apply filters in args
         if args.last_updated:
             query = query.filter(User.last_updated<=args.last_updated)
-        query = User.query
-        if (args.radius and args.longitude and args.latitude):
-            #ensure GPS parameters are valid
-            if (args.radius <= 0) or not (-180 <= args.longitude <= 180)\
-                or not (-90 <= args.latitude <= 90):
-                return Response(status=400,message="Invalid GPS parameters.")\
-                    .__dict__,400
-            point = func.ST_GeomFromText("POINT(%f %f)" %\
-                                         (args.longitude,args.latitude)) 
-            arg = func.ST_DWithin(point, User.location, args.radius, True)
-            query = query.filter(arg)
-            
+        
+        #apply gps filter
+        query = User.query.join(User.search_settings)
+        other_in_user_range = func.ST_DWithin(user.location, User.location,
+            user.search_settings.radius_converted, True)
+        user_in_other_range = func.ST_DWithin(user.location, User.location,
+            SearchSettings.radius_converted, True)
+        query = query.filter(and_(other_in_user_range, user_in_other_range))
+        
+        #ensure user running query is not in results
+        query = query.filter(User.id!=user.id)
+
         #ensure no repeat users as a result from an earlier join
         query = query.distinct(User.id)
 
