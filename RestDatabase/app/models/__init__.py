@@ -311,16 +311,26 @@ class Question(db.Model):
     activity_id = db.Column(db.Integer, ForeignKey("activities.id"))
     activity = relationship("Activity", foreign_keys=[activity_id])
     question = db.Column(db.String(2048), nullable=False)
+    unit_type = db.Column(db.String(128), nullable=False)
+    _ureg = UnitRegistry()
 
-    def __init__(self, activity, question_string):
+    @validates("unit_type")
+    def validate_unit_type(self, key, value):
+        try: test = self._ureg.parse_expression(value)
+        except: return False
+        return True
+
+    def __init__(self, activity, question_string, unit_type):
         self.question = question_string
         self.activity = activity
+        self.unit_type
 
     def dict_repr(self):
         return {
             "id":self.id,
             "activity_id":self.activity_id,
-            "question":self.question
+            "question":self.question,
+            "unit_type": self.unit_type
         }
 
 class ActivitySetting(db.Model):
@@ -330,14 +340,50 @@ class ActivitySetting(db.Model):
     user = relationship("User",foreign_keys=[user_id])
     question_id = db.Column(db.Integer, ForeignKey("activity_questions.id"))
     question = relationship("Question", foreign_keys=[question_id])
-    lower_value = db.Column(db.Float)
-    upper_value = db.Column(db.Float)
+    lower_value_converted = db.Column(db.Float)
+    upper_value_converted = db.Column(db.Float)
+    unit_type = db.Column(db.String(128), nullable=False)
+    _ureg = UnitRegistry()
     
     __table_args__ = (CheckConstraint("lower_value <= upper_value"),)
+    
+    @hybrid_property
+    def lower_value(self):
+        db_val = self.lower_value_converted *\
+                 self._ureg.parse_expression(question.unit_type)
+        return db_val.to(self._ureg.parse_expression(self.unit_type)).magnitude
 
-    def __init__(self, user, question, lower_value=None, upper_value=None):
+    @lower_value.setter
+    def lower_value(self, value):
+        value = value * self._ureg.parse_expression(unit_type)
+        self.lower_value_converted = value.to(self._ureg.parse_expression(
+            question.unit_type)).magnitude
+
+    @hybrid_property
+    def upper_value(self):
+        db_val = self.upper_value_converted *\
+                 self._ureg.parse_expression(question.unit_type)
+        return db_val.to(self._ureg.parse_expression(self.unit_type)).magnitude
+        
+    @upper_value.setter
+    def upper_value(self, value):
+        value = value * self._ureg.parse_expression(unit_type)
+        self.upper_value_converted = value.to(self._ureg.parse_expression(
+            question.unit_type)).magnitude
+    
+    @validates("unit_type")
+    def validate_unit_type(self, key, value):
+        try: 
+            test_unit = self._ureg.parse_expression(value) * 100
+            converstion_test = test_unit.to(self._ureg.parse_expression(
+                self.question.unit_type))
+        except: return False
+        return True
+
+    def __init__(self,user,question,lower_value=None,upper_value=None,unit_type):
         self.user = user
         self.question = question
+        self.unit_type = unit_type
         self.lower_value = lower_value
         self.upper_value = upper_value
 
@@ -347,7 +393,8 @@ class ActivitySetting(db.Model):
             "user_id":self.user_id,
             "question_id":self.question_id,
             "lower_value":self.lower_value,
-            "upper_value":self.upper_value
+            "upper_value":self.upper_value,
+            "unit_type":self.unit_type
         }
 
 class Message(db.Model):

@@ -80,7 +80,6 @@ class UsersAPI(Resource):
         query = query.filter(SearchSettings.activity_id==
                              user.search_settings.activity_id)
 
-        #import pdb; pdb.set_trace()
         #filter by activity preferences
         or_expr = None
         query = query.join(User.activity_settings)
@@ -88,12 +87,15 @@ class UsersAPI(Resource):
                      .join(ActivitySetting.question)\
                      .filter(Question.activity_id==
                             user.search_settings.activity_id).all():
-            #make this show an intersection of lower and upper values, not equality
             and_expr = and_(ActivitySetting.question_id==s.question_id,
-                            not_(or_(and_(ActivitySetting.lower_value < s.lower_value,
-                                          ActivitySetting.upper_value < s.lower_value,),
-                                     and_(ActivitySetting.lower_value > s.upper_value,
-                                          ActivitySetting.upper_value > s.upper_value))))
+                            not_(or_(and_(ActivitySetting.lower_value_converted <
+                                              s.lower_value_converted,
+                                          ActivitySetting.upper_value_converted <
+                                              s.lower_value_converted,),
+                                     and_(ActivitySetting.lower_value_converted >
+                                              s.upper_value_converted,
+                                          ActivitySetting.upper_value_converted >
+                                              s.upper_value_converted))))
             or_expr = or_(or_expr,an_expr)
         query = query.filter(or_expr)
 

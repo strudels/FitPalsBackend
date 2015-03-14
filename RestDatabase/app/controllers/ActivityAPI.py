@@ -57,6 +57,7 @@ class UserActivitySettingsAPI(Resource):
         :form int question_id: Id of question.
         :form float lower_value: Lower value answer for question.
         :form float upper_value: Upper value answer for question.
+        :form str unit_type: Name of type of unit; i.e. meter
 
         :status 401: Not Authorized.
         :status 404: Question not found.
@@ -76,6 +77,8 @@ class UserActivitySettingsAPI(Resource):
             type=float, location="form", required=True)
         parser.add_argument("upper_value",
             type=float, location="form", required=True)
+        parser.add_argument("unit_type",
+            type=str, location='form', required=True)
         args = parser.parse_args()
 
         #get question
@@ -95,8 +98,8 @@ class UserActivitySettingsAPI(Resource):
 
         # add setting to user's activity settings
         try: 
-            activity_setting =\
-                ActivitySetting(user,question,args.lower_value,args.upper_value)
+            activity_setting = ActivitySetting(user,question,args.lower_value,
+                                               args.upper_value,args.unit_type)
             user.activity_settings.append(activity_setting)
             db.session.commit()
         except: 
@@ -160,9 +163,11 @@ class ActivitySettingAPI(Resource):
         parser.add_argument("Authorization",
             type=str, location='headers', required=True)
         parser.add_argument("lower_value",
-            type=float,location="form",required=True)
+            type=float,location="form",required=False)
         parser.add_argument("upper_value",
-            type=float,location="form",required=True)
+            type=float,location="form",required=False)
+        parser.add_argument("unit_type",
+            type=float,location="form",required=False)
         args = parser.parse_args()
         
         #get setting
@@ -176,8 +181,9 @@ class ActivitySettingAPI(Resource):
             return Response(status=401,message="Not Authorized.").__dict__,401
             
         try:
-            setting.lower_value = args.lower_value
-            setting.upper_value = args.upper_value
+            if args.unit_type != None: setting.unit_type = args.unit_type
+            if args.lower_value != None: setting.lower_value = args.lower_value
+            if args.upper_value != None: setting.upper_value = args.upper_value
             db.session.commit()
         except:
             db.session.rollback()
