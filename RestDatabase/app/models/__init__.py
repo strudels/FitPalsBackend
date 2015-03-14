@@ -8,6 +8,7 @@ from flask.ext.sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import relationship, backref, validates
 from sqlalchemy.ext.hybrid import hybrid_property
 from datetime import datetime
+from pint import UnitRegistry
 
 from app import db, socketio
 
@@ -316,14 +317,13 @@ class Question(db.Model):
 
     @validates("unit_type")
     def validate_unit_type(self, key, value):
-        try: test = self._ureg.parse_expression(value)
-        except: return False
-        return True
+        test = self._ureg.parse_expression(value)
+        return value
 
     def __init__(self, activity, question_string, unit_type):
         self.question = question_string
         self.activity = activity
-        self.unit_type
+        self.unit_type = unit_type
 
     def dict_repr(self):
         return {
@@ -345,42 +345,41 @@ class ActivitySetting(db.Model):
     unit_type = db.Column(db.String(128), nullable=False)
     _ureg = UnitRegistry()
     
-    __table_args__ = (CheckConstraint("lower_value <= upper_value"),)
+    __table_args__ = (CheckConstraint(
+        "lower_value_converted <= upper_value_converted"),)
     
     @hybrid_property
     def lower_value(self):
         db_val = self.lower_value_converted *\
-                 self._ureg.parse_expression(question.unit_type)
+                 self._ureg.parse_expression(self.question.unit_type)
         return db_val.to(self._ureg.parse_expression(self.unit_type)).magnitude
 
     @lower_value.setter
     def lower_value(self, value):
-        value = value * self._ureg.parse_expression(unit_type)
+        value = value * self._ureg.parse_expression(self.unit_type)
         self.lower_value_converted = value.to(self._ureg.parse_expression(
-            question.unit_type)).magnitude
+            self.question.unit_type)).magnitude
 
     @hybrid_property
     def upper_value(self):
         db_val = self.upper_value_converted *\
-                 self._ureg.parse_expression(question.unit_type)
+                 self._ureg.parse_expression(self.question.unit_type)
         return db_val.to(self._ureg.parse_expression(self.unit_type)).magnitude
         
     @upper_value.setter
     def upper_value(self, value):
-        value = value * self._ureg.parse_expression(unit_type)
+        value = value * self._ureg.parse_expression(self.unit_type)
         self.upper_value_converted = value.to(self._ureg.parse_expression(
-            question.unit_type)).magnitude
+            self.question.unit_type)).magnitude
     
     @validates("unit_type")
     def validate_unit_type(self, key, value):
-        try: 
-            test_unit = self._ureg.parse_expression(value) * 100
-            converstion_test = test_unit.to(self._ureg.parse_expression(
-                self.question.unit_type))
-        except: return False
-        return True
+        test_unit = self._ureg.parse_expression(value) * 100
+        conversion_test = test_unit.to(self._ureg.parse_expression(
+            self.question.unit_type))
+        return value
 
-    def __init__(self,user,question,lower_value=None,upper_value=None,unit_type):
+    def __init__(self,user,question,unit_type,lower_value=None,upper_value=None):
         self.user = user
         self.question = question
         self.unit_type = unit_type

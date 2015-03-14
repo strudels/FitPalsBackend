@@ -12,10 +12,12 @@ class ActivitySettingsAPITestCase(FitPalsTestCase):
         assert activity["name"] == "running"
         assert activity["questions"][0]["id"] == 1
         assert activity["questions"][0]["activity_id"] == 1
-        assert activity["questions"][0]["question"] == "How much time do you want to spend running?"
+        assert activity["questions"][0]["question"] == "How far do you want to run?"
+        assert activity["questions"][0]["unit_type"] == "kilometer"
         assert activity["questions"][1]["id"] == 2
         assert activity["questions"][1]["activity_id"] == 1
-        assert activity["questions"][1]["question"] == "How far do you want to run?"
+        assert activity["questions"][1]["question"] == "How much time do you want to spend running?"
+        assert activity["questions"][1]["unit_type"] == "minute"
     
     def test_get_activity_settings(self):
         #create activity setting to get
@@ -25,7 +27,8 @@ class ActivitySettingsAPITestCase(FitPalsTestCase):
                              data = {"user_id":self.test_user1["id"],
                                      "question_id":activity["questions"][0]["id"],
                                      "lower_value":8.3,
-                                     "upper_value":20.6,},
+                                     "upper_value":20.6,
+                                     "unit_type":"mile"},
                              headers = {"Authorization":fb_secret})
 
         #get activity settings
@@ -37,8 +40,9 @@ class ActivitySettingsAPITestCase(FitPalsTestCase):
         assert setting["id"]==1
         assert setting["user_id"]==self.test_user1["id"]
         assert setting["question_id"] == activity["questions"][0]["id"]
-        assert setting["lower_value"] == 8.3
-        assert setting["upper_value"] == 20.6
+        assert round(setting["lower_value"],1) == 8.3
+        assert round(setting["upper_value"],1) == 20.6
+        assert setting["unit_type"] == "mile"
 
     def test_get_activitys_setting_user_not_found(self):
         fb_secret = self.test_user1["fb_secret"]
@@ -56,7 +60,8 @@ class ActivitySettingsAPITestCase(FitPalsTestCase):
                              data = {"user_id":self.test_user1["id"],
                                      "question_id":activity["questions"][0]["id"],
                                      "lower_value":8.3,
-                                     "upper_value":20.6,},
+                                     "upper_value":20.6,
+                                     "unit_type":"mile"},
                              headers = {"Authorization":fb_secret})
         assert resp.status_code==201
         assert json.loads(resp.data)["message"]=="Activity setting created."
@@ -64,8 +69,9 @@ class ActivitySettingsAPITestCase(FitPalsTestCase):
         assert setting["id"]==1
         assert setting["user_id"]==self.test_user1["id"]
         assert setting["question_id"] == activity["questions"][0]["id"]
-        assert setting["lower_value"] == 8.3
-        assert setting["upper_value"] == 20.6
+        assert round(setting["lower_value"],1) == 8.3
+        assert round(setting["upper_value"],1) == 20.6
+        assert setting["unit_type"] == "mile"
 
         #ensure that test_user1 websocket self.websocket_client1 got update
         received = self.websocket_client1.get_received()
@@ -80,7 +86,8 @@ class ActivitySettingsAPITestCase(FitPalsTestCase):
                              data = {"user_id":self.test_user1["id"],
                                      "question_id":0,
                                      "lower_value":8.3,
-                                     "upper_value":20.6,},
+                                     "upper_value":20.6,
+                                     "unit_type":"mile"},
                              headers = {"Authorization":fb_secret})
         assert resp.status_code==404
         assert json.loads(resp.data)["message"]=="Question not found."
@@ -92,7 +99,8 @@ class ActivitySettingsAPITestCase(FitPalsTestCase):
                              data = {"user_id":0,
                                      "question_id":activity["questions"][0]["id"],
                                      "lower_value":8.3,
-                                     "upper_value":20.6,},
+                                     "upper_value":20.6,
+                                     "unit_type":"mile"},
                              headers = {"Authorization":fb_secret})
         assert resp.status_code==404
         assert json.loads(resp.data)["message"]=="User not found."
@@ -104,7 +112,8 @@ class ActivitySettingsAPITestCase(FitPalsTestCase):
                              data = {"user_id":self.test_user1["id"],
                                      "question_id":activity["questions"][0]["id"],
                                      "lower_value":8.3,
-                                     "upper_value":20.6,},
+                                     "upper_value":20.6,
+                                     "unit_type":"mile"},
                              headers = {"Authorization":fb_secret + "junk"})
         assert resp.status_code==401
         assert json.loads(resp.data)["message"]=="Not Authorized."
@@ -116,7 +125,8 @@ class ActivitySettingsAPITestCase(FitPalsTestCase):
                              data = {"user_id":self.test_user1["id"],
                                      "question_id":activity["questions"][0]["id"],
                                      "lower_value":8.3,
-                                     "upper_value":2.6,},
+                                     "upper_value":2.6,
+                                     "unit_type":"mile"},
                              headers = {"Authorization":fb_secret})
         assert resp.status_code==400
         assert json.loads(resp.data)["message"]=="Could not create activity setting."
@@ -129,7 +139,8 @@ class ActivitySettingsAPITestCase(FitPalsTestCase):
                              data = {"user_id":self.test_user1["id"],
                                      "question_id":activity["questions"][0]["id"],
                                      "lower_value":8.3,
-                                     "upper_value":20.6,},
+                                     "upper_value":20.6,
+                                     "unit_type":"mile"},
                              headers = {"Authorization":fb_secret})
         setting_id = json.loads(resp.data)["value"]["id"]
 
@@ -142,8 +153,9 @@ class ActivitySettingsAPITestCase(FitPalsTestCase):
         assert setting["id"] == 1
         assert setting["user_id"]==self.test_user1["id"]
         assert setting["question_id"] == activity["questions"][0]["id"]
-        assert setting["lower_value"] == 8.3
-        assert setting["upper_value"] == 20.6
+        assert round(setting["lower_value"],1) == 8.3
+        assert round(setting["upper_value"],1) == 20.6
+        assert setting["unit_type"] == "mile"
         
     def test_get_activity_setting_not_found(self):
         #get setting
@@ -161,7 +173,8 @@ class ActivitySettingsAPITestCase(FitPalsTestCase):
                              data = {"user_id":self.test_user1["id"],
                                      "question_id":activity["questions"][0]["id"],
                                      "lower_value":8.3,
-                                     "upper_value":20.6,},
+                                     "upper_value":20.6,
+                                     "unit_type":"mile"},
                              headers = {"Authorization":fb_secret})
         setting_id = json.loads(resp.data)["value"]["id"]
         
@@ -179,7 +192,8 @@ class ActivitySettingsAPITestCase(FitPalsTestCase):
                              data = {"user_id":self.test_user1["id"],
                                      "question_id":activity["questions"][0]["id"],
                                      "lower_value":8.3,
-                                     "upper_value":20.6,},
+                                     "upper_value":20.6,
+                                     "unit_type":"mile"},
                              headers = {"Authorization":fb_secret})
         setting_id = json.loads(resp.data)["value"]["id"]
         
@@ -193,8 +207,8 @@ class ActivitySettingsAPITestCase(FitPalsTestCase):
         assert setting["id"] == 1
         assert setting["user_id"]==self.test_user1["id"]
         assert setting["question_id"] == activity["questions"][0]["id"]
-        assert setting["lower_value"] == 4.6
-        assert setting["upper_value"] == 5.7
+        assert round(setting["lower_value"],1) == 4.6
+        assert round(setting["upper_value"],1) == 5.7
 
         #ensure that test_user1 websocket self.websocket_client1 got update
         received = self.websocket_client1.get_received()
@@ -219,7 +233,8 @@ class ActivitySettingsAPITestCase(FitPalsTestCase):
                              data = {"user_id":self.test_user1["id"],
                                      "question_id":activity["questions"][0]["id"],
                                      "lower_value":8.3,
-                                     "upper_value":20.6,},
+                                     "upper_value":20.6,
+                                     "unit_type":"mile"},
                              headers = {"Authorization":fb_secret})
         setting_id = json.loads(resp.data)["value"]["id"]
         
@@ -238,7 +253,8 @@ class ActivitySettingsAPITestCase(FitPalsTestCase):
                              data = {"user_id":self.test_user1["id"],
                                      "question_id":activity["questions"][0]["id"],
                                      "lower_value":8.3,
-                                     "upper_value":20.6,},
+                                     "upper_value":20.6,
+                                     "unit_type":"mile"},
                              headers = {"Authorization":fb_secret})
         setting_id = json.loads(resp.data)["value"]["id"]
         
@@ -257,7 +273,8 @@ class ActivitySettingsAPITestCase(FitPalsTestCase):
                              data = {"user_id":self.test_user1["id"],
                                      "question_id":activity["questions"][0]["id"],
                                      "lower_value":8.3,
-                                     "upper_value":20.6,},
+                                     "upper_value":20.6,
+                                     "unit_type":"mile"},
                              headers = {"Authorization":fb_secret})
         setting_id = json.loads(resp.data)["value"]["id"]
 
@@ -287,7 +304,8 @@ class ActivitySettingsAPITestCase(FitPalsTestCase):
                              data = {"user_id":self.test_user1["id"],
                                      "question_id":activity["questions"][0]["id"],
                                      "lower_value":8.3,
-                                     "upper_value":20.6,},
+                                     "upper_value":20.6,
+                                     "unit_type":"mile"},
                              headers = {"Authorization":fb_secret})
         setting_id = json.loads(resp.data)["value"]["id"]
 

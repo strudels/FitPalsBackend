@@ -57,8 +57,8 @@ def reset_app():
 
     from app.models import *
     running = Activity("running")
-    running_q1 = Question(running, "How much time do you want to spend running?")
-    running_q2 = Question(running, "How far do you want to run?")
+    running_q1 = Question(running, "How far do you want to run?", "kilometer")
+    running_q2 = Question(running, "How much time do you want to spend running?", "minute")
     running.questions.append(running_q1)
     running.questions.append(running_q2)
     db.session.add(running)

@@ -98,8 +98,8 @@ class UserActivitySettingsAPI(Resource):
 
         # add setting to user's activity settings
         try: 
-            activity_setting = ActivitySetting(user,question,args.lower_value,
-                                               args.upper_value,args.unit_type)
+            activity_setting = ActivitySetting(user,question,args.unit_type,
+                                               args.lower_value,args.upper_value)
             user.activity_settings.append(activity_setting)
             db.session.commit()
         except: 
