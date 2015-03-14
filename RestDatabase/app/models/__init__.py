@@ -24,10 +24,32 @@ class SearchSettings(db.Model):
     #oldest person to ever live was 122, 130 should be good enough...
     # http://en.wikipedia.org/wiki/Oldest_people
     age_upper_limit = db.Column(db.Integer, default=130)
-
+    _ureg = UnitRegistry()
+    #radius with default value of 1 mile
+    radius_converted = db.Column(db.Float,
+                                 default=(_ureg.mile * 1)\
+                                 .to(_ureg.meter).magnitude)
+    radius_unit = db.Column(db.String(64), default="mile")
     __table_args__ = (CheckConstraint("age_lower_limit < age_upper_limit"),)
+
+    @hybrid_property
+    def radius(self):
+        db_val = self.radius_converted * self._ureg.meter
+        return db_val.to(self._ureg.parse_expression(self.radius_unit)).magnitude
+        
+    @radius.setter
+    def radius(self, value):
+        value = value * self._ureg.parse_expression(self.radius_unit)
+        self.radius_converted = value.to(self._ureg.meter).magnitude
     
-    def __init__(self,user,activity=None,friends_only=False,men_only=False,
+    @validates("unit_type")
+    def validate_unit_type(self, key, value):
+        test_unit = self._ureg.parse_expression(value) * 100
+        conversion_test = test_unit.to(self._ureg.meter)
+        return value
+    
+    def __init__(self,user,radius=1,radius_unit="mile",activity=None,
+                 friends_only=False,men_only=False,
                  women_only=False,age_lower_limit=18,age_upper_limit=130):
         self.user = user
         self.activity = activity
@@ -36,6 +58,8 @@ class SearchSettings(db.Model):
         self.women_only = women_only
         self.age_lower_limit = age_lower_limit
         self.age_upper_limit = age_upper_limit
+        self.radius_unit = radius_unit
+        self.radius = radius
         
     def dict_repr(self):
         return {
@@ -46,7 +70,9 @@ class SearchSettings(db.Model):
             "men_only":self.men_only,
             "women_only":self.women_only,
             "age_lower_limit":self.age_lower_limit,
-            "age_upper_limit":self.age_upper_limit
+            "age_upper_limit":self.age_upper_limit,
+            "radius_unit":self.radius_unit,
+            "radius":self.radius
         }
 
 class User(db.Model):

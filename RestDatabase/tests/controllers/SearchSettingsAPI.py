@@ -11,7 +11,9 @@ class SearchSettingsApiTestCase(FitPalsTestCase):
                    "men_only":False,
                    "women_only":False,
                    "age_lower_limit":18,
-                   "age_upper_limit":130}
+                   "age_upper_limit":130,
+                   "radius":1,
+                   "radius_unit":"mile"}
         resp = self.app.get("/search_settings/%d" % setting_id,
                             headers={"Authorization":fb_secret})
         assert resp.status_code == 200
@@ -45,12 +47,15 @@ class SearchSettingsApiTestCase(FitPalsTestCase):
 
         #update settings
         resp = self.app.put("/search_settings/%d" % settings["id"],
-                            data={"men_only":0, "women_only":1},
+                            data={"men_only":0, "women_only":1,
+                                  "radius":12,"radius_unit":"kilometer"},
                             headers={"Authorization":fb_secret})
         assert resp.status_code == 202
         assert json.loads(resp.data)["message"] == "Search settings updated."
         settings["men_only"] = False
         settings["women_only"] = True
+        settings["radius"] = 12
+        settings["radius_unit"] = "kilometer"
         assert json.loads(resp.data)["value"] == settings
 
         #ensure that test_user websocket self.websocket_client1 got new user update

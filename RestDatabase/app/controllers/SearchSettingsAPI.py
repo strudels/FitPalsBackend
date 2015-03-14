@@ -83,12 +83,16 @@ class SearchSettingsAPI(Resource):
             type=int, location="form", required=False)
         parser.add_argument("age_upper_limit",
             type=int, location="form", required=False)
+        parser.add_argument("radius",
+            type=float,location="form",required=False)
+        parser.add_argument("radius_unit",
+            type=str,location="form",required=False)
         args = parser.parse_args()
-        if type(args.friends_only)==type(int()):
+        if type(args.friends_only)==int:
             args.friends_only = bool(args.friends_only)
-        if type(args.men_only)==type(int()):
+        if type(args.men_only)==int:
             args.men_only = bool(args.men_only)
-        if type(args.women_only)==type(int()):
+        if type(args.women_only)==int:
             args.women_only = bool(args.women_only)
         
         #get search_settings
@@ -105,7 +109,8 @@ class SearchSettingsAPI(Resource):
         #update search_settings
         try:
             for arg in args.keys():
-                if args[arg] != None: setattr(settings,arg,args[arg])
+                if args[arg] != None:
+                    setattr(settings,arg,args[arg])
             db.session.commit()
         except:
             return Response(status=400,
