@@ -325,7 +325,9 @@ Contents:
         Return users that were updated before a given time.
 
    :Status Codes:
-      * 400 Bad Request -- Invalid GPS parameters.
+      * 401 Unauthorized -- Not Authorized.
+
+      * 500 Internal Server Error -- Internal Error.
 
       * 200 OK -- Users found.
 
