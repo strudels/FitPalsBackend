@@ -55,20 +55,21 @@ class UsersAPI(Resource):
         user = User.query.filter(User.fb_secret==args.Authorization).first()
         if not user:
             return Response(status=401,message="Not Authorized.").__dict__,401
-
-        #wrap in try except, incase Facebook doesn't respond
-        try: friend_fb_ids = Facebook.get_user_friends(user.fb_id)
-        except :
-            return Response(status=500,message="Internal Error."),500
             
         #begin creating query
         query = User.query.filter(User.id!=user.id).join(User.search_settings)
         query = query.join(User.activity_settings)
 
         #apply filters in user's search settings
-        #STILL NEED TO FILTER BY FRIENDS
         if user.search_settings.friends_only:
-            pass
+            #wrap in try except, incase Facebook doesn't respond
+            try: friend_fb_ids = Facebook.get_user_friends(user.fb_id)
+            except :
+                return Response(status=500,message="Internal Error."),500
+            users = query.filter(User.fb_id in friend_fb_ids).all()
+            users = [u.dict_repr(show_online_status=True) for u in users]
+            return Response(status=200,message="Users found.",
+                            value=users).__dict__,200
         else:
             if user.search_settings.men_only:
                 query = query.filter(User.gender=="male")
@@ -130,9 +131,7 @@ class UsersAPI(Resource):
         if args.offset != None: query = query.offset(args.offset)
 
         if args.limit != None: users = query.limit(args.limit)
-        else: users = query.all()
-        users = [u.dict_repr(show_online_status=True)\
-                 if u.fb_id in friend_fb_ids else u.dict_repr() for u in users]
+        users = [u.dict_repr() for u in query.all()]
         #return matches' ids
         return Response(status=200,message="Users found.",
                         value=users).__dict__,200
