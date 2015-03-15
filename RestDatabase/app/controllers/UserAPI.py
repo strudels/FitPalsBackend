@@ -13,6 +13,39 @@ from app.models import *
 from app.utils.Response import Response
 from app.utils import Facebook
 
+@api.resource("/users/<int:user_id>/friends")
+class UserFriendsAPI(Resource):
+    def get(self,user_id):
+        """
+        Gets users that fall inside the specified parameters
+             and the authorized user's search settings
+        
+        :reqheader Authorization: facebook secret
+        
+        :status 404: User not found.
+        :status 401: Not Authorized.
+        :status 200: Friends found.
+        """
+        parser = reqparse.RequestParser()
+        parser.add_argument("Authorization",
+            type=str, location="headers", required=True)
+        args = parser.parse_args()
+
+        user = User.query.get(user_id)
+        if not user:
+            return Response(status=404,message="User not found.").__dict__,404
+            
+        if user.fb_secret != args.Authorization:
+            return Response(status=401,message="Not Authorized.").__dict__,401
+        
+        try: friend_fb_ids = Facebook.get_user_friends(user.fb_id)
+        except :
+            return Response(status=500,message="Internal Error."),500
+        users = query.filter(User.fb_id in friend_fb_ids).all()
+        users = [u.dict_repr(show_online_status=True) for u in users]
+        return Response(status=200,message="Users found.",
+                        value=users).__dict__,200
+
 @api.resource('/users')
 class UsersAPI(Resource):
     def _age_to_day(self,age):
