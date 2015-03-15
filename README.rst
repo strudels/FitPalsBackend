@@ -379,6 +379,21 @@ Contents:
 
       * 201 Created -- User created.
 
+``GET /users/(int: user_id)/friends``
+
+   Gets users that fall inside the specified parameters
+      and the authorized user's search settings
+
+   :Request Headers:
+      * Authorization -- facebook secret
+
+   :Status Codes:
+      * 404 Not Found -- User not found.
+
+      * 401 Unauthorized -- Not Authorized.
+
+      * 200 OK -- Friends found.
+
 ``GET /activity_settings/(int: setting_id)``
 
    Get specific activity setting
