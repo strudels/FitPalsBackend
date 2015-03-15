@@ -168,7 +168,7 @@ class ActivitySettingAPI(Resource):
         parser.add_argument("upper_value",
             type=float,location="form",required=False)
         parser.add_argument("unit_type",
-            type=float,location="form",required=False)
+            type=str,location="form",required=False)
         args = parser.parse_args()
         
         #get setting

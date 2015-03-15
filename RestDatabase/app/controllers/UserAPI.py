@@ -11,6 +11,7 @@ from datetime import date
 from app import db, api, socketio
 from app.models import *
 from app.utils.Response import Response
+from app.utils import Facebook
 
 @api.resource('/users')
 class UsersAPI(Resource):
@@ -53,10 +54,11 @@ class UsersAPI(Resource):
         user = User.query.filter(User.fb_secret==args.Authorization).first()
         if not user:
             return Response(status=401,message="Not Authorized.").__dict__,401
+        friend_fb_ids = Facebook.get_user_friends(user.fb_id)
             
         #begin creating query
         query = User.query.filter(User.id!=user.id).join(User.search_settings)
-        query = query.join(ActivitySetting)
+        query = query.join(User.activity_settings)
 
         #apply filters in user's search settings
         #STILL NEED TO FILTER BY FRIENDS
@@ -86,20 +88,23 @@ class UsersAPI(Resource):
         #filter by activity preferences
         query = query.filter(SearchSettings.activity_id==
                              user.search_settings.activity_id)
-        or_expr = True
-        for s in user.activity_settings\
+        settings = user.activity_settings\
                      .join(ActivitySetting.question)\
                      .filter(Question.activity_id==
-                            user.search_settings.activity_id).all():
+                            user.search_settings.activity_id).all()
+        if settings:
+            s = settings[0]
+            or_expr = and_(ActivitySetting.question_id==s.question_id,
+                                    not_(or_(ActivitySetting.upper_value_converted <
+                                                    s.lower_value_converted,
+                                            ActivitySetting.lower_value_converted >
+                                                    s.upper_value_converted)))
+        for s in settings[1:]:
             and_expr = and_(ActivitySetting.question_id==s.question_id,
-                            not_(or_(and_(ActivitySetting.lower_value_converted <
+                            not_(or_(ActivitySetting.upper_value_converted <
                                               s.lower_value_converted,
-                                          ActivitySetting.upper_value_converted <
-                                              s.lower_value_converted,),
-                                     and_(ActivitySetting.lower_value_converted >
-                                              s.upper_value_converted,
-                                          ActivitySetting.upper_value_converted >
-                                              s.upper_value_converted))))
+                                     ActivitySetting.lower_value_converted >
+                                              s.upper_value_converted)))
             or_expr = or_(or_expr,and_expr)
         query = query.filter(or_expr)
 
@@ -121,9 +126,11 @@ class UsersAPI(Resource):
 
         if args.limit != None: users = query.limit(args.limit)
         else: users = query.all()
+        users = [u.dict_repr(show_online_status=True)\
+                 if u.fb_id in friend_fb_ids else u.dict_repr() for u in users]
         #return matches' ids
         return Response(status=200,message="Users found.",
-            value=[u.dict_repr() for u in users]).__dict__,200
+                        value=users).__dict__,200
 
     def post(self):
         """

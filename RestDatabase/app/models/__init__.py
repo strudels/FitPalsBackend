@@ -146,7 +146,7 @@ class User(db.Model):
         self.name=name
         self.gender=gender
 
-    def dict_repr(self,public=True):
+    def dict_repr(self,public=True,show_online_status=False):
         dict_repr = {
             "id":self.id,
             "fb_id":self.fb_id,
@@ -159,10 +159,12 @@ class User(db.Model):
             "dob_day":self.dob_day,
             "available":self.available,
             "name":self.name,
-            "gender":self.gender,
-            "online":self.online
+            "gender":self.gender
         }
+        if show_online_status:
+            dict_repr["online"] = self.online
         if not public:
+            dict_repr["online"] = self.online
             dict_repr["fb_secret"] = self.fb_secret
             dict_repr["password"] = self.password
         return dict_repr

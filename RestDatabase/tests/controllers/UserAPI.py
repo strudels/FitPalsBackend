@@ -52,11 +52,11 @@ class UsersApiTestCase(FitPalsTestCase):
         assert json.loads(resp.data)["message"] == "Coordinates invalid."
         
     #helper function for running test_get_users for a bunch of diff possibilities
-    @unittest.skip("Skipping a non-test function")
     def generate_test_user_and_get_users(self,
-                           user,
-                           activity_setting,
-                           search_settings):
+                                         user,
+                                         activity_setting_id,
+                                         activity_setting,
+                                         search_settings):
         #update search settings, activity_settings, and location for each user to be the same
         resp = self.app.put("/search_settings/%d" % user["search_settings_id"],
                             data=search_settings,
@@ -65,11 +65,11 @@ class UsersApiTestCase(FitPalsTestCase):
                             data={"longitude":user["longitude"],
                                   "latitude":user["latitude"]},
                             headers={"Authorization":user["fb_secret"]})
-        resp = self.app.put("/activity_settings",
+        resp = self.app.put("/activity_settings/%d" % activity_setting_id,
                              data=activity_setting,
                             headers={"Authorization":user["fb_secret"]})
         resp = self.app.get("/users?longitude=40&latitude=20&radius=17000",
-                            headers={"Authorization":fb_secret})
+                            headers={"Authorization":self.test_user1["fb_secret"]})
         assert resp.status_code==200
         assert json.loads(resp.data)["message"] == "Users found."
         users = json.loads(resp.data)["value"]
@@ -87,11 +87,18 @@ class UsersApiTestCase(FitPalsTestCase):
         location2 = (28.074511,-82.412251)
 
         #initialize user1
+        self.test_user1["longitude"] = location1[0]
+        self.test_user1["latitude"] = location1[1]
+        resp = self.app.put("/users/%d" % self.test_user1["id"],
+                            data={"longitude":self.test_user1["longitude"],
+                                  "latitude":self.test_user1["latitude"]},
+                            headers={"Authorization":self.test_user1["fb_secret"]})
         user1_search_settings = {"activity_id":activity_id,
                                   "radius":12, 
                                   "radius_unit":"mile"}
-        self.test_user1["longitude"] = location1[0]
-        self.test_user1["latitude"] = location1[1]
+        resp = self.app.put("/search_settings/%d" % self.test_user1["search_settings_id"],
+                            data=user1_search_settings,
+                            headers={"Authorization":self.test_user1["fb_secret"]})
         user1_activity_setting = {"user_id":self.test_user1["id"],
                                    "question_id":question_id,
                                    "lower_value":5,
@@ -100,13 +107,14 @@ class UsersApiTestCase(FitPalsTestCase):
         resp = self.app.post("/activity_settings",
                              data=user1_activity_setting,
                              headers={"Authorization":self.test_user1["fb_secret"]})
+        user1_activity_setting_id = json.loads(resp.data)["value"]["id"]
         
         #initialize user2
+        self.test_user2["longitude"] = location2[0]
+        self.test_user2["latitude"] = location2[1]
         user2_search_settings = {"activity_id":activity_id,
                                   "radius":12, 
                                   "radius_unit":"mile"}
-        self.test_user2["longitude"] = location2[0]
-        self.test_user2["latitude"] = location2[1]
         user2_activity_setting = {"user_id":self.test_user2["id"],
                                    "question_id":question_id,
                                    "lower_value":5,
@@ -115,11 +123,13 @@ class UsersApiTestCase(FitPalsTestCase):
         resp = self.app.post("/activity_settings",
                              data=user2_activity_setting,
                              headers={"Authorization":self.test_user2["fb_secret"]})
+        user2_activity_setting_id = json.loads(resp.data)["value"]["id"]
         
         # GET /users while both users are the same
         matches = self.generate_test_user_and_get_users(
             user=self.test_user2,
             activity_setting=user2_activity_setting,
+            activity_setting_id=user2_activity_setting_id,
             search_settings=user2_search_settings
         )
         assert len(matches) == 1
@@ -131,6 +141,7 @@ class UsersApiTestCase(FitPalsTestCase):
         matches = self.generate_test_user_and_get_users(
             user=self.test_user2,
             activity_setting=user2_activity_setting,
+            activity_setting_id=user2_activity_setting_id,
             search_settings=user2_search_settings
         )
         assert len(matches) == 0
@@ -142,15 +153,17 @@ class UsersApiTestCase(FitPalsTestCase):
         matches = self.generate_test_user_and_get_users(
             user=self.test_user2,
             activity_setting=user2_activity_setting,
+            activity_setting_id=user2_activity_setting_id,
             search_settings=user2_search_settings
         )
         assert len(matches) == 0
 
-        # GET /users user2's radius too short
+        # GET /users user2's 
         user2_search_settings["radius"] = 5
         matches = self.generate_test_user_and_get_users(
             user=self.test_user2,
             activity_setting=user2_activity_setting,
+            activity_setting_id=user2_activity_setting_id,
             search_settings=user2_search_settings
         )
         assert len(matches) == 0
@@ -165,6 +178,7 @@ class UsersApiTestCase(FitPalsTestCase):
         test_user1_public = self.test_user1
         del test_user1_public["fb_secret"]
         del test_user1_public["password"]
+        del test_user1_public["online"]
         resp = self.app.get("/users/" + str(self.test_user1["id"]))
         assert resp.status_code==200
         assert json.loads(resp.data)["message"] == "User found."
@@ -199,6 +213,7 @@ class UsersApiTestCase(FitPalsTestCase):
         self.test_user1["about_me"] = "I'm a test user!"
         del self.test_user1["password"]
         del self.test_user1["fb_secret"]
+        del self.test_user1["online"]
         
         #ensure that test_user websocket self.websocket_client1 got new user update
         received = self.websocket_client1.get_received()
