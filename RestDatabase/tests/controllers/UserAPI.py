@@ -1,6 +1,27 @@
 from tests.utils.FitPalsTestCase import *
 
 class UsersApiTestCase(FitPalsTestCase):
+    def test_get_user_facebook_friends(self):
+        resp = self.app.get("/users/%d/friends" % self.test_user1["id"],
+                            headers={"Authorization":self.test_user1["fb_secret"]})
+        assert resp.status_code==200
+        assert json.loads(resp.data)["message"] == "Friends found."
+        friends = json.loads(resp.data)["value"]
+        assert len(friends) == 1
+        assert friends[0]["name"]=="Ricky"
+
+    def test_get_user_facebook_friends_user_not_found(self):
+        resp = self.app.get("/users/%d/friends" % 0,
+                            headers={"Authorization":self.test_user1["fb_secret"]})
+        assert resp.status_code==404
+        assert json.loads(resp.data)["message"] == "User not found."
+
+    def test_get_user_facebook_friends_not_authorized(self):
+        resp = self.app.get("/users/%d/friends" % self.test_user1["id"],
+                            headers={"Authorization":self.test_user1["fb_secret"] + "junk"})
+        assert resp.status_code==401
+        assert json.loads(resp.data)["message"] == "Not Authorized."
+
     def test_create_user(self):
         user = {"fb_secret":"some fb_secret",
                 "fb_id":"some fb_id",
