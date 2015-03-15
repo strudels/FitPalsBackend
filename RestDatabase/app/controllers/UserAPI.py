@@ -36,7 +36,8 @@ class UsersAPI(Resource):
         :query int last_updated: Number of seconds since epoch;
             Return users that were updated before a given time.
 
-        :status 400: Invalid GPS parameters.
+        :status 401: Not Authorized.
+        :status 500: Internal Error.
         :status 200: Users found.
         """
         parser = reqparse.RequestParser()
@@ -54,7 +55,11 @@ class UsersAPI(Resource):
         user = User.query.filter(User.fb_secret==args.Authorization).first()
         if not user:
             return Response(status=401,message="Not Authorized.").__dict__,401
-        friend_fb_ids = Facebook.get_user_friends(user.fb_id)
+
+        #wrap in try except, incase Facebook doesn't respond
+        try: friend_fb_ids = Facebook.get_user_friends(user.fb_id)
+        except :
+            return Response(status=500,message="Internal Error."),500
             
         #begin creating query
         query = User.query.filter(User.id!=user.id).join(User.search_settings)
