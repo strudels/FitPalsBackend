@@ -13,7 +13,7 @@ app = Flask(__name__)
 
 conn_str = "postgresql://"
 if basename(os.environ.get("_", "")) == "foreman":
-    if os.environ.get("DATABASE_URL", None) != None:
+    if os.environ.get("DATABASE_URL", None) is not None:
         conn_str = os.environ["DATABASE_URL"]
     else:
         pguser = os.environ.get("FITPALS_PGUSER", "")
@@ -24,6 +24,8 @@ if basename(os.environ.get("_", "")) == "foreman":
         conn_str += os.environ.get("FITPALS_PGHOST", "localhost")
         conn_str += ":" + os.environ.get("FITPALS_PGPORT", "5432")
         conn_str += "/" + os.environ.get("FITPALS_PGDBNAME", "fitpals")
+elif os.environ.get("DATABASE_URL", None) is not None:
+    conn_str = os.environ["DATABASE_URL"]
 else:
     config = ConfigParser()
     config.read([dirname(__file__) + "/fitpals_api.cfg"])
