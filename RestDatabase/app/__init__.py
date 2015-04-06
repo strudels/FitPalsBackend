@@ -3,7 +3,6 @@ from flask.ext.sqlalchemy import SQLAlchemy
 from flask.ext.restful import Api
 from flask.ext.socketio import SocketIO, send, emit, join_room, leave_room
 from ConfigParser import ConfigParser
-import MySQLdb as mysql
 from os.path import dirname
 from pyapns import configure, provision, notify
 
