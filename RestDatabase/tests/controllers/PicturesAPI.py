@@ -1,9 +1,6 @@
 from tests.utils.FitPalsTestCase import *
 
 class PicturesApiTestCase(FitPalsTestCase):
-    def tearDown(self):
-        reset_app()
-
     def test_add_picture(self):
         #add picture
         fb_secret = self.test_user1["fb_secret"]
