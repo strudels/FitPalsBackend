@@ -1,6 +1,30 @@
 from tests.utils.FitPalsTestCase import *
+from app.utils.Facebook import *
+from nose.tools import nottest
 
 class UsersApiTestCase(FitPalsTestCase):
+    #helper function for running test_get_users for a bunch of diff possibilities
+    @nottest
+    def generate_test_user_and_get_users(self,user,activity_setting_id,activity_setting,
+                                        search_settings):
+        #update search settings, activity_settings, and location for each user to be the same
+        resp = self.app.put("/search_settings/%d" % user["search_settings_id"],
+                            data=search_settings,
+                            headers={"Authorization":user["fb_secret"]})
+        resp = self.app.put("/users/%d" % user["id"],
+                            data={"longitude":user["longitude"],
+                                    "latitude":user["latitude"]},
+                            headers={"Authorization":user["fb_secret"]})
+        resp = self.app.put("/activity_settings/%d" % activity_setting_id,
+                                data=activity_setting,
+                            headers={"Authorization":user["fb_secret"]})
+        resp = self.app.get("/users?longitude=40&latitude=20&radius=17000",
+                            headers={"Authorization":self.test_user1["fb_secret"]})
+        assert resp.status_code==200
+        assert json.loads(resp.data)["message"] == "Users found."
+        users = json.loads(resp.data)["value"]
+        return users
+
     def test_get_user_facebook_friends(self):
         resp = self.app.get("/users/%d/friends" % self.test_user1["id"],
                             headers={"Authorization":self.test_user1["fb_secret"]})
@@ -23,8 +47,8 @@ class UsersApiTestCase(FitPalsTestCase):
         assert json.loads(resp.data)["message"] == "Not Authorized."
 
     def test_create_user(self):
-        user = {"fb_secret":"some fb_secret",
-                "fb_id":"some fb_id",
+        access_token = self.access_tokens["1377938879200557"]
+        user = {"access_token":access_token,
                 "dob_year":1990,
                 "dob_month":2,
                 "dob_day":17,
@@ -34,24 +58,24 @@ class UsersApiTestCase(FitPalsTestCase):
         assert resp.status_code==201
         assert json.loads(resp.data)["message"] == "User created."
         received_user = json.loads(resp.data)["value"]
+        del user["access_token"]
         for key in user.keys():
             assert user[key] == received_user[key]
 
     def test_create_user_found(self):
-        resp = self.app.post("/users",data={"fb_secret":self.test_user1["fb_secret"],
-                                            "fb_id":self.test_user1["fb_id"]})
+        resp = self.app.post("/users",data={"access_token":\
+            self.access_tokens[self.test_user1["fb_id"]]})
         assert resp.status_code==200
         assert json.loads(resp.data)["message"] == "User found."
         
     def test_create_user_not_authorized(self):
-        resp = self.app.post("/users",data={"fb_secret":self.test_user1["fb_secret"] + "junk",
-                                            "fb_id":self.test_user1["fb_id"]})
+        resp = self.app.post("/users",data={"access_token":"invalid_access_token"})
         assert resp.status_code==401
         assert json.loads(resp.data)["message"] == "Not Authorized."
         
     def test_create_user_no_dob(self):
-        user = {"fb_secret":"some fb_secret",
-                "fb_id":"some fb_id",
+        access_token = self.access_tokens["1377938879200557"]
+        user = {"access_token":access_token,
                 "dob_month":2,
                 "dob_day":17,
                 "longitude":20.0,
@@ -61,8 +85,8 @@ class UsersApiTestCase(FitPalsTestCase):
         assert json.loads(resp.data)["message"] == "Must specify DOB."
         
     def test_create_user_bad_coords(self):
-        user = {"fb_secret":"some fb_secret",
-                "fb_id":"some fb_id",
+        access_token = self.access_tokens["1377938879200557"]
+        user = {"access_token":access_token,
                 "dob_year":1990,
                 "dob_month":2,
                 "dob_day":17,
@@ -72,30 +96,7 @@ class UsersApiTestCase(FitPalsTestCase):
         assert resp.status_code==400
         assert json.loads(resp.data)["message"] == "Coordinates invalid."
         
-    #helper function for running test_get_users for a bunch of diff possibilities
-    def generate_test_user_and_get_users(self,
-                                         user,
-                                         activity_setting_id,
-                                         activity_setting,
-                                         search_settings):
-        #update search settings, activity_settings, and location for each user to be the same
-        resp = self.app.put("/search_settings/%d" % user["search_settings_id"],
-                            data=search_settings,
-                            headers={"Authorization":user["fb_secret"]})
-        resp = self.app.put("/users/%d" % user["id"],
-                            data={"longitude":user["longitude"],
-                                  "latitude":user["latitude"]},
-                            headers={"Authorization":user["fb_secret"]})
-        resp = self.app.put("/activity_settings/%d" % activity_setting_id,
-                             data=activity_setting,
-                            headers={"Authorization":user["fb_secret"]})
-        resp = self.app.get("/users?longitude=40&latitude=20&radius=17000",
-                            headers={"Authorization":self.test_user1["fb_secret"]})
-        assert resp.status_code==200
-        assert json.loads(resp.data)["message"] == "Users found."
-        users = json.loads(resp.data)["value"]
-        return users
-       
+      
     def test_get_users(self):
         fb_secret = self.test_user1["fb_secret"]
         setting_id = self.test_user1["search_settings_id"]
