@@ -8,10 +8,11 @@ import time
 from sqlalchemy import func,or_, and_, not_
 from datetime import date
 
-from app import db, api, socketio
+from app import db, api
 from app.models import *
 from app.utils.Response import Response
 from app.utils import Facebook
+from app.utils.AsyncNotifications import send_message
 
 @api.resource("/users/<int:user_id>/friends")
 class UserFriendsAPI(Resource):
@@ -384,7 +385,7 @@ class UserAPI(Resource):
                 message="Internal error. Changes not committed.").__dict__, 500
         
         #reflect update in user's other clients
-        socketio.emit("user_update", user.dict_repr(), room=str(user.id))
+        send_message(user,"user_update",user.dict_repr())
 
         return Response(status=202,message="User updated",
                         value=user.dict_repr()).__dict__,202
