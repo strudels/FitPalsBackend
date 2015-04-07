@@ -45,10 +45,10 @@ class PicturesAPI(Resource):
         :form int user_id: Id of user.
         :form str uri: Facebook Picture Id string.
         :form int ui_index: Index of the ui.
-        :form float top: Top position for crop
-        :form float bottom: Bottom position for crop
-        :form float left: Left position for crop
-        :form float right: Right position for crop
+        :form float top: Top position for crop. Must be between 0 and 1.
+        :form float bottom: Bottom position for crop. Must be between 0 and 1.
+        :form float left: Left position for crop. Must be between 0 and 1.
+        :form float right: Right position for crop. Must be between 0 and 1.
 
         :status 400: Picture data invalid.
         :status 401: Not Authorized.

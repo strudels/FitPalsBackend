@@ -186,13 +186,17 @@ Contents:
 
       * **int ui_index** -- Index of the ui.
 
-      * **float top** -- Top position for crop
+      * **float top** -- Top position for crop. Must be between 0 and
+        1.
 
-      * **float bottom** -- Bottom position for crop
+      * **float bottom** -- Bottom position for crop. Must be between
+        0 and 1.
 
-      * **float left** -- Left position for crop
+      * **float left** -- Left position for crop. Must be between 0
+        and 1.
 
-      * **float right** -- Right position for crop
+      * **float right** -- Right position for crop. Must be between 0
+        and 1.
 
    :Status Codes:
       * 400 Bad Request -- Picture data invalid.
@@ -336,11 +340,8 @@ Contents:
    Create new user if not already exists; return user
 
    :Form Parameters:
-      * **str fb_id** -- Specify fb_id for user; must be unique for
-        every user.
-
-      * **str fb_secret** -- Specify fb_secret for user; must be
-        unique for every user.
+      * **str access_token** -- Specify fb access token for user from
+        login dialogue.
 
       * **float longitude** -- Specify a longitude to search by.
 
@@ -378,6 +379,15 @@ Contents:
       * 200 OK -- User found.
 
       * 201 Created -- User created.
+
+``GET /activities/(int: activity_id)/questions``
+
+   Get all questions for an activity
+
+   :Status Codes:
+      * 404 Not Found -- Activity not found.
+
+      * 200 OK -- Questions found.
 
 ``GET /users/(int: user_id)/friends``
 
