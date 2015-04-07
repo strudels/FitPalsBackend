@@ -333,6 +333,9 @@ class Activity(db.Model):
             "name":self.name,
             "questions":[q.id for q in self.questions]
         }
+        
+    def __repr__(self):
+        return "<Activity id=%d name=%s>" % (self.id,self.name)
 
 class Question(db.Model):
     __tablename__ = "activity_questions"
