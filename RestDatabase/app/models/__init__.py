@@ -168,7 +168,11 @@ class User(db.Model):
             dict_repr["fb_secret"] = self.fb_secret
             dict_repr["password"] = self.password
         return dict_repr
-       
+
+@event.listens_for(User.__table__, "before_create")
+def user_ensure_postgis_extension(mapper, connection, **kwargs):
+    connection.execute("CREATE EXTENSION IF NOT EXISTS postgis")
+
 @event.listens_for(User, "before_delete")
 def user_message_thread_cascade_delete(mapper, connection, user):
     #delete all message threads where user is thread.user1

@@ -1,23 +1,40 @@
+from __future__ import print_function
 from flask import Flask
 from flask.ext.sqlalchemy import SQLAlchemy
 from flask.ext.restful import Api
 from flask.ext.socketio import SocketIO, send, emit, join_room, leave_room
 from ConfigParser import ConfigParser
-import MySQLdb as mysql
-from os.path import dirname
+from os.path import basename, dirname
 from pyapns import configure, provision, notify
-
-config = ConfigParser()
-config.read([dirname(__file__) + "/fitpals_api.cfg"])
+import os
+import sys
 
 app = Flask(__name__)
 
 conn_str = "postgresql://"
-conn_str += config.get("postgres","username")
-conn_str += ":" + config.get("postgres","password")
-conn_str += "@" + config.get("postgres","hostname")
-conn_str += ":" + config.get("postgres","port")
-conn_str += "/" + config.get("postgres","dbname")
+if basename(os.environ.get("_", "")) == "foreman":
+    if os.environ.get("DATABASE_URL", None) is not None:
+        conn_str = os.environ["DATABASE_URL"]
+    else:
+        pguser = os.environ.get("FITPALS_PGUSER", "")
+        conn_str += pguser
+        conn_str += (":" + \
+                os.environ.get("FITPALS_PGPASS", "")) if pguser != "" else ""
+        conn_str += "@" if pguser != "" else ""
+        conn_str += os.environ.get("FITPALS_PGHOST", "localhost")
+        conn_str += ":" + os.environ.get("FITPALS_PGPORT", "5432")
+        conn_str += "/" + os.environ.get("FITPALS_PGDBNAME", "fitpals")
+elif os.environ.get("DATABASE_URL", None) is not None:
+    conn_str = os.environ["DATABASE_URL"]
+else:
+    config = ConfigParser()
+    config.read([dirname(__file__) + "/fitpals_api.cfg"])
+
+    conn_str += config.get("postgres","username")
+    conn_str += ":" + config.get("postgres","password")
+    conn_str += "@" + config.get("postgres","hostname")
+    conn_str += ":" + config.get("postgres","port")
+    conn_str += "/" + config.get("postgres","dbname")
 app.config["SQLALCHEMY_DATABASE_URI"] = conn_str
 
 socketio = SocketIO(app)
