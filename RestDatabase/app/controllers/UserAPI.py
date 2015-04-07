@@ -35,7 +35,7 @@ class UserFriendsAPI(Resource):
         if not user:
             return Response(status=404,message="User not found.").__dict__,404
             
-        if user.fb_secret != args.Authorization:
+        if user.fitpals_secret != args.Authorization:
             return Response(status=401,message="Not Authorized.").__dict__,401
         
         try: friend_fb_ids = Facebook.get_user_friends(user.fb_id)
@@ -91,7 +91,7 @@ class UsersAPI(Resource):
         args = parser.parse_args()
         
         #get user by fb_id; if no user then 401
-        user = User.query.filter(User.fb_secret==args.Authorization).first()
+        user = User.query.filter(User.fitpals_secret==args.Authorization).first()
         if not user:
             return Response(status=401,message="Not Authorized.").__dict__,401
             
@@ -252,7 +252,7 @@ class UsersAPI(Resource):
         try:
             new_user = User(
                 fb_id=fb_id,
-                fb_secret=Facebook.create_fitpals_secret(),
+                fitpals_secret=Facebook.create_fitpals_secret(),
                 longitude=args.longitude,
                 latitude=args.latitude,
                 about_me=args.about_me,
@@ -360,7 +360,7 @@ class UserAPI(Resource):
             return Response(status=404,message="User not found.").__dict__,404
 
         #ensure user is valid by checking if fb_id is correct
-        if user.fb_secret != args.Authorization:
+        if user.fitpals_secret != args.Authorization:
             return Response(status=401,message="Not Authorized.").__dict__,401
 
         #update fields specified by client
@@ -414,7 +414,7 @@ class UserAPI(Resource):
                 message="User not found.").__dict__,404
 
         #ensure user is authorized to delete
-        if user.fb_secret != args.Authorization:
+        if user.fitpals_secret != args.Authorization:
             return Response(status=401,
                 message="Not Authorized.").__dict__,401
             

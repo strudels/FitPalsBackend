@@ -38,7 +38,7 @@ class MatchesAPI(Resource):
         args = parser.parse_args()
 
         #get user from the database
-        user = User.query.filter(User.fb_secret==args.Authorization).first()
+        user = User.query.filter(User.fitpals_secret==args.Authorization).first()
         if not user:
             return Response(status=401,
                 message="Not Authorized.").__dict__, 401
@@ -89,7 +89,7 @@ class MatchesAPI(Resource):
                 .__dict__,404
 
         #ensure user is authorized
-        if user.fb_secret != args.Authorization:
+        if user.fitpals_secret != args.Authorization:
             return Response(status=401,
                 message="Not Authorized.").__dict__, 401
 
@@ -145,7 +145,7 @@ class MatchAPI(Resource):
         user = match.user
 
         #ensure user is authorized
-        if user.fb_secret != args.Authorization:
+        if user.fitpals_secret != args.Authorization:
             return Response(status=401,
                 message="Not Authorized.").__dict__, 401
 

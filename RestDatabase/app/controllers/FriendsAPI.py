@@ -29,7 +29,7 @@ class FriendsAPI(Resource):
         args = parser.parse_args()
         
         #Ensure user is authorized
-        user = User.query.filter(User.fb_secret==args.Authorization).first()
+        user = User.query.filter(User.fitpals_secret==args.Authorization).first()
         if not user:
             return Response(status=401, message="Not Authorized.").__dict__,401
             
@@ -65,7 +65,7 @@ class FriendsAPI(Resource):
             return Response(status=404, message="User not found.").__dict__,404
             
         #ensure user is authorized
-        if not user.fb_secret == args.Authorization:
+        if not user.fitpals_secret == args.Authorization:
             return Response(status=401, message="Not Authorized.").__dict__,401
             
         #get friend user from db
@@ -107,7 +107,7 @@ class FriendAPI(Resource):
         args = parser.parse_args()
         
         #Get user from Authorization
-        user = User.query.filter(User.fb_secret==args.Authorization).first()
+        user = User.query.filter(User.fitpals_secret==args.Authorization).first()
         if not user:
             return Response(status=401, message="Not Authorized.").__dict__,401
 

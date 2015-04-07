@@ -38,7 +38,7 @@ class SearchSettingsAPI(Resource):
         
         #Ensure user is authorized to make change to settings
         user = settings.user
-        if user.fb_secret != args.Authorization:
+        if user.fitpals_secret != args.Authorization:
             return Response(status=401, message="Not Authorized.").__dict__,401
             
         return Response(status=200, message="Search settings found.",
@@ -103,7 +103,7 @@ class SearchSettingsAPI(Resource):
             
         #Ensure user is authorized to make change to settings
         user = settings.user
-        if user.fb_secret != args.Authorization:
+        if user.fitpals_secret != args.Authorization:
             return Response(status=401, message="Not Authorized.").__dict__,401
             
         #update search_settings

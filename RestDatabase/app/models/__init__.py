@@ -79,7 +79,7 @@ class User(db.Model):
     __tablename__ = "users"
     id = db.Column(db.Integer, primary_key=True)
     fb_id = db.Column(db.String(2048), unique=True, nullable=False)
-    fb_secret = db.Column(db.String(2048), unique=True, nullable=False)
+    fitpals_secret = db.Column(db.String(2048), unique=True, nullable=False)
     location = db.Column(Geography(geometry_type="POINT",srid=4326))
     search_settings = relationship("SearchSettings",
                                   uselist=False,
@@ -107,7 +107,7 @@ class User(db.Model):
     
     @hybrid_property
     def password(self):
-        return self.fb_secret
+        return self.fitpals_secret
 
     @hybrid_property
     def longitude(self):
@@ -133,10 +133,10 @@ class User(db.Model):
     def online(self):
         return str(self.id) in socketio.rooms[""] if socketio.rooms!={} else False
 
-    def __init__(self,fb_id,fb_secret,longitude=None,latitude=None,about_me=None,
+    def __init__(self,fb_id,fitpals_secret,longitude=None,latitude=None,about_me=None,
         dob=None, available=False, name=None, gender=None):
         self.fb_id = fb_id
-        self.fb_secret = fb_secret
+        self.fitpals_secret = fitpals_secret
         if longitude!=None and latitude!=None:
             self.location = WKTElement("POINT(%f %f)"%(longitude,latitude))
         self.search_settings = SearchSettings(self)
@@ -165,14 +165,10 @@ class User(db.Model):
             dict_repr["online"] = self.online
         if not public:
             dict_repr["online"] = self.online
-            dict_repr["fb_secret"] = self.fb_secret
+            dict_repr["fitpals_secret"] = self.fitpals_secret
             dict_repr["password"] = self.password
         return dict_repr
-
-@event.listens_for(User.__table__, "before_create")
-def user_ensure_postgis_extension(mapper, connection, **kwargs):
-    connection.execute("CREATE EXTENSION IF NOT EXISTS postgis")
-
+       
 @event.listens_for(User, "before_delete")
 def user_message_thread_cascade_delete(mapper, connection, user):
     #delete all message threads where user is thread.user1

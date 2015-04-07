@@ -39,7 +39,7 @@ class UserActivitySettingsAPI(Resource):
         args = parser.parse_args()
 
         #get user via user_id
-        user = User.query.filter(User.fb_secret == args.Authorization).first()
+        user = User.query.filter(User.fitpals_secret == args.Authorization).first()
         if not user:
             return Response(status=401,message="Not Authorized.").__dict__,401
 
@@ -93,7 +93,7 @@ class UserActivitySettingsAPI(Resource):
             return Response(status=404,message="User not found.").__dict__,404
 
         #ensure user is authorized by checking if fb_id is correct
-        if user.fb_secret != args.Authorization:
+        if user.fitpals_secret != args.Authorization:
             return Response(status=401,message="Not Authorized.").__dict__,401
 
         # add setting to user's activity settings
@@ -139,7 +139,7 @@ class ActivitySettingAPI(Resource):
                 .__dict__, 404
             
         #Ensure that user is authorized
-        if setting.user.fb_secret != args.Authorization:
+        if setting.user.fitpals_secret != args.Authorization:
             return Response(status=401,message="Not Authorized.").__dict__,401
 
         return Response(status=200, message="Activity setting found.",
@@ -178,7 +178,7 @@ class ActivitySettingAPI(Resource):
                 .__dict__, 404
 
         #ensure user is valid by checking if fb_id is correct
-        if setting.user.fb_secret != args.Authorization:
+        if setting.user.fitpals_secret != args.Authorization:
             return Response(status=401,message="Not Authorized.").__dict__,401
             
         try:
@@ -226,7 +226,7 @@ class ActivitySettingAPI(Resource):
         user = setting.user
 
         #ensure user is valid by checking if fb_id is correct
-        if setting.user.fb_secret != args.Authorization:
+        if setting.user.fitpals_secret != args.Authorization:
             return Response(status=401,message="Not Authorized.").__dict__,401
             
         try:

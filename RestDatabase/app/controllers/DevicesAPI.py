@@ -43,7 +43,7 @@ class DevicesAPI(Resource):
             return Response(status=404,
                 message="User not found.").__dict__,404
             
-        if user.fb_secret != args.Authorization:
+        if user.fitpals_secret != args.Authorization:
             return Response(status=401,
                 message="Not Authorized.").__dict__, 401
             
@@ -89,7 +89,7 @@ class DeviceAPI(Resource):
                 message="Device not found.").__dict__,404
 
         #get user from database
-        if not device.user.fb_secret == args.Authorization:
+        if not device.user.fitpals_secret == args.Authorization:
             return Response(status=401,
                 message="Not Authorized.").__dict__,401
             

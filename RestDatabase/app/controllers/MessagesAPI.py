@@ -30,7 +30,7 @@ class NewMessagesAPI(Resource):
         args = parser.parse_args()
 
         #get user from Authorization
-        user = User.query.filter(User.fb_secret==args.Authorization).first()
+        user = User.query.filter(User.fitpals_secret==args.Authorization).first()
         if not user:
             return Response(status=401, message="Not Authorized.")\
                 .__dict__, 401
@@ -89,7 +89,7 @@ class NewMessagesAPI(Resource):
         args = parser.parse_args()
 
         #get user from Authorization
-        user = User.query.filter(User.fb_secret==args.Authorization).first()
+        user = User.query.filter(User.fitpals_secret==args.Authorization).first()
         if not user:
             return Response(status=401, message="Not Authorized.")\
                 .__dict__, 401
@@ -150,7 +150,7 @@ class MessageThreadsAPI(Resource):
         args = parser.parse_args()
         
         #get user from Authorization
-        user = User.query.filter(User.fb_secret==args.Authorization).first()
+        user = User.query.filter(User.fitpals_secret==args.Authorization).first()
         if not user:
             return Response(status=401, message="Not Authorized.")\
                 .__dict__, 401
@@ -189,7 +189,7 @@ class MessageThreadsAPI(Resource):
         args = parser.parse_args()
         
         #get user from Authorization
-        user1 = User.query.filter(User.fb_secret==args.Authorization).first()
+        user1 = User.query.filter(User.fitpals_secret==args.Authorization).first()
         if not user1:
             return Response(status=401, message="Not Authorized.")\
                 .__dict__, 401
@@ -241,7 +241,7 @@ class MessageThreadAPI(Resource):
         args = parser.parse_args()
 
         #get user from Authorization
-        user = User.query.filter(User.fb_secret==args.Authorization).first()
+        user = User.query.filter(User.fitpals_secret==args.Authorization).first()
         if not user:
             return Response(status=401, message="Not Authorized.")\
                 .__dict__, 401

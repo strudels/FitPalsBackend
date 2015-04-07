@@ -9,7 +9,7 @@ class UserReportsAPITestCase(FitPalsTestCase):
         }
         resp = self.app.post("/user_reports",
                              data=report,
-                             headers={"Authorization":self.test_user1["fb_secret"]})
+                             headers={"Authorization":self.test_user1["fitpals_secret"]})
         assert resp.status_code == 201
         assert json.loads(resp.data)["message"] == "User report created."
         report_received = json.loads(resp.data)["value"]
@@ -26,7 +26,7 @@ class UserReportsAPITestCase(FitPalsTestCase):
         }
         resp = self.app.post("/user_reports",
                              data=report,
-                             headers={"Authorization":self.test_user1["fb_secret"]})
+                             headers={"Authorization":self.test_user1["fitpals_secret"]})
         assert resp.status_code == 404
         assert json.loads(resp.data)["message"] == "fb_id not found."
 
@@ -38,7 +38,7 @@ class UserReportsAPITestCase(FitPalsTestCase):
         }
         resp = self.app.post("/user_reports",
                              data=report,
-                             headers={"Authorization":self.test_user1["fb_secret"] + "junk"})
+                             headers={"Authorization":self.test_user1["fitpals_secret"] + "junk"})
         assert resp.status_code == 401
         assert json.loads(resp.data)["message"] == "Not Authorized."
         
@@ -50,6 +50,6 @@ class UserReportsAPITestCase(FitPalsTestCase):
         }
         resp = self.app.post("/user_reports",
                              data=report,
-                             headers={"Authorization":self.test_user1["fb_secret"]})
+                             headers={"Authorization":self.test_user1["fitpals_secret"]})
         assert resp.status_code == 404
         assert json.loads(resp.data)["message"] == "fb_id not found."

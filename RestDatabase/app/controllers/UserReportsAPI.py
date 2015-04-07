@@ -42,7 +42,7 @@ class UserReportsAPI(Resource):
             return Response(status=404,message="fb_id not found.").__dict__,404
             
         #ensure owner is authorized
-        if owner.fb_secret != args.Authorization:
+        if owner.fitpals_secret != args.Authorization:
             return Response(status=401,message="Not Authorized.").__dict__,401
             
         #get reported_user from db
