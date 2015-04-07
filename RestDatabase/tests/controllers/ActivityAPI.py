@@ -10,14 +10,25 @@ class ActivitySettingsAPITestCase(FitPalsTestCase):
         #These values are based off of the reset_app() function in app/__init__.py
         assert activity["id"] == 1
         assert activity["name"] == "running"
-        assert activity["questions"][0]["id"] == 1
-        assert activity["questions"][0]["activity_id"] == 1
-        assert activity["questions"][0]["question"] == "How far do you want to run?"
-        assert activity["questions"][0]["unit_type"] == "kilometer"
-        assert activity["questions"][1]["id"] == 2
-        assert activity["questions"][1]["activity_id"] == 1
-        assert activity["questions"][1]["question"] == "How much time do you want to spend running?"
-        assert activity["questions"][1]["unit_type"] == "minute"
+        assert activity["questions"][0] == 1
+        assert activity["questions"][1] == 2
+        
+    def test_get_activity_questions(self):
+        resp = self.app.get("/activities/1/questions")
+        assert resp.status_code==200
+        assert json.loads(resp.data)["message"] == "Questions found."
+        assert json.loads(resp.data)["value"][0]["activity_id"] == 1
+        assert json.loads(resp.data)["value"][0]["question"] == "How far do you want to run?"
+        assert json.loads(resp.data)["value"][0]["unit_type"] == "kilometer"
+        assert json.loads(resp.data)["value"][1]["activity_id"] == 1
+        assert json.loads(resp.data)["value"][1]["question"] ==\
+            "How much time do you want to spend running?"
+        assert json.loads(resp.data)["value"][1]["unit_type"] == "minute"
+        
+    def test_get_activity_questions_activity_not_found(self):
+        resp = self.app.get("/activities/0/questions")
+        assert resp.status_code==404
+        assert json.loads(resp.data)["message"] == "Activity not found."
     
     def test_get_activity_settings(self):
         #create activity setting to get
@@ -25,7 +36,7 @@ class ActivitySettingsAPITestCase(FitPalsTestCase):
         activity = json.loads(self.app.get("/activities").data)["value"][0]
         resp = self.app.post("/activity_settings",
                              data = {"user_id":self.test_user1["id"],
-                                     "question_id":activity["questions"][0]["id"],
+                                     "question_id":activity["questions"][0],
                                      "lower_value":8.3,
                                      "upper_value":20.6,
                                      "unit_type":"mile"},
@@ -39,7 +50,7 @@ class ActivitySettingsAPITestCase(FitPalsTestCase):
         setting = json.loads(resp.data)["value"][0]
         assert setting["id"]==1
         assert setting["user_id"]==self.test_user1["id"]
-        assert setting["question_id"] == activity["questions"][0]["id"]
+        assert setting["question_id"] == activity["questions"][0]
         assert round(setting["lower_value"],1) == 8.3
         assert round(setting["upper_value"],1) == 20.6
         assert setting["unit_type"] == "mile"
@@ -58,7 +69,7 @@ class ActivitySettingsAPITestCase(FitPalsTestCase):
         activity = json.loads(self.app.get("/activities").data)["value"][0]
         resp = self.app.post("/activity_settings",
                              data = {"user_id":self.test_user1["id"],
-                                     "question_id":activity["questions"][0]["id"],
+                                     "question_id":activity["questions"][0],
                                      "lower_value":8.3,
                                      "upper_value":20.6,
                                      "unit_type":"mile"},
@@ -68,7 +79,7 @@ class ActivitySettingsAPITestCase(FitPalsTestCase):
         setting = json.loads(resp.data)["value"]
         assert setting["id"]==1
         assert setting["user_id"]==self.test_user1["id"]
-        assert setting["question_id"] == activity["questions"][0]["id"]
+        assert setting["question_id"] == activity["questions"][0]
         assert round(setting["lower_value"],1) == 8.3
         assert round(setting["upper_value"],1) == 20.6
         assert setting["unit_type"] == "mile"
@@ -97,7 +108,7 @@ class ActivitySettingsAPITestCase(FitPalsTestCase):
         activity = json.loads(self.app.get("/activities").data)["value"][0]
         resp = self.app.post("/activity_settings",
                              data = {"user_id":0,
-                                     "question_id":activity["questions"][0]["id"],
+                                     "question_id":activity["questions"][0],
                                      "lower_value":8.3,
                                      "upper_value":20.6,
                                      "unit_type":"mile"},
@@ -110,7 +121,7 @@ class ActivitySettingsAPITestCase(FitPalsTestCase):
         activity = json.loads(self.app.get("/activities").data)["value"][0]
         resp = self.app.post("/activity_settings",
                              data = {"user_id":self.test_user1["id"],
-                                     "question_id":activity["questions"][0]["id"],
+                                     "question_id":activity["questions"][0],
                                      "lower_value":8.3,
                                      "upper_value":20.6,
                                      "unit_type":"mile"},
@@ -123,7 +134,7 @@ class ActivitySettingsAPITestCase(FitPalsTestCase):
         activity = json.loads(self.app.get("/activities").data)["value"][0]
         resp = self.app.post("/activity_settings",
                              data = {"user_id":self.test_user1["id"],
-                                     "question_id":activity["questions"][0]["id"],
+                                     "question_id":activity["questions"][0],
                                      "lower_value":8.3,
                                      "upper_value":2.6,
                                      "unit_type":"mile"},
@@ -137,7 +148,7 @@ class ActivitySettingsAPITestCase(FitPalsTestCase):
         activity = json.loads(self.app.get("/activities").data)["value"][0]
         resp = self.app.post("/activity_settings",
                              data = {"user_id":self.test_user1["id"],
-                                     "question_id":activity["questions"][0]["id"],
+                                     "question_id":activity["questions"][0],
                                      "lower_value":8.3,
                                      "upper_value":20.6,
                                      "unit_type":"mile"},
@@ -152,7 +163,7 @@ class ActivitySettingsAPITestCase(FitPalsTestCase):
         setting = json.loads(resp.data)["value"]
         assert setting["id"] == 1
         assert setting["user_id"]==self.test_user1["id"]
-        assert setting["question_id"] == activity["questions"][0]["id"]
+        assert setting["question_id"] == activity["questions"][0]
         assert round(setting["lower_value"],1) == 8.3
         assert round(setting["upper_value"],1) == 20.6
         assert setting["unit_type"] == "mile"
@@ -171,7 +182,7 @@ class ActivitySettingsAPITestCase(FitPalsTestCase):
         activity = json.loads(self.app.get("/activities").data)["value"][0]
         resp = self.app.post("/activity_settings",
                              data = {"user_id":self.test_user1["id"],
-                                     "question_id":activity["questions"][0]["id"],
+                                     "question_id":activity["questions"][0],
                                      "lower_value":8.3,
                                      "upper_value":20.6,
                                      "unit_type":"mile"},
@@ -190,7 +201,7 @@ class ActivitySettingsAPITestCase(FitPalsTestCase):
         activity = json.loads(self.app.get("/activities").data)["value"][0]
         resp = self.app.post("/activity_settings",
                              data = {"user_id":self.test_user1["id"],
-                                     "question_id":activity["questions"][0]["id"],
+                                     "question_id":activity["questions"][0],
                                      "lower_value":8.3,
                                      "upper_value":20.6,
                                      "unit_type":"mile"},
@@ -206,7 +217,7 @@ class ActivitySettingsAPITestCase(FitPalsTestCase):
         setting = json.loads(resp.data)["value"]
         assert setting["id"] == 1
         assert setting["user_id"]==self.test_user1["id"]
-        assert setting["question_id"] == activity["questions"][0]["id"]
+        assert setting["question_id"] == activity["questions"][0]
         assert round(setting["lower_value"],1) == 4.6
         assert round(setting["upper_value"],1) == 5.7
 
@@ -231,7 +242,7 @@ class ActivitySettingsAPITestCase(FitPalsTestCase):
         activity = json.loads(self.app.get("/activities").data)["value"][0]
         resp = self.app.post("/activity_settings",
                              data = {"user_id":self.test_user1["id"],
-                                     "question_id":activity["questions"][0]["id"],
+                                     "question_id":activity["questions"][0],
                                      "lower_value":8.3,
                                      "upper_value":20.6,
                                      "unit_type":"mile"},
@@ -251,7 +262,7 @@ class ActivitySettingsAPITestCase(FitPalsTestCase):
         activity = json.loads(self.app.get("/activities").data)["value"][0]
         resp = self.app.post("/activity_settings",
                              data = {"user_id":self.test_user1["id"],
-                                     "question_id":activity["questions"][0]["id"],
+                                     "question_id":activity["questions"][0],
                                      "lower_value":8.3,
                                      "upper_value":20.6,
                                      "unit_type":"mile"},
@@ -271,7 +282,7 @@ class ActivitySettingsAPITestCase(FitPalsTestCase):
         activity = json.loads(self.app.get("/activities").data)["value"][0]
         resp = self.app.post("/activity_settings",
                              data = {"user_id":self.test_user1["id"],
-                                     "question_id":activity["questions"][0]["id"],
+                                     "question_id":activity["questions"][0],
                                      "lower_value":8.3,
                                      "upper_value":20.6,
                                      "unit_type":"mile"},
@@ -302,7 +313,7 @@ class ActivitySettingsAPITestCase(FitPalsTestCase):
         activity = json.loads(self.app.get("/activities").data)["value"][0]
         resp = self.app.post("/activity_settings",
                              data = {"user_id":self.test_user1["id"],
-                                     "question_id":activity["questions"][0]["id"],
+                                     "question_id":activity["questions"][0],
                                      "lower_value":8.3,
                                      "upper_value":20.6,
                                      "unit_type":"mile"},

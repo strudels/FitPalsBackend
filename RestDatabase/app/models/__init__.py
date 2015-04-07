@@ -331,7 +331,7 @@ class Activity(db.Model):
         return {
             "id":self.id,
             "name":self.name,
-            "questions":[q.dict_repr() for q in self.questions]
+            "questions":[q.id for q in self.questions]
         }
 
 class Question(db.Model):
