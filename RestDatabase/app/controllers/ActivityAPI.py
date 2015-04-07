@@ -22,10 +22,10 @@ class ActivitiesAPI(Resource):
             value=[a.dict_repr() for a in Activity.query.all()]).__dict__, 200
         
 @api.resource("/activities/<int:activity_id>/questions")
-class QuestionsAPI(Resource):
+class ActivityQuestionsAPI(Resource):
     def get(self, activity_id):
         """
-        Get all questions for an activity
+        Get all questions for an activity.
         
         :status 404: Activity not found.
         :status 200: Questions found.
@@ -38,6 +38,17 @@ class QuestionsAPI(Resource):
         return Response(status=200, message="Questions found.",
                         value=[q.dict_repr() for q in activity.questions.all()])\
                         .__dict__, 200
+        
+@api.resource("/questions")
+class QuestionsAPI(Resource):
+    def get(self):
+        """
+        Get all questions for all activities.
+        
+        :status 200: Questions found.
+        """
+        return Response(status=200,message="Questions found.",
+            value=[q.dict_repr() for q in Question.query.all()]).__dict__,200
 
 @api.resource('/activity_settings')
 class UserActivitySettingsAPI(Resource):

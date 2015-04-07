@@ -29,6 +29,12 @@ class ActivitySettingsAPITestCase(FitPalsTestCase):
         resp = self.app.get("/activities/0/questions")
         assert resp.status_code==404
         assert json.loads(resp.data)["message"] == "Activity not found."
+        
+    def test_get_questions(self):
+        resp = self.app.get("/questions")
+        assert resp.status_code==200
+        assert json.loads(resp.data)["message"] == "Questions found."
+        assert len(json.loads(resp.data)["value"]) > 0
     
     def test_get_activity_settings(self):
         #create activity setting to get
