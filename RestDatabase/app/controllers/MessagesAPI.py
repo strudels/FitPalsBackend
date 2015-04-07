@@ -1,8 +1,9 @@
 from flask.ext.restful import Resource, reqparse, Api
 
-from app import db, api, socketio
+from app import db, api
 from app.models import *
 from app.utils.Response import Response
+from app.utils.AsyncNotifications import send_message
 from sqlalchemy import or_, and_
 
 @api.resource("/messages")
@@ -122,11 +123,9 @@ class NewMessagesAPI(Resource):
             return Response(status=500,
                 message="Internal Error. Changes not committed.")\
 
-        #send update over websocket
-        socketio.emit("message_received", new_message.dict_repr(),
-                      room=str(thread.user1.id))
-        socketio.emit("message_received", new_message.dict_repr(),
-                      room=str(thread.user2.id))
+        #send async update
+        send_message(thread.user1,"message_received",new_message.dict_repr())
+        send_message(thread.user2,"message_received",new_message.dict_repr())
         
         #return success
         return Response(status=201,message="Message created.",
@@ -213,8 +212,8 @@ class MessageThreadsAPI(Resource):
                 .__dict__, 500
 
         #update user's other client's with new thread
-        socketio.emit("message_thread_created", new_thread.dict_repr(),
-                      room=str(new_thread.user1.id))
+        send_message(new_thread.user1, "message_thread_created",
+                     new_thread.dict_repr())
         
         #return create success!
         return Response(status=201, message="Message thread created.",
@@ -270,9 +269,8 @@ class MessageThreadAPI(Resource):
                             message="Internal Error. Changes not committed."),500
         
         #push delete to user's other devices
-        socketio.emit("message_thread_deleted",
-                      room=str(thread.user1.id if user==thread.user1
-                               else thread.user2.id))
+        send_message(thread.user1 if user==thread.user1 else thread.user2,
+                     "message_thread_deleted")
         
         #return deletion success!
         return Response(status=200, message="Message thread deleted.")\
