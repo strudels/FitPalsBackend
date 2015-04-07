@@ -5,9 +5,10 @@ from datetime import datetime
 from dateutil.relativedelta import relativedelta
 import time
 
-from app import db, api, socketio
+from app import db, api
 from app.models import *
 from app.utils.Response import Response
+from app.utils.AsyncNotifications import send_message
 
 @api.resource('/matches')
 class MatchesAPI(Resource):
@@ -104,17 +105,14 @@ class MatchesAPI(Resource):
                 .__dict__, 400
             
         
-        #send websocket update if match_user has also liked user
+        #send async update if match_user has also liked user
         mutual_match = match_user.matches.filter(Match.matched_user_id==user.id).first()
         if mutual_match:
-            socketio.emit("mutual_match_added",mutual_match.dict_repr(),
-                        room=str(user.id))
-            socketio.emit("mutual_match_added",mutual_match.dict_repr(),
-                        room=str(match_user.id))
+            send_message(user,"mutual_match_added",mutual_match.dict_repr())
+            send_message(match_user,"mutual_match_added",mutual_match.dict_repr())
         else:
-            #send websocket update
-            socketio.emit("match_added",match.dict_repr(),
-                        room=str(user.id))
+            #send async update
+            send_message(user, "match_added", match.dict_repr())
 
         return Response(status=201,message="Match created.",
                         value=match.dict_repr()).__dict__,201
@@ -159,7 +157,6 @@ class MatchAPI(Resource):
                 .__dict__,400
 
         #send websocket update
-        socketio.emit("match_deleted",match_id,
-                      room=str(user.id))
+        send_message(user,"match_deleted",match_id)
 
         return Response(status=200,message="Match deleted.").__dict__, 200
