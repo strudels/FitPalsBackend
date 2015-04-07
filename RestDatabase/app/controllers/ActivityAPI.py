@@ -5,9 +5,10 @@ from datetime import datetime
 from dateutil.relativedelta import relativedelta
 import time
 
-from app import db, api, socketio
+from app import db, api
 from app.models import *
 from app.utils.Response import Response
+from app.utils.AsyncNotifications import send_message
 
 @api.resource("/activities")
 class ActivitiesAPI(Resource):
@@ -136,8 +137,8 @@ class UserActivitySettingsAPI(Resource):
             return Response(status=400,
                 message="Could not create activity setting.").__dict__,400
             
-        socketio.emit("activity_setting_added",activity_setting.dict_repr(),
-                      room=str(activity_setting.user.id))
+        send_message(activity_setting.user,"activity_setting_added",
+                     activity_setting.dict_repr())
         
         return Response(status=201,message="Activity setting created.",
                         value=activity_setting.dict_repr()).__dict__,201
@@ -220,8 +221,7 @@ class ActivitySettingAPI(Resource):
             return Response(status=400,
                 message="Could not update activity setting.").__dict__,400
             
-        socketio.emit("activity_setting_updated",setting.dict_repr(),
-                      room=str(setting.user.id))
+        send_message(setting.user,"activity_setting_updated",setting.dict_repr())
 
         return Response(status=202,
                         message="Activity setting updated.",
@@ -267,8 +267,7 @@ class ActivitySettingAPI(Resource):
             return Response(status=500,
                 message="Internal error. Changes not committed.").__dict__,500
 
-        socketio.emit("activity_setting_deleted",setting_id,
-                      room=str(user.id))
+        send_message(user,"activity_setting_deleted",setting_id)
 
         return Response(status=200,
             message="Activity setting deleted.").__dict__, 200
