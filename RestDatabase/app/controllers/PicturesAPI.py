@@ -5,7 +5,8 @@ from datetime import datetime
 from dateutil.relativedelta import relativedelta
 import time
 
-from app import db, api, socketio
+from app import db, api
+from app.utils.AsyncNotifications import send_message
 from app.models import *
 from app.utils.Response import Response
 
@@ -105,8 +106,7 @@ class PicturesAPI(Resource):
               .__dict__,400
             
         #send new picture to user's other devices
-        socketio.emit("picture_added",picture.dict_repr(),
-                      room=str(picture.user.id))
+        send_message(picture.user, "picture_added",picture.dict_repr())
 
 
         return Response(status=201, message="Picture added.",
@@ -179,7 +179,7 @@ class PictureAPI(Resource):
               .__dict__, 400
 
         #send pic update to user's other devices
-        socketio.emit("picture_updated",pic.dict_repr(),room=str(pic.user.id))
+        send_message(pic.user, "picture_updated", pic.dict_repr())
         
         return Response(status=202, message="Picture updated.",
                         value=pic.dict_repr()).__dict__, 202
@@ -224,6 +224,6 @@ class PictureAPI(Resource):
                 message="Internal error. Changes not committed.").__dict__,500
 
         #alert user that picture has been deleted
-        socketio.emit("picture_deleted",pic_id,room=str(user.id))
+        send_message(user, "picture_deleted",pic_id)
 
         return Response(status=200, message="Picture removed.").__dict__, 200
