@@ -7,9 +7,10 @@ from dateutil.relativedelta import relativedelta
 import time
 from sqlalchemy import func,or_, and_
 
-from app import db, api, socketio
+from app import db, api
 from app.models import *
 from app.utils.Response import Response
+from app.utils.AsyncNotifications import send_message
 
 @api.resource("/search_settings/<int:settings_id>")
 class SearchSettingsAPI(Resource):
@@ -119,8 +120,7 @@ class SearchSettingsAPI(Resource):
             db.session.rollback()
             
         #send update to user's other devices
-        socketio.emit("search_settings_update", settings.dict_repr(),
-                      room=str(user.id))
+        send_message(user,"search_settings_update",settings.dict_repr())
 
         return Response(status=202,message="Search settings updated.",
                         value=settings.dict_repr()).__dict__,202
