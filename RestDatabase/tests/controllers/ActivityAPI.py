@@ -93,8 +93,9 @@ class ActivitySettingsAPITestCase(FitPalsTestCase):
         #ensure that test_user1 websocket self.websocket_client1 got update
         received = self.websocket_client1.get_received()
         assert len(received) != 0
-        assert received[-1]["name"] == "activity_setting_added"
-        assert received[-1]["args"][0] == setting
+        assert received[-1]["args"][0]["path"] == "/activity_settings"
+        assert received[-1]["args"][0]["http_method"] == "POST"
+        assert received[-1]["args"][0]["value"] == setting
         
     def test_create_activity_setting_question_not_found(self):
         fitpals_secret = self.test_user1["fitpals_secret"]
@@ -230,8 +231,9 @@ class ActivitySettingsAPITestCase(FitPalsTestCase):
         #ensure that test_user1 websocket self.websocket_client1 got update
         received = self.websocket_client1.get_received()
         assert len(received) != 0
-        assert received[-1]["name"] == "activity_setting_updated"
-        assert setting == received[-1]["args"][0]
+        assert received[-1]["args"][0]["path"] == "/activity_settings/%d" % setting_id
+        assert received[-1]["args"][0]["http_method"] == "PUT"
+        assert received[-1]["args"][0]["value"] == setting
 
     def test_update_activity_setting_not_found(self):
         fitpals_secret = self.test_user1["fitpals_secret"]
@@ -304,7 +306,9 @@ class ActivitySettingsAPITestCase(FitPalsTestCase):
         #ensure that test_user1 websocket self.websocket_client1 got update
         received = self.websocket_client1.get_received()
         assert len(received) != 0
-        assert received[-1]["name"] == "activity_setting_deleted"
+        assert received[-1]["args"][0]["path"] == "/activity_settings/%d" % setting_id
+        assert received[-1]["args"][0]["http_method"] == "DELETE"
+        assert received[-1]["args"][0]["value"] == None
 
     def test_delete_activity_setting_not_found(self):
         fitpals_secret = self.test_user1["fitpals_secret"]

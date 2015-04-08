@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, request
 from flask.ext.restful import Resource, reqparse, Api
 import simplejson as json
 from datetime import datetime
@@ -137,7 +137,7 @@ class UserActivitySettingsAPI(Resource):
             return Response(status=400,
                 message="Could not create activity setting.").__dict__,400
             
-        send_message(activity_setting.user,"activity_setting_added",
+        send_message(activity_setting.user,request.path,request.method,
                      activity_setting.dict_repr())
         
         return Response(status=201,message="Activity setting created.",
@@ -221,7 +221,7 @@ class ActivitySettingAPI(Resource):
             return Response(status=400,
                 message="Could not update activity setting.").__dict__,400
             
-        send_message(setting.user,"activity_setting_updated",setting.dict_repr())
+        send_message(setting.user,request.path,request.method,setting.dict_repr())
 
         return Response(status=202,
                         message="Activity setting updated.",
@@ -267,7 +267,7 @@ class ActivitySettingAPI(Resource):
             return Response(status=500,
                 message="Internal error. Changes not committed.").__dict__,500
 
-        send_message(user,"activity_setting_deleted",setting_id)
+        send_message(user,request.path,request.method)
 
         return Response(status=200,
             message="Activity setting deleted.").__dict__, 200
