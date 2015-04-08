@@ -355,8 +355,6 @@ class UserAPI(Resource):
             type=int, location='form', required=False)
         args = parser.parse_args()
         
-        import pdb; pdb.set_trace()
-
         #get user to update from db
         user = User.query.filter(User.id==user_id).first()
         if not user:
@@ -387,7 +385,7 @@ class UserAPI(Resource):
                 message="Internal error. Changes not committed.").__dict__, 500
         
         #reflect update in user's other clients
-        send_message(user,"user_update",user.dict_repr())
+        send_message(user,request.path,request.method,user.dict_repr())
 
         return Response(status=202,message="User updated",
                         value=user.dict_repr()).__dict__,202

@@ -240,9 +240,9 @@ class UsersApiTestCase(FitPalsTestCase):
         #ensure that test_user websocket self.websocket_client1 got new user update
         received = self.websocket_client1.get_received()
         assert len(received) != 0
-        assert received[-1]["name"] == "user_update"
-        assert received[-1]["args"][0] == self.test_user1
-        assert received[-1]["args"][0] == json.loads(resp.data)["value"]
+        assert received[-1]["args"][0]["path"] == "/users/%d" % self.test_user1["id"]
+        assert received[-1]["args"][0]["http_method"] == "PUT"
+        assert received[-1]["args"][0]["value"] == json.loads(resp.data)["value"]
         
     def test_update_user_not_found(self):
         user_id = 0
