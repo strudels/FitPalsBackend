@@ -1,4 +1,5 @@
 from flask.ext.restful import Resource, reqparse, Api
+from flask import request
 
 from app import db, api
 from app.models import *
@@ -124,8 +125,8 @@ class NewMessagesAPI(Resource):
                 message="Internal Error. Changes not committed.")\
 
         #send async update
-        send_message(thread.user1,"message_received",new_message.dict_repr())
-        send_message(thread.user2,"message_received",new_message.dict_repr())
+        send_message(thread.user1,request.path,request.method,new_message.dict_repr())
+        send_message(thread.user2,request.path,request.method,new_message.dict_repr())
         
         #return success
         return Response(status=201,message="Message created.",
@@ -211,8 +212,7 @@ class MessageThreadsAPI(Resource):
                 message="Internal Error. Changes not committed.")\
                 .__dict__, 500
 
-        #update user's other client's with new thread
-        send_message(new_thread.user1, "message_thread_created",
+        send_message(new_thread.user1, request.path, request.method,
                      new_thread.dict_repr())
         
         #return create success!
@@ -270,7 +270,7 @@ class MessageThreadAPI(Resource):
         
         #push delete to user's other devices
         send_message(thread.user1 if user==thread.user1 else thread.user2,
-                     "message_thread_deleted")
+                     request.path,request.method)
         
         #return deletion success!
         return Response(status=200, message="Message thread deleted.")\

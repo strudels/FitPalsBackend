@@ -47,7 +47,10 @@ class MessagesApiTestCase(FitPalsTestCase):
         #ensure that test_user1 websocket client got update
         received = client.get_received()
         assert len(received) != 0
-        assert received[-1]["name"] == "message_thread_created"
+        assert received[-1]["name"] == "update"
+        assert received[-1]["args"][0]["path"] == "/message_threads"
+        assert received[-1]["args"][0]["http_method"] == "POST"
+        assert received[-1]["args"][0]["value"] == received_thread
         
     def test_create_message_thread_invalid_fitpals_secret(self):
         resp = self.app.post("/message_threads",
@@ -79,7 +82,10 @@ class MessagesApiTestCase(FitPalsTestCase):
         #ensure that test_user1 websocket self.websocket_client1 got update
         received = self.websocket_client1.get_received()
         assert len(received) != 0
-        assert received[-1]["name"] == "message_thread_deleted"
+        assert received[-1]["name"] == "update"
+        assert received[-1]["args"][0]["path"] == "/message_threads/%d" % thread_id
+        assert received[-1]["args"][0]["http_method"] == "DELETE"
+        assert received[-1]["args"][0]["value"] == None
 
         #ensure test_user2 cannot create new messages for thread
         message = {"message_thread_id":thread_id,
@@ -226,14 +232,16 @@ class MessagesApiTestCase(FitPalsTestCase):
         #ensure that test_user1 websocket client got new message
         received = self.websocket_client1.get_received()
         assert len(received) != 0
-        assert received[-1]["name"] == "message_received"
-        assert received[-1]['args'][0] == message_received
+        assert received[-1]["args"][0]["path"] == "/messages"
+        assert received[-1]["args"][0]["http_method"] == "POST"
+        assert received[-1]["args"][0]["value"] == message_received
 
         #ensure that test_user2 websocket client got new message
         received = self.websocket_client2.get_received()
         assert len(received) != 0
-        assert received[-1]["name"] == "message_received"
-        assert received[-1]['args'][0] == message_received
+        assert received[-1]['args'][0]["path"] == "/messages"
+        assert received[-1]["args"][0]["http_method"] == "POST"
+        assert received[-1]["args"][0]["value"] == message_received
         
     def test_create_message_invalid_auth_token(self):
         #create thread

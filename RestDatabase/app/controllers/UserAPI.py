@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, request
 from flask.ext.restful import Resource, reqparse, Api
 from flask.ext.socketio import emit
 import simplejson as json
@@ -354,6 +354,8 @@ class UserAPI(Resource):
         parser.add_argument("dob_day",
             type=int, location='form', required=False)
         args = parser.parse_args()
+        
+        import pdb; pdb.set_trace()
 
         #get user to update from db
         user = User.query.filter(User.id==user_id).first()

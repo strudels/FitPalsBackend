@@ -24,13 +24,17 @@ class AsyncNotificationsTestCase(unittest.TestCase):
     def tearDown(self):
         reset_app()
         
-    def test_apns_send(self):
-        send_message(User.query.get(self.test_user1["id"]),"test_event")
+    def test_apns_send_message(self):
+        send_message(User.query.get(self.test_user1["id"]),"/messages","POST")
+        db.session.close()
+
+    def test_apns_send_match(self):
+        send_message(User.query.get(self.test_user1["id"]),"/matches","POST")
         db.session.close()
         
     def test_websocket_send(self):
         #log in test_user1 to chat web socket
         self.websocket_client1 = socketio.test_client(app)
         self.websocket_client1.emit("join", self.test_user1)
-        send_message(User.query.get(self.test_user1["id"]),"test_event")
+        send_message(User.query.get(self.test_user1["id"]),"/messages","POST")
         db.session.close()
