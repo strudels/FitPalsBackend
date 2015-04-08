@@ -61,8 +61,9 @@ class SearchSettingsApiTestCase(FitPalsTestCase):
         #ensure that test_user websocket self.websocket_client1 got new user update
         received = self.websocket_client1.get_received()
         assert len(received) != 0
-        assert received[-1]["name"] == "search_settings_update"
-        assert received[-1]["args"][0] == json.loads(resp.data)["value"]
+        assert received[-1]["args"][0]["path"] == "/search_settings/%d" % setting_id
+        assert received[-1]["args"][0]["http_method"] == "PUT"
+        assert received[-1]["args"][0]["value"] == json.loads(resp.data)["value"]
         
     def test_update_search_settings_not_found(self):
         fitpals_secret = self.test_user1["fitpals_secret"]

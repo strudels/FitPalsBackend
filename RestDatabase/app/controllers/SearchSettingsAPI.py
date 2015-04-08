@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, request
 from flask.ext.restful import Resource, reqparse, Api
 from flask.ext.socketio import emit
 import simplejson as json
@@ -120,7 +120,7 @@ class SearchSettingsAPI(Resource):
             db.session.rollback()
             
         #send update to user's other devices
-        send_message(user,"search_settings_update",settings.dict_repr())
+        send_message(user,request.path,request.method,settings.dict_repr())
 
         return Response(status=202,message="Search settings updated.",
                         value=settings.dict_repr()).__dict__,202
