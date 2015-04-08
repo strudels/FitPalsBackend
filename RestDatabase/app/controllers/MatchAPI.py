@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, request
 from flask.ext.restful import Resource, reqparse, Api
 import simplejson as json
 from datetime import datetime
@@ -104,15 +104,16 @@ class MatchesAPI(Resource):
             return Response(status=400, message="Could not create match.")\
                 .__dict__, 400
             
-        
         #send async update if match_user has also liked user
+        
+        #send match to user's other devices
+        send_message(user, request.path, request.method, match.dict_repr())
+
+        #if the person being matched with has also matched with the user, let the user know
         mutual_match = match_user.matches.filter(Match.matched_user_id==user.id).first()
         if mutual_match:
-            send_message(user,"mutual_match_added",mutual_match.dict_repr())
-            send_message(match_user,"mutual_match_added",mutual_match.dict_repr())
-        else:
-            #send async update
-            send_message(user, "match_added", match.dict_repr())
+            send_message(user,request.path, request.method,mutual_match.dict_repr())
+            send_message(match_user,request.path, request.method ,match.dict_repr())
 
         return Response(status=201,message="Match created.",
                         value=match.dict_repr()).__dict__,201
@@ -157,6 +158,6 @@ class MatchAPI(Resource):
                 .__dict__,400
 
         #send websocket update
-        send_message(user,"match_deleted",match_id)
+        send_message(user,request.path, request.method)
 
         return Response(status=200,message="Match deleted.").__dict__, 200

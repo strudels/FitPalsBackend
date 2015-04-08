@@ -14,7 +14,9 @@ class MatchApiTestCase(FitPalsTestCase):
         #ensure that test_user1 websocket self.websocket_client1 got update
         received = self.websocket_client1.get_received()
         assert len(received) != 0
-        assert received[-1]["name"] == "match_added"
+        assert received[-1]["args"][0]["path"] == "/matches"
+        assert received[-1]["args"][0]["http_method"] == "POST"
+        assert received[-1]["args"][0]["value"] == json.loads(resp.data)["value"]
 
     def test_add_match_mutual_match(self):
         fitpals_secret = self.test_user1["fitpals_secret"]
@@ -34,12 +36,23 @@ class MatchApiTestCase(FitPalsTestCase):
         #ensure that test_user1 websocket self.websocket_client1 got update
         received = self.websocket_client1.get_received()
         assert len(received) != 0
-        assert received[-1]["name"] == "mutual_match_added"
+        assert received[-1]["args"][0]["path"] == "/matches"
+        assert received[-1]["args"][0]["http_method"] == "POST"
+        assert received[-1]["args"][0]["value"] == json.loads(resp.data)["value"]
 
         #ensure that test_user2 websocket self.websocket_client1 got update
         received = self.websocket_client2.get_received()
         assert len(received) != 0
-        assert received[-1]["name"] == "mutual_match_added"
+        match_id = received[-1]["args"][0]["value"]["matched_user_id"]
+        received[-1]["args"][0]["value"]["matched_user_id"] =\
+            received[-1]["args"][0]["value"]["user_id"]
+        received[-1]["args"][0]["value"]["user_id"] = match_id
+        assert received[-1]["args"][0]["path"] == "/matches"
+        assert received[-1]["args"][0]["http_method"] == "POST"
+        received_via_api = json.loads(resp.data)["value"]
+        del received_via_api["id"]
+        del received[-1]["args"][0]["value"]["id"]
+        assert received[-1]["args"][0]["value"] == received[-1]["args"][0]["value"] 
         
     def test_add_match_user_not_found(self):
         fitpals_secret = self.test_user1["fitpals_secret"]
@@ -163,7 +176,9 @@ class MatchApiTestCase(FitPalsTestCase):
         #ensure that test_user1 websocket self.websocket_client1 got update
         received = self.websocket_client1.get_received()
         assert len(received) != 0
-        assert received[-1]["name"] == "match_deleted"
+        assert received[-1]["args"][0]["path"] == "/matches/%d" % match_id
+        assert received[-1]["args"][0]["http_method"] == "DELETE"
+        assert received[-1]["args"][0]["value"] == None
 
         #ensure that match no longer stored
         resp = self.app.get("/matches",
