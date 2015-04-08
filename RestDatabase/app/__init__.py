@@ -146,7 +146,7 @@ def reset_app():
     db.create_all()
 
     from app.models import *
-    running = Activity("running")
+    running = Activity("running","active_image_uri","inactive_image_uri")
     running_q1 = Question(running, "How far do you want to run?", "kilometer")
     running_q2 = Question(running, "How much time do you want to spend running?", "minute")
     running.questions.append(running_q1)

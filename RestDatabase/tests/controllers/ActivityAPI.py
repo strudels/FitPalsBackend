@@ -10,6 +10,8 @@ class ActivitySettingsAPITestCase(FitPalsTestCase):
         #These values are based off of the reset_app() function in app/__init__.py
         assert activity["id"] == 1
         assert activity["name"] == "running"
+        assert activity["active_image"] == "active_image_uri"
+        assert activity["inactive_image"] == "inactive_image_uri"
         assert activity["questions"][0] == 1
         assert activity["questions"][1] == 2
         

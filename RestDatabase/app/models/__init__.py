@@ -323,14 +323,20 @@ class Activity(db.Model):
     name = db.Column(db.String(64), nullable=False)
     questions = relationship("Question", lazy="dynamic",
         cascade="save-update, merge, delete")
+    active_image = db.Column(db.String, nullable=True)
+    inactive_image = db.Column(db.String, nullable=True)
 
-    def __init__(self, name):
+    def __init__(self, name, active_image=None, inactive_image=None):
         self.name = name
+        self.active_image = active_image
+        self.inactive_image = inactive_image
 
     def dict_repr(self):
         return {
             "id":self.id,
             "name":self.name,
+            "active_image":self.active_image,
+            "inactive_image":self.inactive_image,
             "questions":[q.id for q in self.questions]
         }
         
