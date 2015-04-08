@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, request
 from flask.ext.restful import Resource, reqparse, Api
 import simplejson as json
 from datetime import datetime
@@ -106,7 +106,10 @@ class PicturesAPI(Resource):
               .__dict__,400
             
         #send new picture to user's other devices
-        send_message(picture.user, "picture_added",picture.dict_repr())
+        send_message(picture.user,
+                     request.path,
+                     request.method,
+                     picture.dict_repr())
 
 
         return Response(status=201, message="Picture added.",
@@ -179,7 +182,7 @@ class PictureAPI(Resource):
               .__dict__, 400
 
         #send pic update to user's other devices
-        send_message(pic.user, "picture_updated", pic.dict_repr())
+        send_message(pic.user, request.path, request.method, pic.dict_repr())
         
         return Response(status=202, message="Picture updated.",
                         value=pic.dict_repr()).__dict__, 202
@@ -224,6 +227,6 @@ class PictureAPI(Resource):
                 message="Internal error. Changes not committed.").__dict__,500
 
         #alert user that picture has been deleted
-        send_message(user, "picture_deleted",pic_id)
+        send_message(user, request.path, request.method)
 
         return Response(status=200, message="Picture removed.").__dict__, 200

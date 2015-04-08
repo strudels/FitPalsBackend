@@ -24,7 +24,9 @@ class PicturesApiTestCase(FitPalsTestCase):
         #ensure that test_user1 websocket self.websocket_client1 got update
         received = self.websocket_client1.get_received()
         assert len(received) != 0
-        assert received[-1]["name"] == "picture_added"
+        assert received[-1]["args"][0]["path"] == "/pictures"
+        assert received[-1]["args"][0]["http_method"] == "POST"
+        assert received[-1]["args"][0]["value"] == picture_added
 
     def test_add_picture_user_not_found(self):
         fitpals_secret = self.test_user1["fitpals_secret"]
@@ -125,7 +127,7 @@ class PicturesApiTestCase(FitPalsTestCase):
         pic2 = json.loads(resp.data)["value"]["id"]
         
         #update picture
-        resp = self.app.put("/pictures/%d" % self.test_user1["id"],
+        resp = self.app.put("/pictures/%d" % pic1["id"],
                              data={"uri":"some other uri",
                                    "ui_index":0,
                                    "top":0.6,
@@ -144,7 +146,9 @@ class PicturesApiTestCase(FitPalsTestCase):
         #ensure that test_user1 websocket self.websocket_client1 got update
         received = self.websocket_client1.get_received()
         assert len(received) != 0
-        assert received[-1]["name"] == "picture_updated"
+        assert received[-1]["args"][0]["path"] == "/pictures/%d" % pic1["id"]
+        assert received[-1]["args"][0]["http_method"] == "PUT"
+        assert received[-1]["args"][0]["value"] == pic1
 
     def test_update_picture_not_found(self):
         fitpals_secret = self.test_user1["fitpals_secret"]
@@ -236,7 +240,9 @@ class PicturesApiTestCase(FitPalsTestCase):
         #ensure that test_user1 websocket self.websocket_client1 got update
         received = self.websocket_client1.get_received()
         assert len(received) != 0
-        assert received[-1]["name"] == "picture_deleted"
+        assert received[-1]["args"][0]["path"] == "/pictures/%d" % pic_id
+        assert received[-1]["args"][0]["http_method"] == "DELETE"
+        assert received[-1]["args"][0]["value"] == None
         
         #ensure picture was actually deleted
         resp = self.app.get("/pictures?user_id=%d" % self.test_user1["id"])
