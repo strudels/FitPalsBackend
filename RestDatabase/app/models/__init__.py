@@ -350,24 +350,32 @@ class Question(db.Model):
     activity = relationship("Activity", foreign_keys=[activity_id])
     question = db.Column(db.String(2048), nullable=False)
     unit_type = db.Column(db.String(128), nullable=False)
+    min_value = db.Column(db.Float, nullable=False)
+    max_value = db.Column(db.Float, nullable=False)
     _ureg = UnitRegistry()
+    
+    __table_args__ = (CheckConstraint("min_value <= max_value"),)
 
     @validates("unit_type")
     def validate_unit_type(self, key, value):
         test = self._ureg.parse_expression(value)
         return value
-
-    def __init__(self, activity, question_string, unit_type):
+        
+    def __init__(self, activity, question_string, unit_type, min_value, max_value):
         self.question = question_string
         self.activity = activity
         self.unit_type = unit_type
+        self.min_value = min_value
+        self.max_value = max_value
 
     def dict_repr(self):
         return {
             "id":self.id,
             "activity_id":self.activity_id,
             "question":self.question,
-            "unit_type": self.unit_type
+            "unit_type": self.unit_type,
+            "min_value": self.min_value,
+            "max_value": self.max_value,
         }
 
 class ActivitySetting(db.Model):
@@ -414,6 +422,11 @@ class ActivitySetting(db.Model):
         test_unit = self._ureg.parse_expression(value) * 100
         conversion_test = test_unit.to(self._ureg.parse_expression(
             self.question.unit_type))
+        return value
+        
+    @validates("lower_value_converted","upper_value_converted")
+    def validate_value_converted(self, key, value):
+        assert self.question.min_value <= value <= self.question.max_value
         return value
 
     def __init__(self,user,question,unit_type,lower_value=None,upper_value=None):

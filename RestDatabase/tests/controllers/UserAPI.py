@@ -124,7 +124,7 @@ class UsersApiTestCase(FitPalsTestCase):
         user1_activity_setting = {"user_id":self.test_user1["id"],
                                    "question_id":question_id,
                                    "lower_value":5,
-                                   "upper_value":25,
+                                   "upper_value":6,
                                    "unit_type":"mile"}
         resp = self.app.post("/activity_settings",
                              data=user1_activity_setting,
@@ -140,7 +140,7 @@ class UsersApiTestCase(FitPalsTestCase):
         user2_activity_setting = {"user_id":self.test_user2["id"],
                                    "question_id":question_id,
                                    "lower_value":5,
-                                   "upper_value":25,
+                                   "upper_value":6,
                                    "unit_type":"mile"}
         resp = self.app.post("/activity_settings",
                              data=user2_activity_setting,

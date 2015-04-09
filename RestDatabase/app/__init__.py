@@ -102,7 +102,9 @@ class QuestionView(ModelView):
         try:
             question = Question(form.data["activity"],
                                 form.data["question"],
-                                form.data["unit_type"])
+                                form.data["unit_type"],
+                                form.data["min_value"],
+                                form.data["max_value"])
             self.session.add(question)
             self.session.commit()
         except:
@@ -146,8 +148,8 @@ def reset_app():
 
     from app.models import *
     running = Activity("running","active_image_uri","inactive_image_uri")
-    running_q1 = Question(running, "How far do you want to run?", "kilometer")
-    running_q2 = Question(running, "How much time do you want to spend running?", "minute")
+    running_q1 = Question(running, "Distance", "kilometer", 0, 30)
+    running_q2 = Question(running, "Time", "minute", 0, 120)
     running.questions.append(running_q1)
     running.questions.append(running_q2)
     db.session.add(running)
