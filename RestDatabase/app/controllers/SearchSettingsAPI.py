@@ -81,7 +81,6 @@ class SearchSettingsAPI(Resource):
         
         :param int settings_id: Id of search settings.
         
-        :form int activity_id: Activity id.
         :form int friends_only: Set to 1 if user wants friends only; Default is 0
         :form int men_only: Set to 1 if user wants men only; Default is 0
         :form int women_only: Set to 1 if user wants women only; Default is 0

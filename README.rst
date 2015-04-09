@@ -420,8 +420,6 @@ Contents:
 
       * **latitude** (*float*) -- Specify a latitude to search by.
 
-      * **radius** (*int*) -- Specify a radius to search by in meters.
-
       * **limit** (*int*) -- Limit the number of results.
 
       * **offset** (*int*) -- Return users after a given offset.
@@ -605,8 +603,6 @@ Contents:
       * **settings_id** (*int*) -- Id of search settings.
 
    :Form Parameters:
-      * **int activity_id** -- Activity id.
-
       * **int friends_only** -- Set to 1 if user wants friends only;
         Default is 0
 
@@ -730,7 +726,7 @@ Contents:
       * Authorization -- facebook secret
 
    :Parameters:
-      * **friend_id** (*int*) -- Id of friend to delete.
+      * **friend_id** (*int*) -- User Id of friend to delete.
 
    :Status Codes:
       * 401 Unauthorized -- Not Authorized.
