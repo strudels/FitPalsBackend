@@ -132,12 +132,7 @@ class UsersAPI(Resource):
                                      SearchSettings.men_only==False))
 
         #filter by activity preferences
-        query = query.filter(SearchSettings.activity_id==
-                             user.search_settings.activity_id)
-        settings = user.activity_settings\
-                     .join(ActivitySetting.question)\
-                     .filter(Question.activity_id==
-                            user.search_settings.activity_id).all()
+        settings = user.activity_settings.all()
         if settings:
             s = settings[0]
             or_expr = and_(ActivitySetting.question_id==s.question_id,
@@ -145,14 +140,14 @@ class UsersAPI(Resource):
                                                     s.lower_value_converted,
                                             ActivitySetting.lower_value_converted >
                                                     s.upper_value_converted)))
-        for s in settings[1:]:
-            and_expr = and_(ActivitySetting.question_id==s.question_id,
-                            not_(or_(ActivitySetting.upper_value_converted <
-                                              s.lower_value_converted,
-                                     ActivitySetting.lower_value_converted >
-                                              s.upper_value_converted)))
-            or_expr = or_(or_expr,and_expr)
-        query = query.filter(or_expr)
+            for s in settings[1:]:
+                and_expr = and_(ActivitySetting.question_id==s.question_id,
+                                not_(or_(ActivitySetting.upper_value_converted <
+                                                s.lower_value_converted,
+                                        ActivitySetting.lower_value_converted >
+                                                s.upper_value_converted)))
+                or_expr = or_(or_expr,and_expr)
+            query = query.filter(or_expr)
 
         #apply filters in args
         if args.last_updated:

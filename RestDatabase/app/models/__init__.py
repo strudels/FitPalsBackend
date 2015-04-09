@@ -16,7 +16,6 @@ class SearchSettings(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, ForeignKey("users.id"))
     user = relationship("User",foreign_keys=[user_id])
-    activity_id = db.Column(db.Integer,nullable=True)
     friends_only = db.Column(db.Boolean)
     men_only = db.Column(db.Boolean)
     women_only = db.Column(db.Boolean)
@@ -52,7 +51,6 @@ class SearchSettings(db.Model):
                  friends_only=False,men_only=False,
                  women_only=False,age_lower_limit=18,age_upper_limit=130):
         self.user = user
-        self.activity = activity
         self.friends_only = friends_only
         self.men_only = men_only
         self.women_only = women_only
@@ -65,7 +63,6 @@ class SearchSettings(db.Model):
         return {
             "id":self.id,
             "user_id":self.user_id,
-            "activity_id":self.activity_id,
             "friends_only":self.friends_only,
             "men_only":self.men_only,
             "women_only":self.women_only,
