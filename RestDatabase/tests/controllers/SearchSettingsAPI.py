@@ -4,6 +4,7 @@ class SearchSettingsApiTestCase(FitPalsTestCase):
     def test_get_search_settings(self):
         fitpals_secret = self.test_user1["fitpals_secret"]
         setting_id = self.test_user1["search_settings_id"]
+        user_id = self.test_user1["id"]
         setting = {"id":setting_id,
                    "user_id":self.test_user1["id"],
                    "friends_only":False,
@@ -13,7 +14,7 @@ class SearchSettingsApiTestCase(FitPalsTestCase):
                    "age_upper_limit":130,
                    "radius":1,
                    "radius_unit":"mile"}
-        resp = self.app.get("/search_settings/%d" % setting_id,
+        resp = self.app.get("/search_settings?user_id=%d" % user_id,
                             headers={"Authorization":fitpals_secret})
         assert resp.status_code == 200
         assert json.loads(resp.data)["message"] == "Search settings found."
@@ -22,25 +23,17 @@ class SearchSettingsApiTestCase(FitPalsTestCase):
     def test_get_search_settings_not_found(self):
         fitpals_secret = self.test_user1["fitpals_secret"]
         setting_id = 0
-        resp = self.app.get("/search_settings/%d" % setting_id,
+        resp = self.app.get("/search_settings?user_id=%d" % setting_id,
                             headers={"Authorization":fitpals_secret})
         assert resp.status_code == 404
-        assert json.loads(resp.data)["message"] == "Search settings not found."
-        
-    def test_get_search_settings_not_authorized(self):
-        fitpals_secret = self.test_user1["fitpals_secret"]
-        setting_id = self.test_user1["search_settings_id"]
-        resp = self.app.get("/search_settings/%d" % setting_id,
-                            headers={"Authorization":fitpals_secret + "junk"})
-        assert resp.status_code == 401
-        assert json.loads(resp.data)["message"] == "Not Authorized."
+        assert json.loads(resp.data)["message"] == "User not found."
 
     def test_update_search_settings(self):
         fitpals_secret = self.test_user1["fitpals_secret"]
         setting_id = self.test_user1["search_settings_id"]
 
         #get settings previous state
-        resp = self.app.get("/search_settings/%d" % setting_id,
+        resp = self.app.get("/search_settings?user_id=%d"%self.test_user1["id"],
                             headers={"Authorization":fitpals_secret})
         settings = json.loads(resp.data)["value"]
 

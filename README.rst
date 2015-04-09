@@ -158,6 +158,22 @@ Contents:
 
       * 201 Created -- Message thread created.
 
+``GET /search_settings``
+
+   Get search settings.
+
+   :Request Headers:
+      * Authorization -- facebook secret
+
+   :Parameters:
+      * **user_id** (*int*) -- Id of user that owns the search
+        settings.
+
+   :Status Codes:
+      * 404 Not Found -- User not found.
+
+      * 200 OK -- Search settings found.
+
 ``POST /user_reports``
 
    Report User by creating new UserReport.
@@ -379,9 +395,7 @@ Contents:
       * Authorization -- facebook secret
 
    :Form Parameters:
-      * **int user_id** -- Id of user creating friend.
-
-      * **int friend_user_id** -- Id of user to be friend.
+      * **int id** -- Id of user to be added to friends list.
 
    :Status Codes:
       * 401 Unauthorized -- Not Authorized.
@@ -391,7 +405,7 @@ Contents:
       * 500 Internal Server Error -- Internal error. Changes not
         committed.
 
-      * 201 Created -- Friends added.
+      * 201 Created -- Friend added.
 
 ``GET /users``
 

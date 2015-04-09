@@ -12,6 +12,31 @@ from app.models import *
 from app.utils.Response import Response
 from app.utils.AsyncNotifications import send_message
 
+@api.resource("/search_settings")
+class SearchSettingsGetAPI(Resource):
+    def get(self):
+        """
+        Get search settings.
+
+        :reqheader Authorization: facebook secret
+
+        :param int user_id: Id of user that owns the search settings.
+        
+        :status 404: User not found.
+        :status 200: Search settings found.
+        """
+        parser = reqparse.RequestParser()
+        parser.add_argument("user_id",
+            type=int, location="args", required=True)
+        args = parser.parse_args()
+        
+        user = User.query.get(args.user_id)
+        if not user:
+            return Response(status=404, message="User not found.").__dict__,404
+            
+        return Response(status=200, message="Search settings found.",
+                        value=user.search_settings.dict_repr()).__dict__, 200
+
 @api.resource("/search_settings/<int:settings_id>")
 class SearchSettingsAPI(Resource):
     def get(self, settings_id):
