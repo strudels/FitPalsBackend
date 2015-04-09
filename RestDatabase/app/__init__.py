@@ -7,7 +7,6 @@ from flask.ext.restful import Api
 from flask.ext.socketio import SocketIO, send, emit, join_room, leave_room
 from ConfigParser import ConfigParser
 from os.path import basename, dirname
-from pyapns import configure, provision, notify
 import os
 import sys
 

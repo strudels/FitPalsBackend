@@ -1,6 +1,5 @@
 from app import socketio
 import simplejson as json
-from pyapns import configure, provision, notify
 import base64
 from apns import APNs, Payload
 
