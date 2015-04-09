@@ -107,7 +107,8 @@ class UsersAPI(Resource):
             except :
                 return Response(status=500,message="Internal Error."),500
             users = query.filter(User.fb_id in friend_fb_ids).all()
-            users = [u.dict_repr(show_online_status=True) for u in users]
+            users += [f.friend_user for f in user.friends.all()]
+            users = [u.dict_repr() for u in users]
             return Response(status=200,message="Users found.",
                             value=users).__dict__,200
         else:
