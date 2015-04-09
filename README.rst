@@ -4,6 +4,74 @@ Welcome to Fitpals Web API's documentation!
 
 Contents:
 
+``GET /admin/activity/ajax/lookup/``
+
+``POST /admin/activity/ajax/update/``
+
+   Edits a single column of a record in list view.
+
+``GET /admin/question/ajax/lookup/``
+
+``POST /admin/question/ajax/update/``
+
+   Edits a single column of a record in list view.
+
+``POST /admin/activity/action/``
+
+   Mass-model action view.
+
+``POST /admin/activity/delete/``
+
+   Delete model view. Only POST method is allowed.
+
+``POST /admin/question/action/``
+
+   Mass-model action view.
+
+``POST /admin/question/delete/``
+
+   Delete model view. Only POST method is allowed.
+
+``GET /admin/activity/edit/``
+
+   Edit model view
+
+``POST /admin/activity/edit/``
+
+   Edit model view
+
+``GET /admin/question/edit/``
+
+   Edit model view
+
+``POST /admin/question/edit/``
+
+   Edit model view
+
+``GET /admin/activity/new/``
+
+   Create model view
+
+``POST /admin/activity/new/``
+
+   Create model view
+
+``GET /admin/question/new/``
+
+   Create model view
+
+``POST /admin/question/new/``
+
+   Create model view
+
+``GET /admin/activity/``
+
+   List view
+
+``GET /admin/question/``
+
+   List view
+
 ``GET /activity_settings``
 
    Get all activity settings for a user, specified by Authorization
@@ -45,6 +113,18 @@ Contents:
         setting.
 
       * 201 Created -- Activity setting created.
+
+``GET /facebook_friends``
+
+   Gets a user's(specified by Authorization) facebook friends.
+
+   :Request Headers:
+      * Authorization -- fitpals secret
+
+   :Status Codes:
+      * 401 Unauthorized -- Not Authorized.
+
+      * 200 OK -- Friends found.
 
 ``GET /message_threads``
 
@@ -108,6 +188,13 @@ Contents:
 
    :Status Codes:
       * 200 OK -- Activities found.
+
+``GET /questions``
+
+   Get all questions for all activities.
+
+   :Status Codes:
+      * 200 OK -- Questions found.
 
 ``GET /messages``
 
@@ -380,29 +467,23 @@ Contents:
 
       * 201 Created -- User created.
 
+``GET /admin/``
+
 ``GET /activities/(int: activity_id)/questions``
 
-   Get all questions for an activity
+   Get all questions for an activity.
 
    :Status Codes:
       * 404 Not Found -- Activity not found.
 
       * 200 OK -- Questions found.
 
-``GET /users/(int: user_id)/friends``
+``GET /admin/static/(path: filename)``
 
-   Gets users that fall inside the specified parameters
-      and the authorized user's search settings
+   Function used internally to send static files from the static
+   folder to the browser.
 
-   :Request Headers:
-      * Authorization -- facebook secret
-
-   :Status Codes:
-      * 404 Not Found -- User not found.
-
-      * 401 Unauthorized -- Not Authorized.
-
-      * 200 OK -- Friends found.
+   New in version 0.5: New in version 0.5.
 
 ``GET /activity_settings/(int: setting_id)``
 

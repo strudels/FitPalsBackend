@@ -14,45 +14,6 @@ from app.utils.Response import Response
 from app.utils import Facebook
 from app.utils.AsyncNotifications import send_message
 
-@api.resource("/users/<int:user_id>/friends")
-class UserFriendsAPI(Resource):
-    def get(self,user_id):
-        """
-        Gets users that fall inside the specified parameters
-             and the authorized user's search settings
-        
-        :reqheader Authorization: facebook secret
-        
-        :status 404: User not found.
-        :status 401: Not Authorized.
-        :status 200: Friends found.
-        """
-        parser = reqparse.RequestParser()
-        parser.add_argument("Authorization",
-            type=str, location="headers", required=True)
-        args = parser.parse_args()
-
-        user = User.query.get(user_id)
-        if not user:
-            return Response(status=404,message="User not found.").__dict__,404
-            
-        if user.fitpals_secret != args.Authorization:
-            return Response(status=401,message="Not Authorized.").__dict__,401
-        
-        try: friend_fb_ids = Facebook.get_user_friends(user.fb_id)
-        except :
-            return Response(status=500,message="Internal Error."),500
-        
-        if not friend_fb_ids:
-            return Response(status=200,message="Friends found.",
-                            value=[]).__dict__,200
-        or_expr = or_(User.fb_id==friend_fb_ids[0])
-        for f in friend_fb_ids[1:]: or_expr = or_(or_expr,User.fb_id==f)
-        users = User.query.filter(or_expr).all()
-        users = [u.dict_repr(show_online_status=True) for u in users]
-        return Response(status=200,message="Friends found.",
-                        value=users).__dict__,200
-
 @api.resource('/users')
 class UsersAPI(Resource):
     def _age_to_day(self,age):

@@ -63,6 +63,7 @@ from controllers.MessagesAPI import *
 from controllers.PicturesAPI import *
 from controllers.SearchSettingsAPI import *
 from controllers.FriendsAPI import *
+from controllers.FacebookFriendsAPI import *
 from controllers.UserReportsAPI import *
 
 #class for overriding ModelView methods to make ModelView Work
