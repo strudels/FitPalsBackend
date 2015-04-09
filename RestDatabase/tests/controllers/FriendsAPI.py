@@ -3,39 +3,28 @@ from tests.utils.FitPalsTestCase import *
 class APNTokensApiTestCase(FitPalsTestCase):
     def test_add_friend(self):
         fitpals_secret = self.test_user1["fitpals_secret"]
-        friend = {"user_id":self.test_user1["id"],
-                  "friend_user_id":self.test_user2["id"]}
+        friend = {"id":self.test_user2["id"]}
         resp = self.app.post("/friends",data=friend,
                              headers={"Authorization":fitpals_secret})
         assert resp.status_code == 201
         assert json.loads(resp.data)["message"] == "Friend added."
         received_friend = json.loads(resp.data)["value"]
-        assert type(received_friend["id"]) == int
-        friend["id"] = received_friend["id"]
-        assert friend == received_friend
+        del self.test_user2["password"]
+        del self.test_user2["fitpals_secret"]
+        self.test_user2["online"] = True
+        assert self.test_user2 == received_friend
 
     def test_add_friend_user_not_found(self):
         fitpals_secret = self.test_user1["fitpals_secret"]
-        friend = {"user_id":0,
-                  "friend_user_id":self.test_user2["id"]}
+        friend = {"id":0}
         resp = self.app.post("/friends",data=friend,
                              headers={"Authorization":fitpals_secret})
         assert resp.status_code == 404
         assert json.loads(resp.data)["message"] == "User not found."
-
-    def test_add_friend_friend_user_not_found(self):
-        fitpals_secret = self.test_user1["fitpals_secret"]
-        friend = {"user_id":self.test_user1["id"],
-                  "friend_user_id":0}
-        resp = self.app.post("/friends",data=friend,
-                             headers={"Authorization":fitpals_secret})
-        assert resp.status_code == 404
-        assert json.loads(resp.data)["message"] == "User not found."
-    
+   
     def test_add_friend_not_authorized(self):
         fitpals_secret = self.test_user1["fitpals_secret"]
-        friend = {"user_id":self.test_user1["id"],
-                  "friend_user_id":self.test_user2["id"]}
+        friend = {"id":self.test_user2["id"]}
         resp = self.app.post("/friends",data=friend,
                              headers={"Authorization":fitpals_secret + "junk"})
         assert resp.status_code == 401
@@ -44,8 +33,7 @@ class APNTokensApiTestCase(FitPalsTestCase):
     def test_get_friends(self):
         #create friend to get
         fitpals_secret = self.test_user1["fitpals_secret"]
-        friend = {"user_id":self.test_user1["id"],
-                  "friend_user_id":self.test_user2["id"]}
+        friend = {"id":self.test_user2["id"]}
         resp = self.app.post("/friends",data=friend,
                              headers={"Authorization":fitpals_secret})
         friend = json.loads(resp.data)["value"]
@@ -67,8 +55,7 @@ class APNTokensApiTestCase(FitPalsTestCase):
     def test_delete_friend(self):
         #create friend to delete
         fitpals_secret = self.test_user1["fitpals_secret"]
-        friend = {"user_id":self.test_user1["id"],
-                  "friend_user_id":self.test_user2["id"]}
+        friend = {"id":self.test_user2["id"]}
         resp = self.app.post("/friends",data=friend,
                              headers={"Authorization":fitpals_secret})
         friend = json.loads(resp.data)["value"]
@@ -95,8 +82,7 @@ class APNTokensApiTestCase(FitPalsTestCase):
     def test_delete_friend_not_authorized(self):
         #create friend to delete
         fitpals_secret = self.test_user1["fitpals_secret"]
-        friend = {"user_id":self.test_user1["id"],
-                  "friend_user_id":self.test_user2["id"]}
+        friend = {"id":self.test_user2["id"]}
         resp = self.app.post("/friends",data=friend,
                              headers={"Authorization":fitpals_secret})
         friend = json.loads(resp.data)["value"]
