@@ -96,6 +96,7 @@ class ActivitySettingsAPITestCase(FitPalsTestCase):
         assert setting["unit_type"] == "mile"
 
         #ensure that test_user1 websocket self.websocket_client1 got update
+        sleep(0.01) #so that the async thread has time to send the message
         received = self.websocket_client1.get_received()
         assert len(received) != 0
         assert received[-1]["args"][0]["path"] == "/activity_settings"
@@ -234,6 +235,7 @@ class ActivitySettingsAPITestCase(FitPalsTestCase):
         assert round(setting["upper_value"],1) == 5.7
 
         #ensure that test_user1 websocket self.websocket_client1 got update
+        sleep(0.01) #so that the async thread has time to send the message
         received = self.websocket_client1.get_received()
         assert len(received) != 0
         assert received[-1]["args"][0]["path"] == "/activity_settings/%d" % setting_id
@@ -309,6 +311,7 @@ class ActivitySettingsAPITestCase(FitPalsTestCase):
         assert json.loads(resp.data)["message"]=="Activity setting deleted."
 
         #ensure that test_user1 websocket self.websocket_client1 got update
+        sleep(0.01) #so that the async thread has time to send the message
         received = self.websocket_client1.get_received()
         assert len(received) != 0
         assert received[-1]["args"][0]["path"] == "/activity_settings/%d" % setting_id

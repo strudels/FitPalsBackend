@@ -2,12 +2,14 @@ import unittest
 from app import app,socketio,reset_app
 from app.models import *
 from datetime import date
+from time import sleep
 
 class WebSocketTestCase(unittest.TestCase):
     def setUp(self):
         reset_app()
         app.testing = True
         self.client = socketio.test_client(app)
+        sleep(0.01) #so that the async thread has time to send the message
         self.client.get_received()
 
         self.test_user = User("fbTestUser1","fbTestUser1",gender="male",dob=date(1990,1,1))
@@ -19,6 +21,7 @@ class WebSocketTestCase(unittest.TestCase):
 
     def test_websocket_connect(self):
         client = socketio.test_client(app)
+        sleep(0.01) #so that the async thread has time to send the message
         received = client.get_received()
         assert len(received) == 1
         client.disconnect()
@@ -27,11 +30,13 @@ class WebSocketTestCase(unittest.TestCase):
         #ensure client does not receive messages before joining chat room
         socketio.emit("user_update", self.test_user.dict_repr(),\
                       room=str(self.test_user.id))
+        sleep(0.01) #so that the async thread has time to send the message
         received = self.client.get_received()
         assert len(received) == 0
 
         #ensure client can join chat room
         self.client.emit("join", self.test_user.dict_repr(public=False))
+        sleep(0.01) #so that the async thread has time to send the message
         received = self.client.get_received()
         assert len(received) != 0
         assert received[-1]["name"] ==\
@@ -40,6 +45,7 @@ class WebSocketTestCase(unittest.TestCase):
         #ensure client receives messages after joining chat room
         socketio.emit("user_update", self.test_user.dict_repr(),\
                       room=str(self.test_user.id))
+        sleep(0.01) #so that the async thread has time to send the message
         received = self.client.get_received()
         assert len(received) != 0
         assert received[-1]["name"] ==\

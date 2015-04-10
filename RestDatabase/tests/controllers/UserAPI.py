@@ -222,6 +222,7 @@ class UsersApiTestCase(FitPalsTestCase):
         del self.test_user1["online"]
         
         #ensure that test_user websocket self.websocket_client1 got new user update
+        sleep(0.01) #so that the async thread has time to send the message
         received = self.websocket_client1.get_received()
         assert len(received) != 0
         assert received[-1]["args"][0]["path"] == "/users/%d" % self.test_user1["id"]
