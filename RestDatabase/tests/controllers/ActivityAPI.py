@@ -13,27 +13,6 @@ class ActivitySettingsAPITestCase(FitPalsTestCase):
         assert activity["active_image"] == "IcnWalking.png"
         assert activity["inactive_image"] == "IcnWalkingInactive.png"
         assert activity["questions"][0] == 1
-        assert activity["questions"][1] == 2
-        
-    def test_get_activity_questions(self):
-        resp = self.app.get("/activities/1/questions")
-        assert resp.status_code==200
-        assert json.loads(resp.data)["message"] == "Questions found."
-        assert json.loads(resp.data)["value"][0]["activity_id"] == 1
-        assert json.loads(resp.data)["value"][0]["question"] == "Distance"
-        assert json.loads(resp.data)["value"][0]["unit_type"] == "mile"
-        assert json.loads(resp.data)["value"][0]["min_value"] == 0
-        assert json.loads(resp.data)["value"][0]["max_value"] == 30
-        assert json.loads(resp.data)["value"][1]["activity_id"] == 1
-        assert json.loads(resp.data)["value"][1]["question"] == "Time"
-        assert json.loads(resp.data)["value"][1]["unit_type"] == "minute"
-        assert json.loads(resp.data)["value"][1]["min_value"] == 1
-        assert json.loads(resp.data)["value"][1]["max_value"] == 120
-        
-    def test_get_activity_questions_activity_not_found(self):
-        resp = self.app.get("/activities/0/questions")
-        assert resp.status_code==404
-        assert json.loads(resp.data)["message"] == "Activity not found."
         
     def test_get_questions(self):
         resp = self.app.get("/questions")
@@ -48,9 +27,9 @@ class ActivitySettingsAPITestCase(FitPalsTestCase):
         resp = self.app.post("/activity_settings",
                              data = {"user_id":self.test_user1["id"],
                                      "question_id":activity["questions"][0],
-                                     "lower_value":8.3,
+                                     "lower_value":15.3,
                                      "upper_value":18.6,
-                                     "unit_type":"mile"},
+                                     "unit_type":"minute"},
                              headers = {"Authorization":fitpals_secret})
 
         #get activity settings
@@ -62,9 +41,9 @@ class ActivitySettingsAPITestCase(FitPalsTestCase):
         assert setting["id"]==1
         assert setting["user_id"]==self.test_user1["id"]
         assert setting["question_id"] == activity["questions"][0]
-        assert round(setting["lower_value"],1) == 8.3
+        assert round(setting["lower_value"],1) == 15.3
         assert round(setting["upper_value"],1) == 18.6
-        assert setting["unit_type"] == "mile"
+        assert setting["unit_type"] == "minute"
 
     def test_get_activitys_setting_user_not_found(self):
         fitpals_secret = self.test_user1["fitpals_secret"]
@@ -81,9 +60,9 @@ class ActivitySettingsAPITestCase(FitPalsTestCase):
         resp = self.app.post("/activity_settings",
                              data = {"user_id":self.test_user1["id"],
                                      "question_id":activity["questions"][0],
-                                     "lower_value":8.3,
+                                     "lower_value":15.3,
                                      "upper_value":18.6,
-                                     "unit_type":"mile"},
+                                     "unit_type":"minute"},
                              headers = {"Authorization":fitpals_secret})
         assert resp.status_code==201
         assert json.loads(resp.data)["message"]=="Activity setting created."
@@ -91,9 +70,9 @@ class ActivitySettingsAPITestCase(FitPalsTestCase):
         assert setting["id"]==1
         assert setting["user_id"]==self.test_user1["id"]
         assert setting["question_id"] == activity["questions"][0]
-        assert round(setting["lower_value"],1) == 8.3
+        assert round(setting["lower_value"],1) == 15.3
         assert round(setting["upper_value"],1) == 18.6
-        assert setting["unit_type"] == "mile"
+        assert setting["unit_type"] == "minute"
 
         #ensure that test_user1 websocket self.websocket_client1 got update
         sleep(0.01) #so that the async thread has time to send the message
@@ -109,9 +88,9 @@ class ActivitySettingsAPITestCase(FitPalsTestCase):
         resp = self.app.post("/activity_settings",
                              data = {"user_id":self.test_user1["id"],
                                      "question_id":0,
-                                     "lower_value":8.3,
+                                     "lower_value":15.3,
                                      "upper_value":18.6,
-                                     "unit_type":"mile"},
+                                     "unit_type":"minute"},
                              headers = {"Authorization":fitpals_secret})
         assert resp.status_code==404
         assert json.loads(resp.data)["message"]=="Question not found."
@@ -122,9 +101,9 @@ class ActivitySettingsAPITestCase(FitPalsTestCase):
         resp = self.app.post("/activity_settings",
                              data = {"user_id":0,
                                      "question_id":activity["questions"][0],
-                                     "lower_value":8.3,
+                                     "lower_value":15.3,
                                      "upper_value":18.6,
-                                     "unit_type":"mile"},
+                                     "unit_type":"minute"},
                              headers = {"Authorization":fitpals_secret})
         assert resp.status_code==404
         assert json.loads(resp.data)["message"]=="User not found."
@@ -135,9 +114,9 @@ class ActivitySettingsAPITestCase(FitPalsTestCase):
         resp = self.app.post("/activity_settings",
                              data = {"user_id":self.test_user1["id"],
                                      "question_id":activity["questions"][0],
-                                     "lower_value":8.3,
+                                     "lower_value":15.3,
                                      "upper_value":18.6,
-                                     "unit_type":"mile"},
+                                     "unit_type":"minute"},
                              headers = {"Authorization":fitpals_secret + "junk"})
         assert resp.status_code==401
         assert json.loads(resp.data)["message"]=="Not Authorized."
@@ -148,9 +127,9 @@ class ActivitySettingsAPITestCase(FitPalsTestCase):
         resp = self.app.post("/activity_settings",
                              data = {"user_id":self.test_user1["id"],
                                      "question_id":activity["questions"][0],
-                                     "lower_value":8.3,
+                                     "lower_value":15.3,
                                      "upper_value":2.6,
-                                     "unit_type":"mile"},
+                                     "unit_type":"minute"},
                              headers = {"Authorization":fitpals_secret})
         assert resp.status_code==400
         assert json.loads(resp.data)["message"]=="Could not create activity setting."
@@ -162,9 +141,9 @@ class ActivitySettingsAPITestCase(FitPalsTestCase):
         resp = self.app.post("/activity_settings",
                              data = {"user_id":self.test_user1["id"],
                                      "question_id":activity["questions"][0],
-                                     "lower_value":8.3,
+                                     "lower_value":15.3,
                                      "upper_value":18.6,
-                                     "unit_type":"mile"},
+                                     "unit_type":"minute"},
                              headers = {"Authorization":fitpals_secret})
         setting_id = json.loads(resp.data)["value"]["id"]
 
@@ -177,9 +156,9 @@ class ActivitySettingsAPITestCase(FitPalsTestCase):
         assert setting["id"] == 1
         assert setting["user_id"]==self.test_user1["id"]
         assert setting["question_id"] == activity["questions"][0]
-        assert round(setting["lower_value"],1) == 8.3
+        assert round(setting["lower_value"],1) == 15.3
         assert round(setting["upper_value"],1) == 18.6
-        assert setting["unit_type"] == "mile"
+        assert setting["unit_type"] == "minute"
         
     def test_get_activity_setting_not_found(self):
         #get setting
@@ -196,9 +175,9 @@ class ActivitySettingsAPITestCase(FitPalsTestCase):
         resp = self.app.post("/activity_settings",
                              data = {"user_id":self.test_user1["id"],
                                      "question_id":activity["questions"][0],
-                                     "lower_value":8.3,
+                                     "lower_value":15.3,
                                      "upper_value":18.6,
-                                     "unit_type":"mile"},
+                                     "unit_type":"minute"},
                              headers = {"Authorization":fitpals_secret})
         setting_id = json.loads(resp.data)["value"]["id"]
         
@@ -215,15 +194,15 @@ class ActivitySettingsAPITestCase(FitPalsTestCase):
         resp = self.app.post("/activity_settings",
                              data = {"user_id":self.test_user1["id"],
                                      "question_id":activity["questions"][0],
-                                     "lower_value":8.3,
+                                     "lower_value":15.3,
                                      "upper_value":18.6,
-                                     "unit_type":"mile"},
+                                     "unit_type":"minute"},
                              headers = {"Authorization":fitpals_secret})
         setting_id = json.loads(resp.data)["value"]["id"]
         
         #update setting
         resp = self.app.put("/activity_settings/%d" % setting_id,
-                            data={"lower_value":4.6, "upper_value":5.7},
+                            data={"lower_value":15.8, "upper_value":22.4},
                             headers={"Authorization":fitpals_secret})
         assert resp.status_code==202
         assert json.loads(resp.data)["message"]=="Activity setting updated."
@@ -231,8 +210,8 @@ class ActivitySettingsAPITestCase(FitPalsTestCase):
         assert setting["id"] == 1
         assert setting["user_id"]==self.test_user1["id"]
         assert setting["question_id"] == activity["questions"][0]
-        assert round(setting["lower_value"],1) == 4.6
-        assert round(setting["upper_value"],1) == 5.7
+        assert round(setting["lower_value"],1) == 15.8
+        assert round(setting["upper_value"],1) == 22.4
 
         #ensure that test_user1 websocket self.websocket_client1 got update
         sleep(0.01) #so that the async thread has time to send the message
@@ -258,9 +237,9 @@ class ActivitySettingsAPITestCase(FitPalsTestCase):
         resp = self.app.post("/activity_settings",
                              data = {"user_id":self.test_user1["id"],
                                      "question_id":activity["questions"][0],
-                                     "lower_value":8.3,
+                                     "lower_value":15.3,
                                      "upper_value":18.6,
-                                     "unit_type":"mile"},
+                                     "unit_type":"minute"},
                              headers = {"Authorization":fitpals_secret})
         setting_id = json.loads(resp.data)["value"]["id"]
         
@@ -278,9 +257,9 @@ class ActivitySettingsAPITestCase(FitPalsTestCase):
         resp = self.app.post("/activity_settings",
                              data = {"user_id":self.test_user1["id"],
                                      "question_id":activity["questions"][0],
-                                     "lower_value":8.3,
+                                     "lower_value":15.3,
                                      "upper_value":18.6,
-                                     "unit_type":"mile"},
+                                     "unit_type":"minute"},
                              headers = {"Authorization":fitpals_secret})
         setting_id = json.loads(resp.data)["value"]["id"]
         
@@ -298,9 +277,9 @@ class ActivitySettingsAPITestCase(FitPalsTestCase):
         resp = self.app.post("/activity_settings",
                              data = {"user_id":self.test_user1["id"],
                                      "question_id":activity["questions"][0],
-                                     "lower_value":8.3,
+                                     "lower_value":15.3,
                                      "upper_value":18.6,
-                                     "unit_type":"mile"},
+                                     "unit_type":"minute"},
                              headers = {"Authorization":fitpals_secret})
         setting_id = json.loads(resp.data)["value"]["id"]
 
@@ -332,9 +311,9 @@ class ActivitySettingsAPITestCase(FitPalsTestCase):
         resp = self.app.post("/activity_settings",
                              data = {"user_id":self.test_user1["id"],
                                      "question_id":activity["questions"][0],
-                                     "lower_value":8.3,
+                                     "lower_value":15.3,
                                      "upper_value":18.6,
-                                     "unit_type":"mile"},
+                                     "unit_type":"minute"},
                              headers = {"Authorization":fitpals_secret})
         setting_id = json.loads(resp.data)["value"]["id"]
 

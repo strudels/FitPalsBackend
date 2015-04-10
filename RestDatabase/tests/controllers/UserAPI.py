@@ -107,9 +107,9 @@ class UsersApiTestCase(FitPalsTestCase):
                             headers={"Authorization":self.test_user1["fitpals_secret"]})
         user1_activity_setting = {"user_id":self.test_user1["id"],
                                    "question_id":question_id,
-                                   "lower_value":5,
-                                   "upper_value":6,
-                                   "unit_type":"mile"}
+                                   "lower_value":18.3,
+                                   "upper_value":30,
+                                   "unit_type":"minute"}
         resp = self.app.post("/activity_settings",
                              data=user1_activity_setting,
                              headers={"Authorization":self.test_user1["fitpals_secret"]})
@@ -123,9 +123,9 @@ class UsersApiTestCase(FitPalsTestCase):
                                   "radius_unit":"mile"}
         user2_activity_setting = {"user_id":self.test_user2["id"],
                                    "question_id":question_id,
-                                   "lower_value":5,
-                                   "upper_value":6,
-                                   "unit_type":"mile"}
+                                   "lower_value":20.4,
+                                   "upper_value":25,
+                                   "unit_type":"minute"}
         resp = self.app.post("/activity_settings",
                              data=user2_activity_setting,
                              headers={"Authorization":self.test_user2["fitpals_secret"]})
@@ -152,18 +152,6 @@ class UsersApiTestCase(FitPalsTestCase):
         )
         assert len(matches) == 0
         
-        # GET /users user2's diff activity_setting
-        user2_search_settings["radius"] = 12
-        user2_activity_setting["lower_value"]=1
-        user2_activity_setting["upper_value"]=4
-        matches = self.generate_test_user_and_get_users(
-            user=self.test_user2,
-            activity_setting=user2_activity_setting,
-            activity_setting_id=user2_activity_setting_id,
-            search_settings=user2_search_settings
-        )
-        assert len(matches) == 0
-
         # GET /users user2's 
         user2_search_settings["radius"] = 5
         matches = self.generate_test_user_and_get_users(
