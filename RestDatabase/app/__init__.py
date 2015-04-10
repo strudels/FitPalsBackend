@@ -1,6 +1,7 @@
 from __future__ import print_function
 from flask import Flask
 from flask.ext.admin import Admin
+from flask_admin import LoginManager
 from flask.ext.admin.contrib.sqla import ModelView
 from flask.ext.sqlalchemy import SQLAlchemy
 from flask.ext.restful import Api
@@ -66,80 +67,14 @@ from controllers.FriendsAPI import *
 from controllers.FacebookFriendsAPI import *
 from controllers.UserReportsAPI import *
 
-#class for overriding ModelView methods to make ModelView Work
-class ActivityView(ModelView):
-    def create_model(self,form):
-        try:
-            activity = Activity(name=form.data['name'])
-            self.session.add(activity)
-            self.session.commit()
-        except:
-            self.session.rollback()
-            return False
-        return True
-        
-    def update_model(self, form, model):
-        try:
-            model.name = form.data['name']
-            self.session.commit()
-        except:
-            self.session.rollback()
-            return False
-        return True
-        
-    def delete_model(self,model):
-        try:
-            self.on_model_delete(model)
-            self.session.flush()
-            self.session.delete(model)
-            self.session.commit()
-        except:
-            self.session.rollback()
-            return False
-        return True
-        
-class QuestionView(ModelView):
-    def create_model(self, form):
-        try:
-            question = Question(form.data["activity"],
-                                form.data["question"],
-                                form.data["unit_type"],
-                                form.data["min_value"],
-                                form.data["max_value"])
-            self.session.add(question)
-            self.session.commit()
-        except:
-            self.session.rollback()
-            return False
-        return True
-        
-    def update_model(self,form,model):
-        try:
-            model.question = form.data["question"]
-            model.unit_type = form.data["unit_type"]
-            self.session.commit()
-        except:
-            self.session.rollback()
-            return Flase
-        return True
-        
-    def delete_model(self,model):
-        try:
-            self.on_model_delete(model)
-            self.session.flush()
-            self.session.delete(model)
-            self.session.commit()
-        except:
-            self.session.rollback()
-            return False
-        return True
-
-admin = Admin(app)
-admin.add_view(ActivityView(Activity, db.session))
-admin.add_view(QuestionView(Question, db.session))
-
 #import websocket events
 from websockets import *
+
+#import admin panel
+from admin import *
+
+login_manager = LoginManager()
+login_manager.init_app(app)
 
 #reset app and database to fresh install
 def reset_app():
