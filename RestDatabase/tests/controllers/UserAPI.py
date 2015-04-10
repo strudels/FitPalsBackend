@@ -32,7 +32,8 @@ class UsersApiTestCase(FitPalsTestCase):
                 "dob_month":2,
                 "dob_day":17,
                 "longitude":20.0,
-                "latitude":20.0}
+                "latitude":20.0,
+                "gender":"male"}
         resp = self.app.post("/users",data=user)
         assert resp.status_code==201
         assert json.loads(resp.data)["message"] == "User created."
@@ -43,12 +44,14 @@ class UsersApiTestCase(FitPalsTestCase):
 
     def test_create_user_found(self):
         resp = self.app.post("/users",data={"access_token":\
-            self.access_tokens[self.test_user1["fb_id"]]})
+                                            self.access_tokens[self.test_user1["fb_id"]],
+                                            "gender":"male"})
         assert resp.status_code==200
         assert json.loads(resp.data)["message"] == "User found."
         
     def test_create_user_not_authorized(self):
-        resp = self.app.post("/users",data={"access_token":"invalid_access_token"})
+        resp = self.app.post("/users",data={"access_token":"invalid_access_token",
+                                            "gender":"male"})
         assert resp.status_code==401
         assert json.loads(resp.data)["message"] == "Not Authorized."
         
@@ -58,7 +61,8 @@ class UsersApiTestCase(FitPalsTestCase):
                 "dob_month":2,
                 "dob_day":17,
                 "longitude":20.0,
-                "latitude":20.0}
+                "latitude":20.0,
+                "gender":"male"}
         resp = self.app.post("/users",data=user)
         assert resp.status_code==400
         assert json.loads(resp.data)["message"] == "Must specify DOB."
@@ -70,7 +74,8 @@ class UsersApiTestCase(FitPalsTestCase):
                 "dob_month":2,
                 "dob_day":17,
                 "longitude":200.0,
-                "latitude":200.0}
+                "latitude":200.0,
+                "gender":"male"}
         resp = self.app.post("/users",data=user)
         assert resp.status_code==400
         assert json.loads(resp.data)["message"] == "Coordinates invalid."

@@ -28,20 +28,21 @@ class FitPalsTestCase(unittest.TestCase):
         #test_user1 and test_user2 are facebook friends
         #create test_user1
         self.test_user1 = User("1380493978943440","fbTestUser1",
-                               dob=date(1990,1,1),name="Ben")
+                               gender="male",dob=date(1990,1,1),name="Ben")
         db.session.add(self.test_user1)
         db.session.commit()
         self.test_user1 = self.test_user1.dict_repr(public=False)
 
         #create test_user2
         self.test_user2 = User("1390508901271602","fbTestUser2",
-                               dob=date(1990,1,1),name="Ricky")
+                               gender="male",dob=date(1990,1,1),name="Ricky")
         db.session.add(self.test_user2)
         db.session.commit()
         self.test_user2 = self.test_user2.dict_repr(public=False)
             
         #create test_user3
-        self.test_user3 = User("1420288438286360","fbTestUser3",dob=date(1990,1,1))
+        self.test_user3 = User("1420288438286360","fbTestUser3",gender="female",
+                               dob=date(1990,1,1))
         db.session.add(self.test_user3)
         db.session.commit()
         self.test_user3 = self.test_user3.dict_repr(public=False)

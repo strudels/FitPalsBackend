@@ -17,19 +17,21 @@ class SearchSettings(db.Model):
     user_id = db.Column(db.Integer, ForeignKey("users.id"))
     user = relationship("User",foreign_keys=[user_id])
     friends_only = db.Column(db.Boolean)
-    men_only = db.Column(db.Boolean)
-    women_only = db.Column(db.Boolean)
+    men = db.Column(db.Boolean)
+    women = db.Column(db.Boolean)
     age_lower_limit = db.Column(db.Integer, default=18)
     #oldest person to ever live was 122, 130 should be good enough...
     # http://en.wikipedia.org/wiki/Oldest_people
-    age_upper_limit = db.Column(db.Integer, default=130)
+    age_upper_limit = db.Column(db.Integer, default=85)
     _ureg = UnitRegistry()
     #radius with default value of 1 mile
     radius_converted = db.Column(db.Float,
                                  default=(_ureg.mile * 1)\
                                  .to(_ureg.meter).magnitude)
     radius_unit = db.Column(db.String(64), default="mile")
-    __table_args__ = (CheckConstraint("age_lower_limit < age_upper_limit"),)
+    __table_args__ = (CheckConstraint("age_lower_limit < age_upper_limit"),
+                      CheckConstraint("age_lower_limit >= 18"),
+                      CheckConstraint("age_lower_limit <= 85"),)
 
     @hybrid_property
     def radius(self):
@@ -47,13 +49,13 @@ class SearchSettings(db.Model):
         conversion_test = test_unit.to(self._ureg.meter)
         return value
     
-    def __init__(self,user,radius=1,radius_unit="mile",activity=None,
-                 friends_only=False,men_only=False,
-                 women_only=False,age_lower_limit=18,age_upper_limit=130):
+    def __init__(self,user,radius=5,radius_unit="mile",activity=None,
+                 friends_only=False,men=True,
+                 women=True,age_lower_limit=18,age_upper_limit=85):
         self.user = user
         self.friends_only = friends_only
-        self.men_only = men_only
-        self.women_only = women_only
+        self.men = men
+        self.women = women
         self.age_lower_limit = age_lower_limit
         self.age_upper_limit = age_upper_limit
         self.radius_unit = radius_unit
@@ -64,8 +66,8 @@ class SearchSettings(db.Model):
             "id":self.id,
             "user_id":self.user_id,
             "friends_only":self.friends_only,
-            "men_only":self.men_only,
-            "women_only":self.women_only,
+            "men":self.men,
+            "women":self.women,
             "age_lower_limit":self.age_lower_limit,
             "age_upper_limit":self.age_upper_limit,
             "radius_unit":self.radius_unit,
@@ -84,7 +86,7 @@ class User(db.Model):
                                   cascade="save-update, merge, delete")
     about_me = db.Column(db.String(2048))
     name = db.Column(db.String(256))
-    gender = db.Column(db.String(32))
+    gender = db.Column(db.String(6),nullable=False)
     pictures = relationship("Picture", lazy="dynamic",
                             cascade="save-update, merge, delete")
     last_updated =\
@@ -129,9 +131,14 @@ class User(db.Model):
     @hybrid_property
     def online(self):
         return str(self.id) in socketio.rooms[""] if socketio.rooms!={} else False
+        
+    @validates("gender")
+    def validate_ui_index(self, key, gender):
+        assert gender == "male" or gender == "female"
+        return gender
 
-    def __init__(self,fb_id,fitpals_secret,longitude=None,latitude=None,about_me=None,
-        dob=None, available=False, name=None, gender=None):
+    def __init__(self,fb_id,fitpals_secret,gender,longitude=None,latitude=None,
+                 about_me=None, dob=None, available=False, name=None):
         self.fb_id = fb_id
         self.fitpals_secret = fitpals_secret
         if longitude!=None and latitude!=None:

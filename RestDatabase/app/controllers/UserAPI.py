@@ -72,10 +72,13 @@ class UsersAPI(Resource):
             return Response(status=200,message="Users found.",
                             value=users).__dict__,200
         else:
-            if user.search_settings.men_only:
-                query = query.filter(User.gender=="male")
-            elif user.search_settings.women_only:
+            gender_or = or_()
+            if user.search_settings.men and user.search_settings.women:
+                query = query.filter(or_(User.gender=="female", User.gender=="male"))
+            elif user.search_settings.women:
                 query = query.filter(User.gender=="female")
+            else: #user.search_settings.men == True
+                query = query.filter(User.gender=="male")
             query = query.filter(User.dob<=self._age_to_day(
                 user.search_settings.age_lower_limit))
             query = query.filter(User.dob>=self._age_to_day(
@@ -83,14 +86,9 @@ class UsersAPI(Resource):
             
         #apply filters from other user's search settings
         if user.gender == "male":
-            query = query.filter(or_(SearchSettings.men_only==True,
-                                     SearchSettings.women_only==False))
-        elif user.gender == "female":
-            query = query.filter(or_(SearchSettings.women_only==True,
-                                     SearchSettings.men_only==False))
-        else:
-            query = query.filter(and_(SearchSettings.women_only==False,
-                                     SearchSettings.men_only==False))
+            query = query.filter(SearchSettings.men==True)
+        else: #user.gender == "female"
+            query = query.filter(SearchSettings.women==True)
 
         #filter by activity preferences
         settings = user.activity_settings.all()
@@ -179,7 +177,7 @@ class UsersAPI(Resource):
         parser.add_argument("name",
             type=str, location='form', required=False)
         parser.add_argument("gender",
-            type=str, location='form', required=False)
+            type=str, location='form', required=True)
         args = parser.parse_args()
         
         #if no fb_id is found for the given access token, the user is not auth'd

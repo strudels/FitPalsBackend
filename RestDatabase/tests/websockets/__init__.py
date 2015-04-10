@@ -10,7 +10,7 @@ class WebSocketTestCase(unittest.TestCase):
         self.client = socketio.test_client(app)
         self.client.get_received()
 
-        self.test_user = User("fbTestUser1","fbTestUser1",dob=date(1990,1,1))
+        self.test_user = User("fbTestUser1","fbTestUser1",gender="male",dob=date(1990,1,1))
         db.session.add(self.test_user)
         db.session.commit()
 

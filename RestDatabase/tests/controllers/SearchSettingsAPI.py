@@ -8,11 +8,11 @@ class SearchSettingsApiTestCase(FitPalsTestCase):
         setting = {"id":setting_id,
                    "user_id":self.test_user1["id"],
                    "friends_only":False,
-                   "men_only":False,
-                   "women_only":False,
+                   "men":True,
+                   "women":True,
                    "age_lower_limit":18,
-                   "age_upper_limit":130,
-                   "radius":1,
+                   "age_upper_limit":85,
+                   "radius":5,
                    "radius_unit":"mile"}
         resp = self.app.get("/search_settings?user_id=%d" % user_id,
                             headers={"Authorization":fitpals_secret})
@@ -44,8 +44,8 @@ class SearchSettingsApiTestCase(FitPalsTestCase):
                             headers={"Authorization":fitpals_secret})
         assert resp.status_code == 202
         assert json.loads(resp.data)["message"] == "Search settings updated."
-        settings["men_only"] = False
-        settings["women_only"] = True
+        settings["men"] = True
+        settings["women"] = True
         settings["radius"] = 12
         settings["radius_unit"] = "kilometer"
         assert json.loads(resp.data)["value"] == settings
