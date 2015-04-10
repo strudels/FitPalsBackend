@@ -148,10 +148,32 @@ def reset_app():
     db.create_all()
 
     from app.models import *
-    running = Activity("running","active_image_uri","inactive_image_uri")
-    running_q1 = Question(running, "Distance", "kilometer", 0, 30)
-    running_q2 = Question(running, "Time", "minute", 0, 120)
-    running.questions.append(running_q1)
-    running.questions.append(running_q2)
-    db.session.add(running)
+
+    activity_info_list = {
+        "Walking" : [
+            "IcnWalking.png", 
+            "IcnWalkingInactive.png", [
+                [ "Distance", "mile", 0, 30 ],
+                [ "Time", "minute", 1, 120 ]]
+        ],
+        "Running" : [
+            "IcnRunning.png", 
+            "IcnRunningInactive.png", [
+                [ "Distance", "mile", 0, 30 ],
+                [ "Time", "minute", 1, 120 ]]
+        ],
+        "Biking" : [
+            "IcnBiking.png", 
+            "IcnBikingInactive.png", [
+                [ "Distance", "mile", 0, 30 ],
+                [ "Time", "minute", 1, 120 ]]
+        ]
+    }
+    for a_name, a_value in activity_info_list.iteritems():
+        activity = Activity(a_name, a_value[0], a_value[1])
+        for q_value in a_value[2]:
+            question = Question(activity, q_value[0], q_value[1], q_value[2], q_value[3])
+            activity.questions.append(question)
+        db.session.add(activity)
+    
     db.session.commit()
