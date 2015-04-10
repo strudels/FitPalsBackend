@@ -74,7 +74,7 @@ class SearchSettingsAPI(Resource):
         """
         Create new search setting.
         
-        NOTE bool fields friends_only, men_only, and women_only are encoded as int
+        NOTE bool fields friends_only, men, and women are encoded as int
         because reqparse is dumb and I should've used something else.
 
         :reqheader Authorization: facebook secret
@@ -82,8 +82,8 @@ class SearchSettingsAPI(Resource):
         :param int settings_id: Id of search settings.
         
         :form int friends_only: Set to 1 if user wants friends only; Default is 0
-        :form int men_only: Set to 1 if user wants men only; Default is 0
-        :form int women_only: Set to 1 if user wants women only; Default is 0
+        :form int men: Set to 0 if user don't wants men; Default is 1
+        :form int women: Set to 1 if user don't wants women; Default is 1
         :form int age_lower_limit: Set if user want lower age limit. Default is 18.
         :form int age_upper_limit: Set if user want upper age limit. Default is 130.
         http://en.wikipedia.org/wiki/Oldest_people
@@ -100,9 +100,9 @@ class SearchSettingsAPI(Resource):
             type=int, location="form", required=False)
         parser.add_argument("friends_only",
             type=int, location="form", required=False)
-        parser.add_argument("men_only",
+        parser.add_argument("men",
             type=int, location="form", required=False)
-        parser.add_argument("women_only",
+        parser.add_argument("women",
             type=int, location="form", required=False)
         parser.add_argument("age_lower_limit",
             type=int, location="form", required=False)
@@ -115,10 +115,10 @@ class SearchSettingsAPI(Resource):
         args = parser.parse_args()
         if type(args.friends_only)==int:
             args.friends_only = bool(args.friends_only)
-        if type(args.men_only)==int:
-            args.men_only = bool(args.men_only)
-        if type(args.women_only)==int:
-            args.women_only = bool(args.women_only)
+        if type(args.men)==int:
+            args.men = bool(args.men)
+        if type(args.women)==int:
+            args.women = bool(args.women)
         
         #get search_settings
         settings = SearchSettings.query.get(settings_id)

@@ -39,13 +39,13 @@ class SearchSettingsApiTestCase(FitPalsTestCase):
 
         #update settings
         resp = self.app.put("/search_settings/%d" % settings["id"],
-                            data={"men_only":0, "women_only":1,
+                            data={"men":1, "women":0,
                                   "radius":12,"radius_unit":"kilometer"},
                             headers={"Authorization":fitpals_secret})
         assert resp.status_code == 202
         assert json.loads(resp.data)["message"] == "Search settings updated."
         settings["men"] = True
-        settings["women"] = True
+        settings["women"] = False
         settings["radius"] = 12
         settings["radius_unit"] = "kilometer"
         assert json.loads(resp.data)["value"] == settings
