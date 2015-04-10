@@ -16,7 +16,7 @@ class SearchSettings(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, ForeignKey("users.id"))
     user = relationship("User",foreign_keys=[user_id])
-    available = db.Column(db.Boolean, default=False)
+    available = db.Column(db.Boolean, default=True)
     friends_only = db.Column(db.Boolean)
     men = db.Column(db.Boolean)
     women = db.Column(db.Boolean)
@@ -50,7 +50,7 @@ class SearchSettings(db.Model):
         conversion_test = test_unit.to(self._ureg.meter)
         return value
     
-    def __init__(self,user,available=False,radius=5,radius_unit="mile",activity=None,
+    def __init__(self,user,available=True,radius=5,radius_unit="mile",activity=None,
                  friends_only=False,men=True,
                  women=True,age_lower_limit=18,age_upper_limit=85):
         self.user = user

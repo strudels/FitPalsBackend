@@ -7,7 +7,7 @@ class SearchSettingsApiTestCase(FitPalsTestCase):
         user_id = self.test_user1["id"]
         setting = {"id":setting_id,
                    "user_id":self.test_user1["id"],
-                   "available":False,
+                   "available":True,
                    "friends_only":False,
                    "men":True,
                    "women":True,
