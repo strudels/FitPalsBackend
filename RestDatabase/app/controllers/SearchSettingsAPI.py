@@ -144,7 +144,9 @@ class SearchSettingsAPI(Resource):
             db.session.rollback()
             
         #send update to user's other devices
-        send_message(user,request.path,request.method,settings.dict_repr())
+        send_message(user.dict_repr(show_online_status=True),
+                     [d.token for d in user.devices.all()],
+                     request.path,request.method,settings.dict_repr())
 
         return Response(status=202,message="Search settings updated.",
                         value=settings.dict_repr()).__dict__,202

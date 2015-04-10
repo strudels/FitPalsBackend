@@ -45,6 +45,7 @@ class MessagesApiTestCase(FitPalsTestCase):
         assert type(value["id"]) == int
         
         #ensure that test_user1 websocket client got update
+        sleep(0.01) #so that the async thread has time to send the message
         received = client.get_received()
         assert len(received) != 0
         assert received[-1]["name"] == "update"
@@ -80,6 +81,7 @@ class MessagesApiTestCase(FitPalsTestCase):
         assert json.loads(resp.data)["message"]=="Message thread deleted."
         
         #ensure that test_user1 websocket self.websocket_client1 got update
+        sleep(0.01) #so that the async thread has time to send the message
         received = self.websocket_client1.get_received()
         assert len(received) != 0
         assert received[-1]["name"] == "update"
@@ -230,6 +232,7 @@ class MessagesApiTestCase(FitPalsTestCase):
             assert message_received[key] == message[key]
 
         #ensure that test_user1 websocket client got new message
+        sleep(0.01) #so that the async thread has time to send the message
         received = self.websocket_client1.get_received()
         assert len(received) != 0
         assert received[-1]["args"][0]["path"] == "/messages"
@@ -237,6 +240,7 @@ class MessagesApiTestCase(FitPalsTestCase):
         assert received[-1]["args"][0]["value"] == message_received
 
         #ensure that test_user2 websocket client got new message
+        sleep(0.01) #so that the async thread has time to send the message
         received = self.websocket_client2.get_received()
         assert len(received) != 0
         assert received[-1]['args'][0]["path"] == "/messages"

@@ -137,7 +137,9 @@ class UserActivitySettingsAPI(Resource):
             return Response(status=400,
                 message="Could not create activity setting.").__dict__,400
             
-        send_message(activity_setting.user,request.path,request.method,
+        send_message(activity_setting.user.dict_repr(show_online_status=True),
+                     [d.token for d in activity_setting.user.devices.all()],
+                     request.path,request.method,
                      activity_setting.dict_repr())
         
         return Response(status=201,message="Activity setting created.",
@@ -221,7 +223,9 @@ class ActivitySettingAPI(Resource):
             return Response(status=400,
                 message="Could not update activity setting.").__dict__,400
             
-        send_message(setting.user,request.path,request.method,setting.dict_repr())
+        send_message(setting.user.dict_repr(show_online_status=True),
+                     [d.token for d in setting.user.devices.all()],
+                     request.path,request.method,setting.dict_repr())
 
         return Response(status=202,
                         message="Activity setting updated.",
@@ -267,7 +271,9 @@ class ActivitySettingAPI(Resource):
             return Response(status=500,
                 message="Internal error. Changes not committed.").__dict__,500
 
-        send_message(user,request.path,request.method)
+        send_message(user.dict_repr(show_online_status=True),
+                     [d.token for d in user.devices.all()],
+                     request.path,request.method)
 
         return Response(status=200,
             message="Activity setting deleted.").__dict__, 200

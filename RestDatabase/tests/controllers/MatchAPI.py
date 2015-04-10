@@ -12,6 +12,7 @@ class MatchApiTestCase(FitPalsTestCase):
         assert json.loads(resp.data)["message"]=="Match created."
 
         #ensure that test_user1 websocket self.websocket_client1 got update
+        sleep(0.01) #so that the async thread has time to send the message
         received = self.websocket_client1.get_received()
         assert len(received) != 0
         assert received[-1]["args"][0]["path"] == "/matches"
@@ -34,6 +35,7 @@ class MatchApiTestCase(FitPalsTestCase):
                              headers={"Authorization":fitpals_secret2})
 
         #ensure that test_user1 websocket self.websocket_client1 got update
+        sleep(0.01) #so that the async thread has time to send the message
         received = self.websocket_client1.get_received()
         assert len(received) != 0
         assert received[-1]["args"][0]["path"] == "/matches"
@@ -41,6 +43,7 @@ class MatchApiTestCase(FitPalsTestCase):
         assert received[-1]["args"][0]["value"] == json.loads(resp.data)["value"]
 
         #ensure that test_user2 websocket self.websocket_client1 got update
+        sleep(0.01) #so that the async thread has time to send the message
         received = self.websocket_client2.get_received()
         assert len(received) != 0
         match_id = received[-1]["args"][0]["value"]["matched_user_id"]
@@ -174,6 +177,7 @@ class MatchApiTestCase(FitPalsTestCase):
         assert json.loads(resp.data)["message"]=="Match deleted."
 
         #ensure that test_user1 websocket self.websocket_client1 got update
+        sleep(0.01) #so that the async thread has time to send the message
         received = self.websocket_client1.get_received()
         assert len(received) != 0
         assert received[-1]["args"][0]["path"] == "/matches/%d" % match_id

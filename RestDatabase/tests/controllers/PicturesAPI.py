@@ -22,6 +22,7 @@ class PicturesApiTestCase(FitPalsTestCase):
         assert picture == picture_added
 
         #ensure that test_user1 websocket self.websocket_client1 got update
+        sleep(0.01) #so that the async thread has time to send the message
         received = self.websocket_client1.get_received()
         assert len(received) != 0
         assert received[-1]["args"][0]["path"] == "/pictures"
@@ -144,6 +145,7 @@ class PicturesApiTestCase(FitPalsTestCase):
 
 
         #ensure that test_user1 websocket self.websocket_client1 got update
+        sleep(0.01) #so that the async thread has time to send the message
         received = self.websocket_client1.get_received()
         assert len(received) != 0
         assert received[-1]["args"][0]["path"] == "/pictures/%d" % pic1["id"]
@@ -238,6 +240,7 @@ class PicturesApiTestCase(FitPalsTestCase):
         assert json.loads(resp.data)["message"]=="Picture removed."
 
         #ensure that test_user1 websocket self.websocket_client1 got update
+        sleep(0.01) #so that the async thread has time to send the message
         received = self.websocket_client1.get_received()
         assert len(received) != 0
         assert received[-1]["args"][0]["path"] == "/pictures/%d" % pic_id

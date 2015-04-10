@@ -125,8 +125,14 @@ class NewMessagesAPI(Resource):
                 message="Internal Error. Changes not committed.")\
 
         #send async update
-        send_message(thread.user1,request.path,request.method,new_message.dict_repr())
-        send_message(thread.user2,request.path,request.method,new_message.dict_repr())
+        send_message(thread.user1.dict_repr(show_online_status=True),
+                     [d.token for d in thread.user1.devices.all()],
+                     request.path,request.method,
+                     new_message.dict_repr())
+        send_message(thread.user2.dict_repr(show_online_status=True),
+                     [d.token for d in thread.user2.devices.all()],
+                     request.path,request.method,
+                     new_message.dict_repr())
         
         #return success
         return Response(status=201,message="Message created.",
@@ -212,7 +218,9 @@ class MessageThreadsAPI(Resource):
                 message="Internal Error. Changes not committed.")\
                 .__dict__, 500
 
-        send_message(new_thread.user1, request.path, request.method,
+        send_message(new_thread.user1.dict_repr(show_online_status=True),
+                     [d.token for d in new_thread.user1.devices.all()],
+                     request.path, request.method,
                      new_thread.dict_repr())
         
         #return create success!
@@ -269,7 +277,10 @@ class MessageThreadAPI(Resource):
                             message="Internal Error. Changes not committed."),500
         
         #push delete to user's other devices
-        send_message(thread.user1 if user==thread.user1 else thread.user2,
+        send_message(thread.user1.dict_repr(show_online_status=True)\
+                     if user==thread.user1 else\
+                     thread.user2.dict_repr(show_online_status=True),
+                     [d.token for d in thread.user2.devices.all()],
                      request.path,request.method)
         
         #return deletion success!
