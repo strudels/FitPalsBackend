@@ -11,8 +11,11 @@ apns = APNs(use_sandbox=True,
 
 
 thread_q = Queue()
+manager_thread_should_be_alive = True
 def async_notification_thread_manager():
-    while True:
+    global manager_thread_should_be_alive
+    global thread_q
+    while manager_thread_should_be_alive:
         thread = thread_q.get()
         thread.start()
         thread.join()
@@ -45,6 +48,7 @@ def send_message_thread_function(user,tokens,path,http_method,value):
             apns.gateway_server.send_notification(token_hex,payload)
 
 def send_message(user,tokens,path,http_method,value=None):
+    global thread_q
     thread = Thread(target=send_message_thread_function,
                       args=(user,tokens,path,http_method,value,))
     thread_q.put(thread)

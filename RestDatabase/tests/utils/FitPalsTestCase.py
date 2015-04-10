@@ -62,4 +62,5 @@ class FitPalsTestCase(unittest.TestCase):
         self.websocket_client3.emit("join", self.test_user3)
 
     def tearDown(self):
+        AsyncNotifications.manager_thread._Thread__stop()
         reset_app()
