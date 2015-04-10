@@ -153,20 +153,19 @@ def reset_app():
         "Walking" : [
             "IcnWalking.png", 
             "IcnWalkingInactive.png", [
-                [ "Distance", "mile", 0, 30 ],
-                [ "Time", "minute", 1, 120 ]]
+                [ "Pace", "minutes", 15, 60 ]]
         ],
         "Running" : [
             "IcnRunning.png", 
             "IcnRunningInactive.png", [
-                [ "Distance", "mile", 0, 30 ],
-                [ "Time", "minute", 1, 120 ]]
+                [ "Distance", "miles", 2, 20 ],
+                [ "Pace", "minutes/mile", 6, 10 ]]
         ],
         "Biking" : [
             "IcnBiking.png", 
             "IcnBikingInactive.png", [
-                [ "Distance", "mile", 0, 30 ],
-                [ "Time", "minute", 1, 120 ]]
+                [ "Distance", "miles", 5, 30 ],
+                [ "Pace", "miles/hour", 10, 30 ]]
         ]
     }
     for a_name, a_value in activity_info_list.iteritems():
