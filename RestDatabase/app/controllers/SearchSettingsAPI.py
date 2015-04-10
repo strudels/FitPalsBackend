@@ -81,9 +81,10 @@ class SearchSettingsAPI(Resource):
         
         :param int settings_id: Id of search settings.
         
-        :form int friends_only: Set to 1 if user wants friends only; Default is 0
-        :form int men: Set to 0 if user don't wants men; Default is 1
-        :form int women: Set to 1 if user don't wants women; Default is 1
+        :form int available: Set to 1 if user wants to be available; Default is 0.
+        :form int friends_only: Set to 1 if user wants friends only; Default is 0.
+        :form int men: Set to 0 if user don't wants men; Default is 1.
+        :form int women: Set to 1 if user don't wants women; Default is 1.
         :form int age_lower_limit: Set if user want lower age limit. Default is 18.
         :form int age_upper_limit: Set if user want upper age limit. Default is 130.
         http://en.wikipedia.org/wiki/Oldest_people
@@ -96,7 +97,7 @@ class SearchSettingsAPI(Resource):
         parser = reqparse.RequestParser()
         parser.add_argument("Authorization",
             type=str, location="headers", required=True)
-        parser.add_argument("activity_id",
+        parser.add_argument("available",
             type=int, location="form", required=False)
         parser.add_argument("friends_only",
             type=int, location="form", required=False)
@@ -119,6 +120,8 @@ class SearchSettingsAPI(Resource):
             args.men = bool(args.men)
         if type(args.women)==int:
             args.women = bool(args.women)
+        if type(args.available)==int:
+            args.available = bool(args.available)
         
         #get search_settings
         settings = SearchSettings.query.get(settings_id)

@@ -11,13 +11,16 @@ class UsersApiTestCase(FitPalsTestCase):
         resp = self.app.put("/search_settings/%d" % user["search_settings_id"],
                             data=search_settings,
                             headers={"Authorization":user["fitpals_secret"]})
+        assert resp.status_code==202
         resp = self.app.put("/users/%d" % user["id"],
                             data={"longitude":user["longitude"],
                                     "latitude":user["latitude"]},
                             headers={"Authorization":user["fitpals_secret"]})
+        assert resp.status_code==202
         resp = self.app.put("/activity_settings/%d" % activity_setting_id,
                                 data=activity_setting,
                             headers={"Authorization":user["fitpals_secret"]})
+        assert resp.status_code==202
         resp = self.app.get("/users?longitude=40&latitude=20&radius=17000",
                             headers={"Authorization":self.test_user1["fitpals_secret"]})
         assert resp.status_code==200
@@ -101,7 +104,8 @@ class UsersApiTestCase(FitPalsTestCase):
                             headers={"Authorization":self.test_user1["fitpals_secret"]})
         user1_search_settings = {"activity_id":activity_id,
                                   "radius":12, 
-                                  "radius_unit":"mile"}
+                                  "radius_unit":"mile",
+                                 "available":1}
         resp = self.app.put("/search_settings/%d" % self.test_user1["search_settings_id"],
                             data=user1_search_settings,
                             headers={"Authorization":self.test_user1["fitpals_secret"]})
@@ -120,7 +124,8 @@ class UsersApiTestCase(FitPalsTestCase):
         self.test_user2["latitude"] = location2[1]
         user2_search_settings = {"activity_id":activity_id,
                                   "radius":12, 
-                                  "radius_unit":"mile"}
+                                  "radius_unit":"mile",
+                                 "available":1}
         user2_activity_setting = {"user_id":self.test_user2["id"],
                                    "question_id":question_id,
                                    "lower_value":20.4,

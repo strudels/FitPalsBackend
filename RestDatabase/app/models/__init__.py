@@ -16,6 +16,7 @@ class SearchSettings(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, ForeignKey("users.id"))
     user = relationship("User",foreign_keys=[user_id])
+    available = db.Column(db.Boolean, default=False)
     friends_only = db.Column(db.Boolean)
     men = db.Column(db.Boolean)
     women = db.Column(db.Boolean)
@@ -49,10 +50,11 @@ class SearchSettings(db.Model):
         conversion_test = test_unit.to(self._ureg.meter)
         return value
     
-    def __init__(self,user,radius=5,radius_unit="mile",activity=None,
+    def __init__(self,user,available=False,radius=5,radius_unit="mile",activity=None,
                  friends_only=False,men=True,
                  women=True,age_lower_limit=18,age_upper_limit=85):
         self.user = user
+        self.available = available
         self.friends_only = friends_only
         self.men = men
         self.women = women
@@ -65,6 +67,7 @@ class SearchSettings(db.Model):
         return {
             "id":self.id,
             "user_id":self.user_id,
+            "available":self.available,
             "friends_only":self.friends_only,
             "men":self.men,
             "women":self.women,
@@ -92,7 +95,6 @@ class User(db.Model):
     last_updated =\
         db.Column(db.DateTime, default=db.func.now(), onupdate=db.func.now())
     dob = db.Column(db.Date,nullable=False)
-    available = db.Column(db.Boolean, default=False)
     friends = relationship("Friend",
         primaryjoin="User.id==Friend.user_id", lazy="dynamic",
         cascade="save-update, merge, delete")
@@ -146,7 +148,6 @@ class User(db.Model):
         self.search_settings = SearchSettings(self)
         if about_me: self.about_me = about_me
         if dob != None: self.dob = dob
-        self.available = available
         self.name=name
         self.gender=gender
 
@@ -161,7 +162,6 @@ class User(db.Model):
             "dob_year":self.dob_year,
             "dob_month":self.dob_month,
             "dob_day":self.dob_day,
-            "available":self.available,
             "name":self.name,
             "gender":self.gender
         }

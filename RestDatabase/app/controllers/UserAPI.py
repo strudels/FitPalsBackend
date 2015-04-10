@@ -57,8 +57,12 @@ class UsersAPI(Resource):
             return Response(status=401,message="Not Authorized.").__dict__,401
             
         #begin creating query
-        query = User.query.filter(User.id!=user.id).join(User.search_settings)
+        query = User.query.filter(User.id!=user.id)
+        query = query.join(User.search_settings)
         query = query.join(User.activity_settings)
+        
+        #filter out users not marked as available
+        query = query.filter(SearchSettings.available==True)
 
         #apply filters in user's search settings
         if user.search_settings.friends_only:
@@ -142,7 +146,6 @@ class UsersAPI(Resource):
         :form int dob_year: Integer number to represent DOB year.
         :form int dob_month: Integer number to represent DOB month.
         :form int dob_day: Integer number to represent DOB day.
-        :form bool available: Specify whether or not user is available.
         :form str name: Specify user name
         :form str gender: Specify user gender; I DON'T THINK THIS WORKS
 
@@ -172,8 +175,6 @@ class UsersAPI(Resource):
             type=int, location="form", required=False)
         parser.add_argument("dob_day",
             type=int, location="form", required=False)
-        parser.add_argument("available",
-            type=bool, location='form', required=False)
         parser.add_argument("name",
             type=str, location='form', required=False)
         parser.add_argument("gender",
@@ -212,14 +213,12 @@ class UsersAPI(Resource):
                 latitude=args.latitude,
                 about_me=args.about_me,
                 dob=date(args.dob_year,args.dob_month,args.dob_day),
-                available=args.available,
                 name=args.name,
                 gender=args.gender
             )
             db.session.add(new_user)
             db.session.commit()
         except Exception as e:
-            import pdb; pdb.set_trace()
             db.session.rollback()
             return Response(status=500,
                 message="Internal error. Changes not committed.").__dict__,500
@@ -278,7 +277,6 @@ class UserAPI(Resource):
             Longitude must also be specified.
         :form str primary_picture: Update user's primary_picture
         :form str about_me: Update user's about_me
-        :form bool available: Update user's availability
         :form int dob: Update user's DOB; THIS WILL LIKELY CHANGE
 
         :status 401: Not Authorized.
@@ -299,8 +297,6 @@ class UserAPI(Resource):
             type=str, location="form", required=False, action="append")
         parser.add_argument("about_me",
             type=str, location='form', required=False)
-        parser.add_argument("available",
-            type=bool, location='form', required=False)
         parser.add_argument("dob_year",
             type=int, location='form', required=False)
         parser.add_argument("dob_month",
@@ -324,7 +320,6 @@ class UserAPI(Resource):
                 WKTElement("POINT(%f %f)"%(args.longitude,args.latitude))
         if args.primary_picture: user.primary_picture = args.primary_picture
         if args.about_me: user.about_me = args.about_me
-        if args.available: user.available = args.available
         if args.dob_year!=None and args.dob_month!=None and args.dob_day!=None:
             user.dob = date(args.dob_year,args.dob_month,args.dob_day)
         if args.secondary_pictures:
