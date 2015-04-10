@@ -9,3 +9,5 @@ tigase_scripts/apns/certs
 *.pyc
 #*#
 .#*#
+*~
+.*~
