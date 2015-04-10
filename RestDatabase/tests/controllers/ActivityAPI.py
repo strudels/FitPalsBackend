@@ -9,9 +9,9 @@ class ActivitySettingsAPITestCase(FitPalsTestCase):
         
         #These values are based off of the reset_app() function in app/__init__.py
         assert activity["id"] == 1
-        assert activity["name"] == "running"
-        assert activity["active_image"] == "active_image_uri"
-        assert activity["inactive_image"] == "inactive_image_uri"
+        assert activity["name"] == "Walking"
+        assert activity["active_image"] == "IcnWalking.png"
+        assert activity["inactive_image"] == "IcnWalkingInactive.png"
         assert activity["questions"][0] == 1
         assert activity["questions"][1] == 2
         
@@ -21,13 +21,13 @@ class ActivitySettingsAPITestCase(FitPalsTestCase):
         assert json.loads(resp.data)["message"] == "Questions found."
         assert json.loads(resp.data)["value"][0]["activity_id"] == 1
         assert json.loads(resp.data)["value"][0]["question"] == "Distance"
-        assert json.loads(resp.data)["value"][0]["unit_type"] == "kilometer"
+        assert json.loads(resp.data)["value"][0]["unit_type"] == "mile"
         assert json.loads(resp.data)["value"][0]["min_value"] == 0
         assert json.loads(resp.data)["value"][0]["max_value"] == 30
         assert json.loads(resp.data)["value"][1]["activity_id"] == 1
         assert json.loads(resp.data)["value"][1]["question"] == "Time"
         assert json.loads(resp.data)["value"][1]["unit_type"] == "minute"
-        assert json.loads(resp.data)["value"][1]["min_value"] == 0
+        assert json.loads(resp.data)["value"][1]["min_value"] == 1
         assert json.loads(resp.data)["value"][1]["max_value"] == 120
         
     def test_get_activity_questions_activity_not_found(self):
