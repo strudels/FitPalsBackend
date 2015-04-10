@@ -90,7 +90,7 @@ class FriendAPI(Resource):
 
         :reqheader Authorization: facebook secret
         
-        :param int friend_id: Id of friend to delete.
+        :param int friend_id: User Id of friend to delete.
         
         :status 401: Not Authorized.
         :status 404: Friend not found.

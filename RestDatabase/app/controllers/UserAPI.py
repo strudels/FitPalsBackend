@@ -31,7 +31,6 @@ class UsersAPI(Resource):
 
         :query float longitude: Specify a longitude to search by.
         :query float latitude: Specify a latitude to search by.
-        :query int radius: Specify a radius to search by in meters.
         :query int limit: Limit the number of results.
         :query int offset: Return users after a given offset.
         :query int last_updated: Number of seconds since epoch;
