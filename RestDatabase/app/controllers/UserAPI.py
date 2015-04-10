@@ -110,6 +110,8 @@ class UsersAPI(Resource):
                                         ActivitySetting.lower_value_converted >
                                                 s.upper_value_converted)))
                 or_expr = or_(or_expr,and_expr)
+            #also match users that don't have any activity settings
+            or_expr = or_(or_expr, ~User.activity_settings.any())
             query = query.filter(or_expr)
 
         #apply filters in args
