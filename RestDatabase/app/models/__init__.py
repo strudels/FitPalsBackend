@@ -29,7 +29,7 @@ class SearchSettings(db.Model):
     radius_converted = db.Column(db.Float,
                                  default=(_ureg.mile * 1)\
                                  .to(_ureg.meter).magnitude)
-    radius_unit = db.Column(db.String(64), default="mile")
+    radius_unit = db.Column(db.String, default="mile")
     __table_args__ = (CheckConstraint("age_lower_limit < age_upper_limit"),
                       CheckConstraint("age_lower_limit >= 18"),
                       CheckConstraint("age_lower_limit <= 85"),)
@@ -80,15 +80,15 @@ class SearchSettings(db.Model):
 class User(db.Model):
     __tablename__ = "users"
     id = db.Column(db.Integer, primary_key=True)
-    fb_id = db.Column(db.String(2048), unique=True, nullable=False)
-    fitpals_secret = db.Column(db.String(2048), unique=True, nullable=False)
+    fb_id = db.Column(db.String, unique=True, nullable=False)
+    fitpals_secret = db.Column(db.String, unique=True, nullable=False)
     location = db.Column(Geography(geometry_type="POINT",srid=4326))
     search_settings = relationship("SearchSettings",
                                   uselist=False,
                                   backref="parent",
                                   cascade="save-update, merge, delete")
-    about_me = db.Column(db.String(2048))
-    name = db.Column(db.String(256))
+    about_me = db.Column(db.String)
+    name = db.Column(db.String)
     gender = db.Column(db.String(6),nullable=False)
     pictures = relationship("Picture", lazy="dynamic",
                             cascade="save-update, merge, delete")
@@ -188,9 +188,9 @@ def user_message_thread_cascade_delete(mapper, connection, user):
 class UserReport(db.Model):
     __tablename__ = "user_reports"
     id = db.Column(db.Integer, primary_key=True)
-    owner_fb_id = db.Column(db.String(2048))
-    reported_fb_id = db.Column(db.String(2048))
-    reason = db.Column(db.String(2048))
+    owner_fb_id = db.Column(db.String)
+    reported_fb_id = db.Column(db.String)
+    reason = db.Column(db.String)
     reviewed = db.Column(db.Boolean, default=False, nullable=False)
     
     def __init__(self,owner_fb_id,reported_fb_id,reason):
@@ -233,7 +233,7 @@ class Picture(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, ForeignKey("users.id"))
     user = relationship("User",foreign_keys=[user_id])
-    uri = db.Column(db.String(2048), nullable=False)
+    uri = db.Column(db.String, nullable=False)
     ui_index = db.Column(db.Integer)
     top = db.Column(db.Float, nullable=False)
     bottom = db.Column(db.Float, nullable=False)
@@ -304,7 +304,7 @@ class Device(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, ForeignKey("users.id"))
     user = relationship("User",foreign_keys=[user_id])
-    token = db.Column(db.String(2048), nullable=False)
+    token = db.Column(db.String, nullable=False)
     
     __table_args__ = (UniqueConstraint('user_id','token'),)
 
@@ -322,7 +322,7 @@ class Device(db.Model):
 class Activity(db.Model):
     __tablename__ = "activities"
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(64), nullable=False)
+    name = db.Column(db.String, nullable=False)
     questions = relationship("Question", lazy="dynamic",
         cascade="save-update, merge, delete")
     active_image = db.Column(db.String, nullable=True)
@@ -350,8 +350,8 @@ class Question(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     activity_id = db.Column(db.Integer, ForeignKey("activities.id"))
     activity = relationship("Activity", foreign_keys=[activity_id])
-    question = db.Column(db.String(2048), nullable=False)
-    unit_type = db.Column(db.String(128), nullable=False)
+    question = db.Column(db.String, nullable=False)
+    unit_type = db.Column(db.String, nullable=False)
     min_value = db.Column(db.Float, nullable=False)
     max_value = db.Column(db.Float, nullable=False)
     _ureg = UnitRegistry()
@@ -389,7 +389,7 @@ class ActivitySetting(db.Model):
     question = relationship("Question", foreign_keys=[question_id])
     lower_value_converted = db.Column(db.Float)
     upper_value_converted = db.Column(db.Float)
-    unit_type = db.Column(db.String(128), nullable=False)
+    unit_type = db.Column(db.String, nullable=False)
     _ureg = UnitRegistry()
     
     __table_args__ = (CheckConstraint(
@@ -453,7 +453,7 @@ class Message(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     # 0 for user1->user2, 1 for user2->user1
     direction = db.Column(db.Boolean, nullable=False)
-    body = db.Column(db.String(9900), index=True, nullable=False)
+    body = db.Column(db.String, index=True, nullable=False)
     time =\
         db.Column(db.DateTime, default=db.func.now(), onupdate=db.func.now())
     message_thread_id = db.Column(db.Integer, ForeignKey("message_threads.id"))
