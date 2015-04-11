@@ -9,7 +9,6 @@ class APNTokensApiTestCase(FitPalsTestCase):
         assert resp.status_code == 201
         assert json.loads(resp.data)["message"] == "Friend added."
         received_friend = json.loads(resp.data)["value"]
-        del self.test_user2["password"]
         del self.test_user2["fitpals_secret"]
         self.test_user2["online"] = True
         assert self.test_user2 == received_friend

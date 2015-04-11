@@ -176,7 +176,6 @@ class UsersApiTestCase(FitPalsTestCase):
     def test_get_user(self):
         test_user1_public = self.test_user1
         del test_user1_public["fitpals_secret"]
-        del test_user1_public["password"]
         del test_user1_public["online"]
         resp = self.app.get("/users/" + str(self.test_user1["id"]))
         assert resp.status_code==200
@@ -210,7 +209,6 @@ class UsersApiTestCase(FitPalsTestCase):
         self.test_user1["longitude"] = 20.0
         self.test_user1["latitude"] = 20.0
         self.test_user1["about_me"] = "I'm a test user!"
-        del self.test_user1["password"]
         del self.test_user1["fitpals_secret"]
         del self.test_user1["online"]
         

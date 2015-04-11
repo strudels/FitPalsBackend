@@ -29,12 +29,7 @@ class UsersAPI(Resource):
         
         :reqheader Authorization: facebook secret
 
-        :query float longitude: Specify a longitude to search by.
-        :query float latitude: Specify a latitude to search by.
         :query int limit: Limit the number of results.
-        :query int offset: Return users after a given offset.
-        :query int last_updated: Number of seconds since epoch;
-            Return users that were updated before a given time.
 
         :status 401: Not Authorized.
         :status 500: Internal Error.
@@ -44,10 +39,6 @@ class UsersAPI(Resource):
         parser.add_argument("Authorization",
             type=str, location="headers", required=True)
         parser.add_argument("limit",
-            type=int, location="args", required=False)
-        parser.add_argument("offset",
-            type=int, location="args", required=False)
-        parser.add_argument("last_updated",
             type=int, location="args", required=False)
         args = parser.parse_args()
         
@@ -123,10 +114,6 @@ class UsersAPI(Resource):
         else: #user.gender == "female"
             query = query.filter(SearchSettings.women==True)
 
-        #apply filters in args
-        if args.last_updated:
-            query = query.filter(User.last_updated<=args.last_updated)
-        
         #apply gps filter
         other_in_user_range = func.ST_DWithin(user.location, User.location,
             user.search_settings.radius_converted, True)
@@ -136,8 +123,6 @@ class UsersAPI(Resource):
         
         #ensure no repeat users as a result from an earlier join
         query = query.distinct(User.id)
-
-        if args.offset != None: query = query.offset(args.offset)
 
         if args.limit != None: users = query.limit(args.limit)
         users = [u.dict_repr() for u in query.all()]

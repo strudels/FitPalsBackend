@@ -267,7 +267,7 @@ Contents:
 
    Get all pictures for a user.
 
-   :Parameters:
+   :Query Parameters:
       * **user_id** (*int*) -- Id of user.
 
    :Status Codes:
@@ -416,16 +416,7 @@ Contents:
       * Authorization -- facebook secret
 
    :Query Parameters:
-      * **longitude** (*float*) -- Specify a longitude to search by.
-
-      * **latitude** (*float*) -- Specify a latitude to search by.
-
       * **limit** (*int*) -- Limit the number of results.
-
-      * **offset** (*int*) -- Return users after a given offset.
-
-      * **last_updated** (*int*) -- Number of seconds since epoch;
-        Return users that were updated before a given time.
 
    :Status Codes:
       * 401 Unauthorized -- Not Authorized.
@@ -456,9 +447,6 @@ Contents:
       * **int dob_month** -- Integer number to represent DOB month.
 
       * **int dob_day** -- Integer number to represent DOB day.
-
-      * **bool available** -- Specify whether or not user is
-        available.
 
       * **str name** -- Specify user name
 
@@ -592,9 +580,8 @@ Contents:
 
    Create new search setting.
 
-   NOTE bool fields friends_only, men_only, and women_only are encoded
-   as int because reqparse is dumb and I should've used something
-   else.
+   NOTE bool fields friends_only, men, and women are encoded as int
+   because reqparse is dumb and I should've used something else.
 
    :Request Headers:
       * Authorization -- facebook secret
@@ -603,14 +590,16 @@ Contents:
       * **settings_id** (*int*) -- Id of search settings.
 
    :Form Parameters:
+      * **int available** -- Set to 1 if user wants to be available;
+        Default is 0.
+
       * **int friends_only** -- Set to 1 if user wants friends only;
-        Default is 0
+        Default is 0.
 
-      * **int men_only** -- Set to 1 if user wants men only; Default
-        is 0
+      * **int men** -- Set to 0 if user don't wants men; Default is 1.
 
-      * **int women_only** -- Set to 1 if user wants women only;
-        Default is 0
+      * **int women** -- Set to 1 if user don't wants women; Default
+        is 1.
 
       * **int age_lower_limit** -- Set if user want lower age limit.
         Default is 18.
@@ -774,8 +763,6 @@ Contents:
       * **str primary_picture** -- Update user's primary_picture
 
       * **str about_me** -- Update user's about_me
-
-      * **bool available** -- Update user's availability
 
       * **int dob** -- Update user's DOB; THIS WILL LIKELY CHANGE
 

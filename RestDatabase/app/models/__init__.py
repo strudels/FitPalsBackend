@@ -92,8 +92,6 @@ class User(db.Model):
     gender = db.Column(db.String(6),nullable=False)
     pictures = relationship("Picture", lazy="dynamic",
                             cascade="save-update, merge, delete")
-    last_updated =\
-        db.Column(db.DateTime, default=db.func.now(), onupdate=db.func.now())
     dob = db.Column(db.Date,nullable=False)
     friends = relationship("Friend",
         primaryjoin="User.id==Friend.user_id", lazy="dynamic",
@@ -106,10 +104,6 @@ class User(db.Model):
     activity_settings = relationship("ActivitySetting", lazy="dynamic",
         cascade="save-update, merge, delete")
     
-    @hybrid_property
-    def password(self):
-        return self.fitpals_secret
-
     @hybrid_property
     def longitude(self):
         return db.session.query(ST_X(self.location)).first()[0]
@@ -175,7 +169,6 @@ class User(db.Model):
         if not public:
             dict_repr["online"] = self.online
             dict_repr["fitpals_secret"] = self.fitpals_secret
-            dict_repr["password"] = self.password
         return dict_repr
        
 @event.listens_for(User, "before_delete")
