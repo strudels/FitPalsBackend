@@ -31,32 +31,36 @@ class NewMessagesAPI(Resource):
             type=int, location="args", required=False)
         args = parser.parse_args()
 
-        #get user from Authorization
-        user = User.query.filter(User.fitpals_secret==args.Authorization).first()
-        if not user:
-            return Response(status=401, message="Not Authorized.")\
-                .__dict__, 401
-        
-        #get thread from database
-        thread = MessageThread.query.get(args.message_thread_id)
-        if not thread or\
-           (thread.user1==user and thread.user1_deleted==True) or\
-           (thread.user2==user and thread.user2_deleted==True):
-            return Response(status=404,
-                message="Message thread not found.")\
-                .__dict__, 404
+        try:
+            #get user from Authorization
+            user = User.query.filter(User.fitpals_secret==args.Authorization).first()
+            if not user:
+                return Response(status=401, message="Not Authorized.")\
+                    .__dict__, 401
 
-        #ensure user is authorized to read thread
-        if thread.user1 != user and thread.user2 != user:
-            return Response(status=401,message="Not Authorized.").__dict__,401
-            
-        if args.since != None:
-            messages = thread.messages.filter(Message.time>=args.since).all()
-        else: messages = thread.messages.all()
-            
-        #return thread
-        return Response(status=200, message="Messages found.",
-                        value=[m.dict_repr() for m in messages]).__dict__, 200
+            #get thread from database
+            thread = MessageThread.query.get(args.message_thread_id)
+            if not thread or\
+            (thread.user1==user and thread.user1_deleted==True) or\
+            (thread.user2==user and thread.user2_deleted==True):
+                return Response(status=404,
+                    message="Message thread not found.")\
+                    .__dict__, 404
+
+            #ensure user is authorized to read thread
+            if thread.user1 != user and thread.user2 != user:
+                return Response(status=401,message="Not Authorized.").__dict__,401
+
+            if args.since != None:
+                messages = thread.messages.filter(Message.time>=args.since).all()
+            else: messages = thread.messages.all()
+
+            #return thread
+            return Response(status=200, message="Messages found.",
+                            value=[m.dict_repr() for m in messages]).__dict__, 200
+        except Exception as e:
+            app.logger.error(e)
+            return Response(status=500, message="Internal server error.").__dict__,500
 
     #create new message
     def post(self):
@@ -73,10 +77,10 @@ class NewMessagesAPI(Resource):
                               in the model is actually boolean, where 0->False
                               and 1->True.
 
+        :status 400: Could not create message.
         :status 401: Not Authorized.
         :status 403: Message thread has been closed.
         :status 404: Message thread not found.
-        :status 500: Internal Error. Changes not committed.
         :status 201: Message created.
         """
         parser = reqparse.RequestParser()
@@ -90,53 +94,56 @@ class NewMessagesAPI(Resource):
             type=int, location="form", required=True)
         args = parser.parse_args()
 
-        #get user from Authorization
-        user = User.query.filter(User.fitpals_secret==args.Authorization).first()
-        if not user:
-            return Response(status=401, message="Not Authorized.")\
-                .__dict__, 401
-        
-        #get thread from message_thread_id
-        thread = MessageThread.query.get(args.message_thread_id)
-        if not thread:
-            return Response(status=404,
-                message="Message thread not found.").__dict__, 404
-
-        #ensure that user is authorized to add the message to the thread
-        if not ((user == thread.user1 and args.direction==0) or\
-           (user == thread.user2 and args.direction==1)):
-            return Response(status=401,message="Not Authorized.").__dict__,401
-            
-        #Don't allow a user to send messages to a thread deleted by another user
-        if thread.user1_deleted or thread.user2_deleted:
-            return Response(status=403,
-                message="Message thread has been closed.").__dict__, 403
-
-        #add message to thread
-        new_message = Message(thread, bool(args.direction), args.body)
-        thread.messages.append(new_message)
-
-        #commit changes to the db
         try:
-            db.session.commit()
-        except:
-            db.session.rollback()
-            return Response(status=500,
-                message="Internal Error. Changes not committed.")\
+            #get user from Authorization
+            user = User.query.filter(User.fitpals_secret==args.Authorization).first()
+            if not user:
+                return Response(status=401, message="Not Authorized.")\
+                    .__dict__, 401
 
-        #send async update
-        send_message(thread.user1.dict_repr(show_online_status=True),
-                     [d.token for d in thread.user1.devices.all()],
-                     request.path,request.method,
-                     new_message.dict_repr())
-        send_message(thread.user2.dict_repr(show_online_status=True),
-                     [d.token for d in thread.user2.devices.all()],
-                     request.path,request.method,
-                     new_message.dict_repr())
-        
-        #return success
-        return Response(status=201,message="Message created.",
-                        value=new_message.dict_repr()).__dict__, 201
+            #get thread from message_thread_id
+            thread = MessageThread.query.get(args.message_thread_id)
+            if not thread:
+                return Response(status=404,
+                    message="Message thread not found.").__dict__, 404
+
+            #ensure that user is authorized to add the message to the thread
+            if not ((user == thread.user1 and args.direction==0) or\
+            (user == thread.user2 and args.direction==1)):
+                return Response(status=401,message="Not Authorized.").__dict__,401
+
+            #Don't allow a user to send messages to a thread deleted by another user
+            if thread.user1_deleted or thread.user2_deleted:
+                return Response(status=403,
+                    message="Message thread has been closed.").__dict__, 403
+
+            #add message to thread
+            new_message = Message(thread, bool(args.direction), args.body)
+            thread.messages.append(new_message)
+
+            #commit changes to the db
+            db.session.commit()
+
+            #send async update
+            send_message(thread.user1.dict_repr(show_online_status=True),
+                        [d.token for d in thread.user1.devices.all()],
+                        request.path,request.method,
+                        new_message.dict_repr())
+            send_message(thread.user2.dict_repr(show_online_status=True),
+                        [d.token for d in thread.user2.devices.all()],
+                        request.path,request.method,
+                        new_message.dict_repr())
+
+            #return success
+            return Response(status=201,message="Message created.",
+                            value=new_message.dict_repr()).__dict__, 201
+        except Exception as e:
+            if exception_is_validation_error(e):
+                return Response(status=400,
+                    message="Could not create message.").__dict__,400
+            db.session.rollback()
+            app.logger.error(e)
+            return Response(status=500, message="Internal server error.").__dict__,500
         
 @api.resource("/message_threads")
 class MessageThreadsAPI(Resource):
@@ -155,23 +162,27 @@ class MessageThreadsAPI(Resource):
             type=str, location="headers", required=True)
         args = parser.parse_args()
         
-        #get user from Authorization
-        user = User.query.filter(User.fitpals_secret==args.Authorization).first()
-        if not user:
-            return Response(status=401, message="Not Authorized.")\
-                .__dict__, 401
-        
-        #get threads for user
-        threads = MessageThread.query\
-            .filter(
-                    or_(
-                        and_(MessageThread.user1==user,
-                                MessageThread.user1_deleted==False),
-                        and_(MessageThread.user2==user,
-                                MessageThread.user2_deleted==False))).all()
-        
-        return Response(status=200, message="Message threads found.",
-                        value=[t.dict_repr() for t in threads]).__dict__,200
+        try:
+            #get user from Authorization
+            user = User.query.filter(User.fitpals_secret==args.Authorization).first()
+            if not user:
+                return Response(status=401, message="Not Authorized.")\
+                    .__dict__, 401
+
+            #get threads for user
+            threads = MessageThread.query\
+                .filter(
+                        or_(
+                            and_(MessageThread.user1==user,
+                                    MessageThread.user1_deleted==False),
+                            and_(MessageThread.user2==user,
+                                    MessageThread.user2_deleted==False))).all()
+
+            return Response(status=200, message="Message threads found.",
+                            value=[t.dict_repr() for t in threads]).__dict__,200
+        except Exception as e:
+            app.logger.error(e)
+            return Response(status=500, message="Internal server error.").__dict__,500
     
     #create new message thread
     def post(self):
@@ -182,9 +193,9 @@ class MessageThreadsAPI(Resource):
         
         :form int user2_id: Id of user2 for new message thread.
         
+        :status 400: Could not create message thread.
         :status 401: Not Authorized.
         :status 404: user2_id not found.
-        :status 500: Internal Error. Changes not committed.
         :status 201: Message thread created.
         """
         parser = reqparse.RequestParser()
@@ -194,38 +205,40 @@ class MessageThreadsAPI(Resource):
             type=int, location="form", required=True)
         args = parser.parse_args()
         
-        #get user from Authorization
-        user1 = User.query.filter(User.fitpals_secret==args.Authorization).first()
-        if not user1:
-            return Response(status=401, message="Not Authorized.")\
-                .__dict__, 401
-            
-        #get user 2
-        user2 = User.query.get(args.user2_id)
-        if not user2:
-            return Response(status=404,
-                            message="user2_id not found.").__dict__,404
-
-        new_thread = MessageThread(user1, user2)
-        db.session.add(new_thread)
-        
-        #commit changes to the db
         try:
-            db.session.commit()
-        except:
-            db.session.rollback()
-            return Response(status=500,
-                message="Internal Error. Changes not committed.")\
-                .__dict__, 500
+            #get user from Authorization
+            user1 = User.query.filter(User.fitpals_secret==args.Authorization).first()
+            if not user1:
+                return Response(status=401, message="Not Authorized.")\
+                    .__dict__, 401
 
-        send_message(new_thread.user1.dict_repr(show_online_status=True),
-                     [d.token for d in new_thread.user1.devices.all()],
-                     request.path, request.method,
-                     new_thread.dict_repr())
-        
-        #return create success!
-        return Response(status=201, message="Message thread created.",
-                        value=new_thread.dict_repr()).__dict__,201
+            #get user 2
+            user2 = User.query.get(args.user2_id)
+            if not user2:
+                return Response(status=404,
+                                message="user2_id not found.").__dict__,404
+
+            new_thread = MessageThread(user1, user2)
+            db.session.add(new_thread)
+
+            #commit changes to the db
+            db.session.commit()
+
+            send_message(new_thread.user1.dict_repr(show_online_status=True),
+                        [d.token for d in new_thread.user1.devices.all()],
+                        request.path, request.method,
+                        new_thread.dict_repr())
+
+            #return create success!
+            return Response(status=201, message="Message thread created.",
+                            value=new_thread.dict_repr()).__dict__,201
+        except Exception as e:
+            if exception_is_validation_error(e):
+                return Response(status=400,
+                    message="Could not create message thread.").__dict__,400
+            db.session.rollback()
+            app.logger.error(e)
+            return Response(status=500, message="Internal server error.").__dict__,500
         
 @api.resource("/message_threads/<int:thread_id>")
 class MessageThreadAPI(Resource):
@@ -247,42 +260,42 @@ class MessageThreadAPI(Resource):
             type=str, location="headers", required=True)
         args = parser.parse_args()
 
-        #get user from Authorization
-        user = User.query.filter(User.fitpals_secret==args.Authorization).first()
-        if not user:
-            return Response(status=401, message="Not Authorized.")\
-                .__dict__, 401
-
-        #get thread from database
-        thread = MessageThread.query.get(thread_id)
-        if not thread:
-            return Response(status=404,
-                message="Message thread not found.")\
-                .__dict__, 404
-            
-        #delete thread for user if user is authorized
-        if user == thread.user1:
-            thread.user1_deleted = True
-        elif user == thread.user2:
-            thread.user2_deleted = True
-        else:
-            return Response(status=401,message="Not Authorized.").__dict__,401
-            
-        #commit changes to the db
         try:
+            #get user from Authorization
+            user = User.query.filter(User.fitpals_secret==args.Authorization).first()
+            if not user:
+                return Response(status=401, message="Not Authorized.")\
+                    .__dict__, 401
+
+            #get thread from database
+            thread = MessageThread.query.get(thread_id)
+            if not thread:
+                return Response(status=404,
+                    message="Message thread not found.")\
+                    .__dict__, 404
+
+            #delete thread for user if user is authorized
+            if user == thread.user1:
+                thread.user1_deleted = True
+            elif user == thread.user2:
+                thread.user2_deleted = True
+            else:
+                return Response(status=401,message="Not Authorized.").__dict__,401
+
+            #commit changes to the db
             db.session.commit()
-        except:
+
+            #push delete to user's other devices
+            send_message(thread.user1.dict_repr(show_online_status=True)\
+                        if user==thread.user1 else\
+                        thread.user2.dict_repr(show_online_status=True),
+                        [d.token for d in thread.user2.devices.all()],
+                        request.path,request.method)
+
+            #return deletion success!
+            return Response(status=200, message="Message thread deleted.")\
+                .__dict__,200
+        except Exception as e:
             db.session.rollback()
-            return Response(status=500,
-                            message="Internal Error. Changes not committed."),500
-        
-        #push delete to user's other devices
-        send_message(thread.user1.dict_repr(show_online_status=True)\
-                     if user==thread.user1 else\
-                     thread.user2.dict_repr(show_online_status=True),
-                     [d.token for d in thread.user2.devices.all()],
-                     request.path,request.method)
-        
-        #return deletion success!
-        return Response(status=200, message="Message thread deleted.")\
-            .__dict__,200
+            app.logger.error(e)
+            return Response(status=500, message="Internal server error.").__dict__,500
