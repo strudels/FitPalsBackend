@@ -24,6 +24,7 @@ class ActivitiesAPI(Resource):
                 value=[a.dict_repr() for a in Activity.query.all()]).__dict__, 200
         except Exception as e:
             app.logger.error(e)
+            return Response(status=500, message="Internal server error.").__dict__,500
         
 @api.resource("/activities/<int:activity_id>/questions")
 class ActivityQuestionsAPI(Resource):
