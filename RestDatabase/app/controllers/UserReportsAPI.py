@@ -4,7 +4,7 @@ from dateutil.relativedelta import relativedelta
 import time
 from datetime import date
 
-from app import db, api
+from app import db, api, app, exception_is_validation_error
 from app.models import *
 from app.utils.Response import Response
 
@@ -22,7 +22,6 @@ class UserReportsAPI(Resource):
         
         :status 401: Not Authorized.
         :status 404: fb_id not found.
-        :status 500: Internal error. Changes not committed.
         :status 201: User report created.
         """
         parser = reqparse.RequestParser()
@@ -36,30 +35,34 @@ class UserReportsAPI(Resource):
             type=str,location="form",required=True)
         args = parser.parse_args()
         
-        #get owner from db
-        owner = User.query.filter(User.fb_id==args.owner_fb_id).first()
-        if not owner:
-            return Response(status=404,message="fb_id not found.").__dict__,404
-            
-        #ensure owner is authorized
-        if owner.fitpals_secret != args.Authorization:
-            return Response(status=401,message="Not Authorized.").__dict__,401
-            
-        #get reported_user from db
-        reported_user = User.query.filter(User.fb_id==args.reported_fb_id).first()
-        if not reported_user:
-            return Response(status=404,message="fb_id not found.").__dict__,404
-            
-        #create new UserReport
         try:
-            user_report = UserReport(args.owner_fb_id,
-                                     args.reported_fb_id,args.reason)
-            db.session.add(user_report)
-            db.session.commit()
-        except:
-            db.session.rollback()
-            return Response(status=500,
-                message="Internal error. Changes not committed.").__dict__,500
-        
-        return Response(status=201, message="User report created.",
-                        value=user_report.dict_repr()).__dict__,201
+            #get owner from db
+            owner = User.query.filter(User.fb_id==args.owner_fb_id).first()
+            if not owner:
+                return Response(status=404,message="fb_id not found.").__dict__,404
+
+            #ensure owner is authorized
+            if owner.fitpals_secret != args.Authorization:
+                return Response(status=401,message="Not Authorized.").__dict__,401
+
+            #get reported_user from db
+            reported_user = User.query.filter(User.fb_id==args.reported_fb_id).first()
+            if not reported_user:
+                return Response(status=404,message="fb_id not found.").__dict__,404
+
+            #create new UserReport
+            try:
+                user_report = UserReport(args.owner_fb_id,
+                                        args.reported_fb_id,args.reason)
+                db.session.add(user_report)
+                db.session.commit()
+            except:
+                db.session.rollback()
+                return Response(status=500,
+                    message="Internal error. Changes not committed.").__dict__,500
+
+            return Response(status=201, message="User report created.",
+                            value=user_report.dict_repr()).__dict__,201
+        except Exception as e:
+            app.logger.error(e)
+            return Response(status=500, message="Internal server error.").__dict__,500
