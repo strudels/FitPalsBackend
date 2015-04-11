@@ -103,14 +103,13 @@ Contents:
       * **str unit_type** -- Name of type of unit; i.e. meter
 
    :Status Codes:
+      * 400 Bad Request -- Activity setting data invalid.
+
       * 401 Unauthorized -- Not Authorized.
 
       * 404 Not Found -- Question not found.
 
       * 404 Not Found -- User not found.
-
-      * 500 Internal Server Error -- Could not create activity
-        setting.
 
       * 201 Created -- Activity setting created.
 
@@ -149,12 +148,11 @@ Contents:
       * **int user2_id** -- Id of user2 for new message thread.
 
    :Status Codes:
+      * 400 Bad Request -- Message thread data invalid.
+
       * 401 Unauthorized -- Not Authorized.
 
       * 404 Not Found -- user2_id not found.
-
-      * 500 Internal Server Error -- Internal Error. Changes not
-        committed.
 
       * 201 Created -- Message thread created.
 
@@ -192,9 +190,6 @@ Contents:
       * 401 Unauthorized -- Not Authorized.
 
       * 404 Not Found -- fb_id not found.
-
-      * 500 Internal Server Error -- Internal error. Changes not
-        committed.
 
       * 201 Created -- User report created.
 
@@ -252,14 +247,13 @@ Contents:
         boolean, where 0->False and 1->True.
 
    :Status Codes:
+      * 400 Bad Request -- Message data invalid.
+
       * 401 Unauthorized -- Not Authorized.
 
       * 403 Forbidden -- Message thread has been closed.
 
       * 404 Not Found -- Message thread not found.
-
-      * 500 Internal Server Error -- Internal Error. Changes not
-        committed.
 
       * 201 Created -- Message created.
 
@@ -323,7 +317,7 @@ Contents:
       * **str token** -- device token to be posted
 
    :Status Codes:
-      * 400 Bad Request -- Could not register device.
+      * 400 Bad Request -- Device data invalid.
 
       * 401 Unauthorized -- Not Authorized.
 
@@ -365,7 +359,7 @@ Contents:
         for False, 1 for True.
 
    :Status Codes:
-      * 400 Bad Request -- Could not create match.
+      * 400 Bad Request -- Match data invalid.
 
       * 401 Unauthorized -- Not Authorized.
 
@@ -398,12 +392,11 @@ Contents:
       * **int id** -- Id of user to be added to friends list.
 
    :Status Codes:
+      * 400 Bad Request -- Friend data invalid.
+
       * 401 Unauthorized -- Not Authorized.
 
       * 404 Not Found -- User not found.
-
-      * 500 Internal Server Error -- Internal error. Changes not
-        committed.
 
       * 201 Created -- Friend added.
 
@@ -454,14 +447,9 @@ Contents:
         WORKS
 
    :Status Codes:
-      * 400 Bad Request -- Must specify DOB.
-
-      * 400 Bad Request -- Could not create user.
+      * 400 Bad Request -- Invalid user data.
 
       * 401 Unauthorized -- Not Authorized.
-
-      * 500 Internal Server Error -- Internal error. Changes not
-        committed.
 
       * 200 OK -- User found.
 
@@ -514,7 +502,7 @@ Contents:
       * **str unit_type** -- Name of type of unit; i.e. meter
 
    :Status Codes:
-      * 400 Bad Request -- Could not update activity setting.
+      * 400 Bad Request -- Activity settings data invalid.
 
       * 401 Unauthorized -- Not Authorized.
 
@@ -610,7 +598,7 @@ Contents:
    http://en.wikipedia.org/wiki/Oldest_people
 
    :Status Codes:
-      * 400 Bad Request -- Search settings could not be updated.
+      * 400 Bad Request -- Search settings data invalid.
 
       * 401 Unauthorized -- Not Authorized.
 
@@ -680,8 +668,6 @@ Contents:
       * Authorization -- facebook secret
 
    :Status Codes:
-      * 400 Bad Request -- Could not delete device.
-
       * 401 Unauthorized -- Not Authorized.
 
       * 404 Not Found -- Device not found.
@@ -699,8 +685,6 @@ Contents:
       * **match_id** (*int*) -- Id for specific match.
 
    :Status Codes:
-      * 400 Bad Request -- Match could not be deleted.
-
       * 401 Unauthorized -- Not Authorized.
 
       * 404 Not Found -- Match not found.
