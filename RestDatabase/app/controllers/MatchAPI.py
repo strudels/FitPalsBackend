@@ -67,7 +67,7 @@ class MatchesAPI(Resource):
         :form bool liked: If specified,
             sets new match liked. Set to 0 for False, 1 for True.
 
-        :status 400: Could not create match.
+        :status 400: Match data invalid.
         :status 401: Not Authorized.
         :status 404: User not found.
         :status 404: Match user not found.
@@ -126,7 +126,7 @@ class MatchesAPI(Resource):
         except Exception as e:
             if exception_is_validation_error(e):
                 return Response(status=400,
-                    message="Could not create match.").__dict__,400
+                    message="Match data invalid.").__dict__,400
             db.session.rollback()
             app.logger.error(e)
             return Response(status=500, message="Internal server error.").__dict__,500

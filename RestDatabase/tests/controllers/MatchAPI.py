@@ -96,7 +96,7 @@ class MatchApiTestCase(FitPalsTestCase):
                                    "liked":1},
                              headers={"Authorization":fitpals_secret})
         assert resp.status_code == 400
-        assert json.loads(resp.data)["message"]=="Could not create match."
+        assert json.loads(resp.data)["message"]=="Match data invalid."
         
     def test_get_matches(self):
         #create match to get
