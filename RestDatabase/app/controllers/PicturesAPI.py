@@ -5,7 +5,7 @@ from datetime import datetime
 from dateutil.relativedelta import relativedelta
 import time
 
-from app import db, api
+from app import db, api, app, exception_is_validation_error
 from app.utils.AsyncNotifications import send_message
 from app.models import *
 from app.utils.Response import Response
@@ -27,15 +27,19 @@ class PicturesAPI(Resource):
             type=int, location="args", required=True)
         args = parser.parse_args()
 
-        #get user from database
-        user = User.query.filter(User.id==args.user_id).first()
-        if not user:
-            return Response(status=404,
-                message="User not found.").__dict__,404
+        try:
+            #get user from database
+            user = User.query.filter(User.id==args.user_id).first()
+            if not user:
+                return Response(status=404,
+                    message="User not found.").__dict__,404
 
-        return Response(status=200, message="Pictures found.",
-            value=[p.dict_repr() for p in user.pictures.all()])\
-            .__dict__, 200
+            return Response(status=200, message="Pictures found.",
+                value=[p.dict_repr() for p in user.pictures.all()])\
+                .__dict__, 200
+        except Exception as e:
+            app.logger.error(e)
+            return Response(status=500, message="Internal server error.").__dict__,500
 
     def post(self):
         """
@@ -76,45 +80,48 @@ class PicturesAPI(Resource):
             type=str, location="headers", required=True)
         args = parser.parse_args()
 
-        #get user from database
-        user = User.query.filter(User.id==args.user_id).first()
-        if not user:
-            return Response(status=404,
-                message="User not found.").__dict__,404
+        try:
+            #get user from database
+            user = User.query.filter(User.id==args.user_id).first()
+            if not user:
+                return Response(status=404,
+                    message="User not found.").__dict__,404
 
-        #ensure user is valid by checking if fb_id is correct
-        if user.fitpals_secret != args.Authorization:
-            return Response(status=401,message="Not Authorized.").__dict__,401
-            
-        if args.ui_index in [p.ui_index for p in user.pictures.all()]:
-            user.pictures.delete(
-                Picture.query.filter(Picture.ui_index==args.ui_index).first())
+            #ensure user is valid by checking if fb_id is correct
+            if user.fitpals_secret != args.Authorization:
+                return Response(status=401,message="Not Authorized.").__dict__,401
 
-        try: 
+            if args.ui_index in [p.ui_index for p in user.pictures.all()]:
+                user.pictures.delete(
+                    Picture.query.filter(Picture.ui_index==args.ui_index).first())
+
             picture = Picture(user,
-                               args.uri,
-                               args.ui_index,
-                               args.top,
-                               args.bottom,
-                               args.left,
-                               args.right)
+                            args.uri,
+                            args.ui_index,
+                            args.top,
+                            args.bottom,
+                            args.left,
+                            args.right)
             user.pictures.append(picture)
             db.session.commit()
-        except:
+
+            #send new picture to user's other devices
+            send_message(picture.user.dict_repr(show_online_status=True),
+                        [d.token for d in picture.user.devices.all()],
+                        request.path,
+                        request.method,
+                        picture.dict_repr())
+
+
+            return Response(status=201, message="Picture added.",
+                            value=picture.dict_repr()).__dict__,201
+        except Exception as e:
+            if exception_is_validation_error(e):
+                return Response(status=400,
+                    message="Picture data invalid.").__dict__,400
             db.session.rollback()
-            return Response(status=400, message="Picture data invalid.")\
-              .__dict__,400
-            
-        #send new picture to user's other devices
-        send_message(picture.user.dict_repr(show_online_status=True),
-                     [d.token for d in picture.user.devices.all()],
-                     request.path,
-                     request.method,
-                     picture.dict_repr())
-
-
-        return Response(status=201, message="Picture added.",
-                        value=picture.dict_repr()).__dict__,201
+            app.logger.error(e)
+            return Response(status=500, message="Internal server error.").__dict__,500
 
 @api.resource("/pictures/<int:pic_id>")
 class PictureAPI(Resource):
@@ -156,16 +163,16 @@ class PictureAPI(Resource):
             type=float, location="form", required=False)
         args = parser.parse_args()
         
-        pic = Picture.query.get(pic_id)
-        if not pic:
-            return Response(status=404,
-                message="Picture not found.").__dict__,404
-
-        #ensure user is valid by checking if fb_id is correct
-        if pic.user.fitpals_secret != args.Authorization:
-            return Response(status=401,message="Not Authorized.").__dict__,401
-            
         try:
+            pic = Picture.query.get(pic_id)
+            if not pic:
+                return Response(status=404,
+                    message="Picture not found.").__dict__,404
+
+            #ensure user is valid by checking if fb_id is correct
+            if pic.user.fitpals_secret != args.Authorization:
+                return Response(status=401,message="Not Authorized.").__dict__,401
+
             if args.uri != None: pic.uri = args.uri
             if args.ui_index != None:
                 old_pic = Picture.query.filter(
@@ -177,18 +184,21 @@ class PictureAPI(Resource):
             if args.left != None: pic.left = args.left
             if args.right != None: pic.right = args.right
             db.session.commit()
-        except:
-            db.session.rollback()
-            return Response(status=400, message="Picture data invalid.")\
-              .__dict__, 400
 
-        #send pic update to user's other devices
-        send_message(pic.user.dict_repr(show_online_status=True),
-                     [d.token for d in pic.user.devices.all()],
-                     request.path, request.method, pic.dict_repr())
-        
-        return Response(status=202, message="Picture updated.",
-                        value=pic.dict_repr()).__dict__, 202
+            #send pic update to user's other devices
+            send_message(pic.user.dict_repr(show_online_status=True),
+                        [d.token for d in pic.user.devices.all()],
+                        request.path, request.method, pic.dict_repr())
+
+            return Response(status=202, message="Picture updated.",
+                            value=pic.dict_repr()).__dict__, 202
+        except Exception as e:
+            if exception_is_validation_error(e):
+                return Response(status=400,
+                    message="Picture data invalid.").__dict__,400
+            db.session.rollback()
+            app.logger.error(e)
+            return Response(status=500, message="Internal server error.").__dict__,500
 
     #delete either a single, or all pictures for a user
     def delete(self, pic_id):
@@ -209,29 +219,34 @@ class PictureAPI(Resource):
             type=str, location="headers", required=True)
         args = parser.parse_args()
         
-        pic = Picture.query.get(pic_id)
-        if not pic:
-            return Response(status=404,
-                message="Picture not found.").__dict__,404
-        user = pic.user
-
-        #ensure user is valid by checking if fb_id is correct
-        if user.fitpals_secret != args.Authorization:
-            return Response(status=401,message="Not Authorized.").__dict__,401
-
         try:
-            #delete picture
-            user.pictures.remove(pic)
-            db.session.delete(pic)
-            db.session.commit()
-        except:
+            pic = Picture.query.get(pic_id)
+            if not pic:
+                return Response(status=404,
+                    message="Picture not found.").__dict__,404
+            user = pic.user
+
+            #ensure user is valid by checking if fb_id is correct
+            if user.fitpals_secret != args.Authorization:
+                return Response(status=401,message="Not Authorized.").__dict__,401
+
+            try:
+                #delete picture
+                user.pictures.remove(pic)
+                db.session.delete(pic)
+                db.session.commit()
+            except:
+                db.session.rollback()
+                return Response(status=500,
+                    message="Internal error. Changes not committed.").__dict__,500
+
+            #alert user that picture has been deleted
+            send_message(user.dict_repr(show_online_status=True),
+                        [d.token for d in user.devices.all()],
+                        request.path, request.method)
+
+            return Response(status=200, message="Picture removed.").__dict__, 200
+        except Exception as e:
             db.session.rollback()
-            return Response(status=500,
-                message="Internal error. Changes not committed.").__dict__,500
-
-        #alert user that picture has been deleted
-        send_message(user.dict_repr(show_online_status=True),
-                     [d.token for d in user.devices.all()],
-                     request.path, request.method)
-
-        return Response(status=200, message="Picture removed.").__dict__, 200
+            app.logger.error(e)
+            return Response(status=500, message="Internal server error.").__dict__,500
