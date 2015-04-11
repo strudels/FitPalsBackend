@@ -1,7 +1,7 @@
 from flask.ext.restful import Resource, reqparse, Api
 from flask import request
 
-from app import db, api
+from app import db, api, app, exception_is_validation_error
 from app.models import *
 from app.utils.Response import Response
 from app.utils.AsyncNotifications import send_message
