@@ -49,7 +49,7 @@ class FriendsAPI(Resource):
         
         :form int id: Id of user to be added to friends list.
         
-        :status 400: Could not create friend.
+        :status 400: Friend data invalid.
         :status 401: Not Authorized.
         :status 404: User not found.
         :status 201: Friend added.
@@ -83,7 +83,7 @@ class FriendsAPI(Resource):
         except Exception as e:
             if exception_is_validation_error(e):
                 return Response(status=400,
-                    message="Could not create friend.").__dict__,400
+                    message="Friend data invalid.").__dict__,400
             db.session.rollback()
             app.logger.error(e)
             return Response(status=500, message="Internal server error.").__dict__,500
