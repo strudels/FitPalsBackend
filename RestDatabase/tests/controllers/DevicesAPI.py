@@ -49,7 +49,7 @@ class APNTokensApiTestCase(FitPalsTestCase):
                                    "user_id":self.test_user1["id"]},
                              headers={"Authorization":fitpals_secret})
         assert resp.status_code==400
-        assert json.loads(resp.data)["message"]=="Could not register device."
+        assert json.loads(resp.data)["message"]=="Device data invalid."
 
     def test_delete_device(self):
         fitpals_secret = self.test_user1["fitpals_secret"]

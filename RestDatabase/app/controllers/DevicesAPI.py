@@ -21,7 +21,7 @@ class DevicesAPI(Resource):
         :form int user_id: Id of user.
         :form str token: device token to be posted
 
-        :status 400: Could not register device.
+        :status 400: Device data invalid.
         :status 401: Not Authorized.
         :status 404: User not found.
         :status 200: Device already registered.
@@ -62,7 +62,7 @@ class DevicesAPI(Resource):
         except Exception as e:
             if exception_is_validation_error(e):
                 return Response(status=400,
-                    message="Could not register device.").__dict__,400
+                    message="Device data invalid.").__dict__,400
             db.session.rollback()
             app.logger.error(e)
             return Response(status=500, message="Internal server error.").__dict__,500
@@ -76,7 +76,6 @@ class DeviceAPI(Resource):
 
         :reqheader Authorization: facebook secret
 
-        :status 400: Could not delete device.
         :status 401: Not Authorized.
         :status 404: Device not found.
         :status 200: Device deleted.
