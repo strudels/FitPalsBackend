@@ -3,7 +3,7 @@ from flask import Flask
 from flask.ext.admin import Admin
 from flask.ext.admin.contrib.sqla import ModelView
 from flask.ext.sqlalchemy import SQLAlchemy
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy.exc import IntegrityError, DataError
 from flask.ext.restful import Api
 from flask.ext.socketio import SocketIO, send, emit, join_room, leave_room
 from ConfigParser import ConfigParser
@@ -22,7 +22,9 @@ app.logger.addHandler(log_handler)
 
 #determines if an exception is from entering invalid data into database
 def exception_is_validation_error(e):
-    return type(e) == IntegrityError or type(e) == AssertionError
+    return type(e) == IntegrityError or\
+        type(e) == AssertionError or\
+        type(e) == DataError
 
 conn_str = "postgresql://"
 if basename(os.environ.get("_", "")) == "foreman":
