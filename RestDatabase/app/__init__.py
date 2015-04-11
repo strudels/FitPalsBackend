@@ -9,8 +9,15 @@ from ConfigParser import ConfigParser
 from os.path import basename, dirname
 import os
 import sys
+import logging
+from logging.handlers import RotatingFileHandler
 
 app = Flask(__name__)
+
+#setup log handler
+log_handler = RotatingFileHandler("fitpals_api.log",maxBytes=10000,backupCount=1)
+log_handler.setLevel(logging.INFO)
+app.logger.addHandler(log_handler)
 
 conn_str = "postgresql://"
 if basename(os.environ.get("_", "")) == "foreman":
