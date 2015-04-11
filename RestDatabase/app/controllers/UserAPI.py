@@ -142,7 +142,6 @@ class UsersAPI(Resource):
         :form float longitude: Specify a longitude to search by.
         :form float latitude: Specify a latitude to search by.
         :form str about_me: "About me" description of the user.
-        :form str primary_picture: Picture ID string for primary picture.
         :form int dob_year: Integer number to represent DOB year.
         :form int dob_month: Integer number to represent DOB month.
         :form int dob_day: Integer number to represent DOB day.
@@ -280,7 +279,6 @@ class UserAPI(Resource):
             Latitude must also be specified.
         :form float latitude: Update user's latitude.
             Longitude must also be specified.
-        :form str primary_picture: Update user's primary_picture
         :form str about_me: Update user's about_me
         :form int dob: Update user's DOB; THIS WILL LIKELY CHANGE
 

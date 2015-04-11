@@ -432,9 +432,6 @@ Contents:
 
       * **str about_me** -- "About me" description of the user.
 
-      * **str primary_picture** -- Picture ID string for primary
-        picture.
-
       * **int dob_year** -- Integer number to represent DOB year.
 
       * **int dob_month** -- Integer number to represent DOB month.
@@ -743,8 +740,6 @@ Contents:
 
       * **float latitude** -- Update user's latitude. Longitude must
         also be specified.
-
-      * **str primary_picture** -- Update user's primary_picture
 
       * **str about_me** -- Update user's about_me
 
