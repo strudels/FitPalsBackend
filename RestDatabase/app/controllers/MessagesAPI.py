@@ -77,7 +77,7 @@ class NewMessagesAPI(Resource):
                               in the model is actually boolean, where 0->False
                               and 1->True.
 
-        :status 400: Could not create message.
+        :status 400: Message data invalid.
         :status 401: Not Authorized.
         :status 403: Message thread has been closed.
         :status 404: Message thread not found.
@@ -140,7 +140,7 @@ class NewMessagesAPI(Resource):
         except Exception as e:
             if exception_is_validation_error(e):
                 return Response(status=400,
-                    message="Could not create message.").__dict__,400
+                    message="Message data invalid.").__dict__,400
             db.session.rollback()
             app.logger.error(e)
             return Response(status=500, message="Internal server error.").__dict__,500
@@ -193,7 +193,7 @@ class MessageThreadsAPI(Resource):
         
         :form int user2_id: Id of user2 for new message thread.
         
-        :status 400: Could not create message thread.
+        :status 400: Message thread data invalid.
         :status 401: Not Authorized.
         :status 404: user2_id not found.
         :status 201: Message thread created.
@@ -235,7 +235,7 @@ class MessageThreadsAPI(Resource):
         except Exception as e:
             if exception_is_validation_error(e):
                 return Response(status=400,
-                    message="Could not create message thread.").__dict__,400
+                    message="Message thread data invalid.").__dict__,400
             db.session.rollback()
             app.logger.error(e)
             return Response(status=500, message="Internal server error.").__dict__,500
