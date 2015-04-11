@@ -15,6 +15,8 @@ class WebSocketTestCase(unittest.TestCase):
         self.test_user = User("fbTestUser1","fbTestUser1",gender="male",dob=date(1990,1,1))
         db.session.add(self.test_user)
         db.session.commit()
+        self.test_user_private = self.test_user.dict_repr(public=False)
+        self.test_user = self.test_user.dict_repr()
 
     def tearDown(self):
         reset_app()
@@ -28,14 +30,14 @@ class WebSocketTestCase(unittest.TestCase):
         
     def test_websocket_join_room(self):
         #ensure client does not receive messages before joining chat room
-        socketio.emit("user_update", self.test_user.dict_repr(),\
-                      room=str(self.test_user.id))
+        socketio.emit("user_update", self.test_user,\
+                      room=str(self.test_user["id"]))
         sleep(0.01) #so that the async thread has time to send the message
         received = self.client.get_received()
         assert len(received) == 0
 
         #ensure client can join chat room
-        self.client.emit("join", self.test_user.dict_repr(public=False))
+        self.client.emit("join", self.test_user_private)
         sleep(0.01) #so that the async thread has time to send the message
         received = self.client.get_received()
         assert len(received) != 0
@@ -43,8 +45,8 @@ class WebSocketTestCase(unittest.TestCase):
             "joined_room"
 
         #ensure client receives messages after joining chat room
-        socketio.emit("user_update", self.test_user.dict_repr(),\
-                      room=str(self.test_user.id))
+        socketio.emit("user_update", self.test_user,\
+                      room=str(self.test_user["id"]))
         sleep(0.01) #so that the async thread has time to send the message
         received = self.client.get_received()
         assert len(received) != 0
