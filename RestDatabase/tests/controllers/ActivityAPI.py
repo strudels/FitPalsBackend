@@ -132,7 +132,7 @@ class ActivitySettingsAPITestCase(FitPalsTestCase):
                                      "unit_type":"minute"},
                              headers = {"Authorization":fitpals_secret})
         assert resp.status_code==400
-        assert json.loads(resp.data)["message"]=="Could not create activity setting."
+        assert json.loads(resp.data)["message"]=="Activity setting data invalid."
         
     def test_get_activity_setting(self):
         #create setting
@@ -268,7 +268,7 @@ class ActivitySettingsAPITestCase(FitPalsTestCase):
                             data={"lower_value":4.6, "upper_value":3.7},
                             headers={"Authorization":fitpals_secret})
         assert resp.status_code==400
-        assert json.loads(resp.data)["message"]=="Could not update activity setting."
+        assert json.loads(resp.data)["message"]=="Activity setting data invalid."
         
     def test_delete_activity_setting(self):
         #create setting

@@ -105,10 +105,10 @@ class UserActivitySettingsAPI(Resource):
         :form float upper_value: Upper value answer for question.
         :form str unit_type: Name of type of unit; i.e. meter
 
+        :status 400: Activity setting data invalid.
         :status 401: Not Authorized.
         :status 404: Question not found.
         :status 404: User not found.
-        :status 500: Could not create activity setting.
         :status 201: Activity setting created.
         """
 
@@ -159,7 +159,7 @@ class UserActivitySettingsAPI(Resource):
         except Exception as e:
             if exception_is_validation_error(e):
                 return Response(status=400,
-                    message="Could not create activity setting.").__dict__,400
+                    message="Activity setting data invalid.").__dict__,400
             db.session.rollback()
             app.logger.error(e)
             return Response(status=500, message="Internal server error.").__dict__,500
@@ -210,7 +210,7 @@ class ActivitySettingAPI(Resource):
         :form float upper_value: Upper value answer to question.
         :form str unit_type: Name of type of unit; i.e. meter
 
-        :status 400: Could not update activity setting.
+        :status 400: Activity settings data invalid.
         :status 401: Not Authorized.
         :status 404: Activity setting not found.
         :status 202: Activity setting updated.
@@ -252,7 +252,7 @@ class ActivitySettingAPI(Resource):
         except Exception as e:
             if exception_is_validation_error(e):
                 return Response(status=400,
-                    message="Could not update activity setting.").__dict__,400
+                    message="Activity setting data invalid.").__dict__,400
             db.session.rollback()
             app.logger.error(e)
             return Response(status=500, message="Internal server error.").__dict__,500
