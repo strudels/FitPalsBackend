@@ -106,9 +106,6 @@ class DeviceAPI(Resource):
             return Response(status=200,
                 message="Device deleted.").__dict__,200
         except Exception as e:
-            if exception_is_validation_error(e):
-                return Response(status=400,
-                    message="Could not delete device.").__dict__,400
             db.session.rollback()
             app.logger.error(e)
             return Response(status=500, message="Internal server error.").__dict__,500
