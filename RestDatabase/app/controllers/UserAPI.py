@@ -67,6 +67,10 @@ class UsersAPI(Resource):
         query = User.query.filter(User.id!=user.id)
         query = query.join(User.search_settings)
         query = query.join(User.activity_settings)
+
+        #filter out users that the querying user has already made a decision on
+        query = query.filter(~User.id.in_(
+            user.matches.with_entities(Match.matched_user_id)))
         
         #filter out users not marked as available
         query = query.filter(SearchSettings.available==True)
