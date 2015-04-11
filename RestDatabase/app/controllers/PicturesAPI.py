@@ -17,7 +17,7 @@ class PicturesAPI(Resource):
         """
         Get all pictures for a user.
 
-        :param int user_id: Id of user.
+        :query int user_id: Id of user.
 
         :status 404: User not found.
         :status 200: Pictures found.

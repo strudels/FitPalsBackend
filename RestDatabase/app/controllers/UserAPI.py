@@ -55,6 +55,13 @@ class UsersAPI(Resource):
         user = User.query.filter(User.fitpals_secret==args.Authorization).first()
         if not user:
             return Response(status=401,message="Not Authorized.").__dict__,401
+
+        #return no users if user running query has not specified any
+        # activity settings
+        settings = user.activity_settings.all()
+        if not settings:
+            return Response(status=200,message="Users found.",value=[])\
+                .__dict__,200
             
         #begin creating query
         query = User.query.filter(User.id!=user.id)
@@ -63,6 +70,24 @@ class UsersAPI(Resource):
         
         #filter out users not marked as available
         query = query.filter(SearchSettings.available==True)
+
+        #filter by activity preferences
+        if settings:
+            s = settings[0]
+            or_expr = and_(ActivitySetting.question_id==s.question_id,
+                                    not_(or_(ActivitySetting.upper_value_converted <
+                                                    s.lower_value_converted,
+                                            ActivitySetting.lower_value_converted >
+                                                    s.upper_value_converted)))
+            for s in settings[1:]:
+                and_expr = and_(ActivitySetting.question_id==s.question_id,
+                                not_(or_(ActivitySetting.upper_value_converted <
+                                                s.lower_value_converted,
+                                        ActivitySetting.lower_value_converted >
+                                                s.upper_value_converted)))
+                or_expr = or_(or_expr,and_expr)
+            #also match users that don't have any activity settings
+            query = query.filter(or_expr)
 
         #apply filters in user's search settings
         if user.search_settings.friends_only:
@@ -93,24 +118,6 @@ class UsersAPI(Resource):
             query = query.filter(SearchSettings.men==True)
         else: #user.gender == "female"
             query = query.filter(SearchSettings.women==True)
-
-        #filter by activity preferences
-        settings = user.activity_settings.all()
-        if settings:
-            s = settings[0]
-            or_expr = and_(ActivitySetting.question_id==s.question_id,
-                                    not_(or_(ActivitySetting.upper_value_converted <
-                                                    s.lower_value_converted,
-                                            ActivitySetting.lower_value_converted >
-                                                    s.upper_value_converted)))
-            for s in settings[1:]:
-                and_expr = and_(ActivitySetting.question_id==s.question_id,
-                                not_(or_(ActivitySetting.upper_value_converted <
-                                                s.lower_value_converted,
-                                        ActivitySetting.lower_value_converted >
-                                                s.upper_value_converted)))
-                or_expr = or_(or_expr,and_expr)
-            query = query.filter(or_expr)
 
         #apply filters in args
         if args.last_updated:

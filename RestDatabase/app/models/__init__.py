@@ -133,9 +133,13 @@ class User(db.Model):
     @hybrid_property
     def online(self):
         return str(self.id) in socketio.rooms[""] if socketio.rooms!={} else False
+    
+    @hybrid_property
+    def primary_picture(self):
+        return self.pictures.order_by(Picture.ui_index).first()
         
     @validates("gender")
-    def validate_ui_index(self, key, gender):
+    def validate_gender(self, key, gender):
         assert gender == "male" or gender == "female"
         return gender
 
@@ -163,7 +167,8 @@ class User(db.Model):
             "dob_month":self.dob_month,
             "dob_day":self.dob_day,
             "name":self.name,
-            "gender":self.gender
+            "gender":self.gender,
+            "primary_picture":self.primary_picture
         }
         if show_online_status:
             dict_repr["online"] = self.online
