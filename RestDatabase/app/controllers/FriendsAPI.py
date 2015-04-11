@@ -1,6 +1,5 @@
 from flask import Flask
 from flask.ext.restful import Resource, reqparse, Api
-from flask.ext.socketio import emit
 import simplejson as json
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
@@ -9,7 +8,7 @@ from sqlalchemy import func,or_, and_, not_
 from datetime import date
 from sqlalchemy import and_
 
-from app import db, api, socketio
+from app import db, api, app, exception_is_validation_error
 from app.models import *
 from app.utils.Response import Response
 
