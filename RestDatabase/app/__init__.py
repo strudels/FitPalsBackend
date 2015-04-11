@@ -3,6 +3,7 @@ from flask import Flask
 from flask.ext.admin import Admin
 from flask.ext.admin.contrib.sqla import ModelView
 from flask.ext.sqlalchemy import SQLAlchemy
+from sqlalchemy.exc import IntegrityError
 from flask.ext.restful import Api
 from flask.ext.socketio import SocketIO, send, emit, join_room, leave_room
 from ConfigParser import ConfigParser
@@ -18,6 +19,10 @@ app = Flask(__name__)
 log_handler = RotatingFileHandler("fitpals_api.log",maxBytes=10000,backupCount=1)
 log_handler.setLevel(logging.INFO)
 app.logger.addHandler(log_handler)
+
+#determines if an exception is from entering invalid data into database
+def exception_is_validation_error(e):
+    return type(e) == IntegrityError or type(e) == AssertionError
 
 conn_str = "postgresql://"
 if basename(os.environ.get("_", "")) == "foreman":
