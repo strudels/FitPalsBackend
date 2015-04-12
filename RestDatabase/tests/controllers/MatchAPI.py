@@ -26,6 +26,8 @@ class MatchApiTestCase(FitPalsTestCase):
                                    "match_user_id":self.test_user2["id"],
                                    "liked":1},
                              headers={"Authorization":fitpals_secret})
+        first_match = json.loads(resp.data)["value"]
+        received = self.websocket_client1.get_received()
 
         fitpals_secret2 = self.test_user2["fitpals_secret"]
         resp = self.app.post("/matches",
@@ -33,6 +35,7 @@ class MatchApiTestCase(FitPalsTestCase):
                                    "match_user_id":self.test_user1["id"],
                                    "liked":1},
                              headers={"Authorization":fitpals_secret2})
+        second_match = json.loads(resp.data)["value"]
 
         #ensure that test_user1 websocket self.websocket_client1 got update
         sleep(0.01) #so that the async thread has time to send the message
@@ -40,7 +43,7 @@ class MatchApiTestCase(FitPalsTestCase):
         assert len(received) != 0
         assert received[-1]["args"][0]["path"] == "/matches"
         assert received[-1]["args"][0]["http_method"] == "POST"
-        assert received[-1]["args"][0]["value"] == json.loads(resp.data)["value"]
+        assert received[-1]["args"][0]["value"] == second_match
 
         #ensure that test_user2 websocket self.websocket_client1 got update
         sleep(0.01) #so that the async thread has time to send the message
@@ -53,9 +56,11 @@ class MatchApiTestCase(FitPalsTestCase):
         assert received[-1]["args"][0]["path"] == "/matches"
         assert received[-1]["args"][0]["http_method"] == "POST"
         received_via_api = json.loads(resp.data)["value"]
-        del received_via_api["id"]
+        del second_match["id"]
         del received[-1]["args"][0]["value"]["id"]
-        assert received[-1]["args"][0]["value"] == received[-1]["args"][0]["value"] 
+        del second_match["matched_user"]
+        del received[-1]["args"][0]["value"]["matched_user"]
+        assert received[-1]["args"][0]["value"] == second_match
         
     def test_add_match_user_not_found(self):
         fitpals_secret = self.test_user1["fitpals_secret"]
@@ -115,16 +120,9 @@ class MatchApiTestCase(FitPalsTestCase):
         assert resp.status_code == 200
         assert json.loads(resp.data)["message"]=="Matches found."
         assert json.loads(resp.data)["value"][0] == match
-
-    def test_get_matches_not_authorized(self):
-        fitpals_secret = self.test_user1["fitpals_secret"]
-        resp = self.app.get("/matches",
-                            headers={"Authorization":fitpals_secret + "junk"})
-        assert resp.status_code == 401
-        assert json.loads(resp.data)["message"]=="Not Authorized."
         
-    def test_get_matches_liked(self):
-        #create liked match to get
+    def test_get_mutual_matches(self):
+        #create 2 matches, so that each makes the other a mutual match
         fitpals_secret = self.test_user1["fitpals_secret"]
         resp = self.app.post("/matches",
                              data={"user_id":self.test_user1["id"],
@@ -132,33 +130,28 @@ class MatchApiTestCase(FitPalsTestCase):
                                    "liked":1},
                              headers={"Authorization":fitpals_secret})
         assert resp.status_code == 201
-
-        #create unliked match to get
-        fitpals_secret = self.test_user1["fitpals_secret"]
+        match = json.loads(resp.data)["value"]
+        fitpals_secret = self.test_user2["fitpals_secret"]
         resp = self.app.post("/matches",
-                             data={"user_id":self.test_user1["id"],
-                                   "match_user_id":self.test_user3["id"],
-                                   "liked":0},
+                             data={"user_id":self.test_user2["id"],
+                                   "match_user_id":self.test_user1["id"],
+                                   "liked":1},
                              headers={"Authorization":fitpals_secret})
         assert resp.status_code == 201
 
-        match = json.loads(resp.data)["value"]
-        match = json.loads(resp.data)["value"]
         fitpals_secret = self.test_user1["fitpals_secret"]
-
-        #ensure only 1 liked match
-        resp = self.app.get("/matches?liked=1",
+        resp = self.app.get("/matches?mutual=1",
                             headers={"Authorization":fitpals_secret})
         assert resp.status_code == 200
         assert json.loads(resp.data)["message"]=="Matches found."
-        assert len(json.loads(resp.data)["value"]) == 1
+        assert json.loads(resp.data)["value"][0] == match
 
-        #ensure only 1 unliked match
-        resp = self.app.get("/matches?liked=0",
-                            headers={"Authorization":fitpals_secret})
-        assert resp.status_code == 200
-        assert json.loads(resp.data)["message"]=="Matches found."
-        assert len(json.loads(resp.data)["value"]) == 1
+    def test_get_matches_not_authorized(self):
+        fitpals_secret = self.test_user1["fitpals_secret"]
+        resp = self.app.get("/matches",
+                            headers={"Authorization":fitpals_secret + "junk"})
+        assert resp.status_code == 401
+        assert json.loads(resp.data)["message"]=="Not Authorized."
         
     def test_delete_match(self):
         #create match

@@ -303,6 +303,7 @@ class Match(db.Model):
             "id":self.id,
             "user_id":self.user_id,
             "matched_user_id":self.matched_user_id,
+            "matched_user":self.matched_user.dict_repr(),
             "liked":self.liked,
             "time":self.epoch
         }

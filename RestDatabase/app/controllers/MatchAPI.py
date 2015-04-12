@@ -4,6 +4,7 @@ import simplejson as json
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
 import time
+from sqlalchemy import and_
 
 from app import db, api, app, exception_is_validation_error
 from app.models import *
@@ -24,15 +25,14 @@ class MatchesAPI(Resource):
 
         :reqheader Authorization: facebook secret
 
-        :query bool liked: If specified,
-            returns matches that correspond with liked. Set to 0 for False,
-            1 for True.
+        :query int mutual: If specified, returns matches where other user has also
+            matched with the querying user. Set to 0 for False, 1 for True.
 
         :status 401: Not Authorized.
         :status 200: Matches found.
         """
         parser = reqparse.RequestParser()
-        parser.add_argument("liked",
+        parser.add_argument("mutual",
             type=int, location="args", required=False)
         parser.add_argument("Authorization",
             type=str, location="headers", required=True)
@@ -45,10 +45,15 @@ class MatchesAPI(Resource):
                 return Response(status=401,
                     message="Not Authorized.").__dict__, 401
 
-            #apply liked filter if specified
             query = user.matches
-            if args.liked != None:
-                query = query.filter(Match.liked==bool(args.liked))
+            #if args.mutual, get all user's matches where the matched_user
+            #liked back
+            if args.mutual == 1:
+                mutual_match_users = Match.query.filter(and_(
+                    Match.matched_user_id==user.id,
+                    Match.liked==True)).with_entities(Match.user_id)
+                query = query.filter(and_(Match.liked==True,
+                    Match.matched_user_id.in_(mutual_match_users)))
 
             return Response(status=200, message="Matches found.",
                 value=[m.dict_repr() for m in query.all()]).__dict__,200
@@ -103,8 +108,6 @@ class MatchesAPI(Resource):
             match = Match(user, match_user, bool(args.liked))
             user.matches.append(match)
             db.session.commit()
-
-            #send async update if match_user has also liked user
 
             #send match to user's other devices
             send_message(user,request.path,request.method,
