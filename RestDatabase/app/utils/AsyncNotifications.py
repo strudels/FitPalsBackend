@@ -3,6 +3,8 @@ import simplejson as json
 import base64
 from apns import APNs, Payload
 from ConfigParser import ConfigParser
+from threading import Thread
+from Queue import Queue
 import os.path
 from os.path import basename,dirname
 
@@ -16,6 +18,19 @@ apns = APNs(use_sandbox=True,
             key_file=config.get("certs","apns_cert"),
             enhanced=True)
 
+thread_q = Queue()
+def async_notification_thread_manager():
+    global thread_q
+    while True:
+        thread = thread_q.get()
+        thread.start()
+        thread.join()
+manager_thread = Thread(target=async_notification_thread_manager)
+manager_thread.start()
+
+def emit_wrapper(name,value,room):
+    socketio.emit(name,value,room=room)
+
 def send_message(user,path,http_method,value=None,apn_send=False):
     info = {
         "path":path,
@@ -28,7 +43,10 @@ def send_message(user,path,http_method,value=None,apn_send=False):
             payload = Payload(alert="Match found!", custom=info)
             apns.gateway_server.send_notification(token_hex,payload)
     else:
-        socketio.emit("update",info,room=str(user.id))
+        global thread_q
+        thread = Thread(target=emit_wrapper,
+                        args=("update",info,str(user.id)))
+        thread_q.put(thread)
             
     #keeping this code commented out for now
     """

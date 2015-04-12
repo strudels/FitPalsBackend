@@ -3,7 +3,7 @@ import simplejson as json
 from app import app,db,socketio,reset_app
 from app.models import *
 from datetime import date
-from app.utils import Facebook
+from app.utils import Facebook, AsyncNotifications
 import requests
 from time import sleep
 
@@ -61,4 +61,5 @@ class FitPalsTestCase(unittest.TestCase):
         self.websocket_client3.emit("join", self.test_user3)
 
     def tearDown(self):
+        AsyncNotifications.manager_thread._Thread__stop()
         reset_app()
