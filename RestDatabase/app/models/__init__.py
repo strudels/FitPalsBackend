@@ -284,8 +284,14 @@ class Match(db.Model):
     matched_user_id = db.Column(db.Integer, ForeignKey("users.id"))
     matched_user = relationship("User",foreign_keys=[matched_user_id])
     liked = db.Column(db.Boolean, index=True, nullable=False)
+    time =\
+        db.Column(db.DateTime, default=db.func.now(), nullable=False)
 
     __table_args__ = (CheckConstraint("user_id != matched_user_id"),)
+
+    @hybrid_property
+    def epoch(self):
+        return int((self.time - datetime(1970,1,1)).total_seconds())
 
     def __init__(self, user, matched_user,liked=False):
         self.user = user
@@ -297,7 +303,8 @@ class Match(db.Model):
             "id":self.id,
             "user_id":self.user_id,
             "matched_user_id":self.matched_user_id,
-            "liked":self.liked
+            "liked":self.liked,
+            "time":self.epoch
         }
 
 class Device(db.Model):
@@ -455,7 +462,7 @@ class Message(db.Model):
     direction = db.Column(db.Boolean, nullable=False)
     body = db.Column(db.String, index=True, nullable=False)
     time =\
-        db.Column(db.DateTime, default=db.func.now(), onupdate=db.func.now())
+        db.Column(db.DateTime, default=db.func.now(), nullable=False)
     message_thread_id = db.Column(db.Integer, ForeignKey("message_threads.id"))
     message_thread =\
         relationship("MessageThread",foreign_keys=[message_thread_id])
