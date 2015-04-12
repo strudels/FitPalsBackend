@@ -16,7 +16,7 @@ from app.utils.Response import Response
 class FriendsAPI(Resource):
     def get(self):
         """
-        Get friends for a user specified by Authorization.
+        Get friends(as User objects) for a user specified by Authorization.
         
         :reqheader Authorization: facebook secret
         

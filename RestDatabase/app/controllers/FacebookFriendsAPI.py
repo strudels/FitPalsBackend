@@ -18,7 +18,7 @@ from app.utils.AsyncNotifications import send_message
 class FacebookFriendsAPI(Resource):
     def get(self):
         """
-        Gets a user's(specified by Authorization) facebook friends.
+        Gets a user's(specified by Authorization) facebook friends(As User objects).
         
         :reqheader Authorization: fitpals secret
         

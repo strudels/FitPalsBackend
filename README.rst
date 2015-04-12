@@ -115,7 +115,8 @@ Contents:
 
 ``GET /facebook_friends``
 
-   Gets a user's(specified by Authorization) facebook friends.
+   Gets a user's(specified by Authorization) facebook friends(As User
+   objects).
 
    :Request Headers:
       * Authorization -- fitpals secret
@@ -335,8 +336,9 @@ Contents:
       * Authorization -- facebook secret
 
    :Query Parameters:
-      * **liked** (*bool*) -- If specified, returns matches that
-        correspond with liked. Set to 0 for False, 1 for True.
+      * **mutual** (*int*) -- If specified, returns matches where
+        other user has also matched with the querying user. Set to 0
+        for False, 1 for True.
 
    :Status Codes:
       * 401 Unauthorized -- Not Authorized.
@@ -371,7 +373,7 @@ Contents:
 
 ``GET /friends``
 
-   Get friends for a user specified by Authorization.
+   Get friends(as User objects) for a user specified by Authorization.
 
    :Request Headers:
       * Authorization -- facebook secret

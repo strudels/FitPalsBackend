@@ -506,7 +506,9 @@ class MessageThread(db.Model):
         return {
             "id":self.id,
             "user1_id":self.user1_id,
+            "user1":self.user1.dict_repr(),
             "user2_id":self.user2_id,
+            "user2":self.user2.dict_repr()
         }
 
 #These 2 events ensure that a MessageThread gets deleted if both it's
