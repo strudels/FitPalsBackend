@@ -88,8 +88,9 @@ class UsersApiTestCase(FitPalsTestCase):
         fitpals_secret = self.test_user1["fitpals_secret"]
         setting_id = self.test_user1["search_settings_id"]
         activity_resp = json.loads(self.app.get("/activities").data)
+        questions_resp = json.loads(self.app.get("/questions").data)
         activity_id = activity_resp["value"][0]["id"]
-        question_id = activity_resp["value"][0]["questions"][0]
+        question_id = activity_resp["value"][0]["id"]
         
         #a bit less than 12 miles away from user1
         location1 = (27.924458,-82.320241)

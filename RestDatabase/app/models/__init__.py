@@ -340,7 +340,6 @@ class Activity(db.Model):
             "name":self.name,
             "active_image":self.active_image,
             "inactive_image":self.inactive_image,
-            "questions":[q.id for q in self.questions]
         }
         
     def __repr__(self):
