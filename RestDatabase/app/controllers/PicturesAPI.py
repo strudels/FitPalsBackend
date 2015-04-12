@@ -106,12 +106,8 @@ class PicturesAPI(Resource):
             db.session.commit()
 
             #send new picture to user's other devices
-            send_message(picture.user.dict_repr(show_online_status=True),
-                        [d.token for d in picture.user.devices.all()],
-                        request.path,
-                        request.method,
-                        picture.dict_repr())
-
+            send_message(picture.user,request.path,request.method,
+                         value=picture.dict_repr())
 
             return Response(status=201, message="Picture added.",
                             value=picture.dict_repr()).__dict__,201
@@ -186,9 +182,8 @@ class PictureAPI(Resource):
             db.session.commit()
 
             #send pic update to user's other devices
-            send_message(pic.user.dict_repr(show_online_status=True),
-                        [d.token for d in pic.user.devices.all()],
-                        request.path, request.method, pic.dict_repr())
+            send_message(pic.user,request.path,request.method,
+                         value=pic.dict_repr())
 
             return Response(status=202, message="Picture updated.",
                             value=pic.dict_repr()).__dict__, 202
@@ -241,9 +236,7 @@ class PictureAPI(Resource):
                     message="Internal error. Changes not committed.").__dict__,500
 
             #alert user that picture has been deleted
-            send_message(user.dict_repr(show_online_status=True),
-                        [d.token for d in user.devices.all()],
-                        request.path, request.method)
+            send_message(user, request.path, request.method)
 
             return Response(status=200, message="Picture removed.").__dict__, 200
         except Exception as e:

@@ -5,7 +5,6 @@ from app.models import *
 from datetime import date
 from app.utils import Facebook
 import requests
-from app.utils import AsyncNotifications
 from time import sleep
 
 def _get_access_tokens(fb_id, password):
@@ -62,5 +61,4 @@ class FitPalsTestCase(unittest.TestCase):
         self.websocket_client3.emit("join", self.test_user3)
 
     def tearDown(self):
-        AsyncNotifications.manager_thread._Thread__stop()
         reset_app()

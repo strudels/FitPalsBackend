@@ -149,10 +149,8 @@ class UserActivitySettingsAPI(Resource):
             user.activity_settings.append(activity_setting)
             db.session.commit()
 
-            send_message(activity_setting.user.dict_repr(show_online_status=True),
-                        [d.token for d in activity_setting.user.devices.all()],
-                        request.path,request.method,
-                        activity_setting.dict_repr())
+            send_message(activity_setting.user,request.path,request.method,
+                         value=activity_setting.dict_repr())
 
             return Response(status=201,message="Activity setting created.",
                             value=activity_setting.dict_repr()).__dict__,201
@@ -242,9 +240,8 @@ class ActivitySettingAPI(Resource):
             if args.upper_value != None: setting.upper_value = args.upper_value
             db.session.commit()
 
-            send_message(setting.user.dict_repr(show_online_status=True),
-                        [d.token for d in setting.user.devices.all()],
-                        request.path,request.method,setting.dict_repr())
+            send_message(setting.user,request.path,request.method,
+                         value=setting.dict_repr())
 
             return Response(status=202,
                             message="Activity setting updated.",
@@ -293,9 +290,7 @@ class ActivitySettingAPI(Resource):
             db.session.delete(setting)
             db.session.commit()
 
-            send_message(user.dict_repr(show_online_status=True),
-                        [d.token for d in user.devices.all()],
-                        request.path,request.method)
+            send_message(user,request.path,request.method)
 
             return Response(status=200,
                 message="Activity setting deleted.").__dict__, 200

@@ -107,19 +107,16 @@ class MatchesAPI(Resource):
             #send async update if match_user has also liked user
 
             #send match to user's other devices
-            send_message(user.dict_repr(show_online_status=True),
-                        [d.token for d in user.devices.all()],
-                        request.path, request.method, match.dict_repr())
+            send_message(user,request.path,request.method,
+                         value=match.dict_repr())
 
             #if the person being matched with has also matched with the user, let the user know
             mutual_match = match_user.matches.filter(Match.matched_user_id==user.id).first()
             if mutual_match and match.liked and mutual_match.liked:
-                send_message(user.dict_repr(show_online_status=True),
-                            [d.token for d in user.devices.all()],
-                            request.path, request.method,mutual_match.dict_repr())
-                send_message(match_user.dict_repr(show_online_status=True),
-                            [d.token for d in match_user.devices.all()],
-                            request.path, request.method ,match.dict_repr())
+                send_message(user,request.path,request.method,
+                             value=mutual_match.dict_repr(),apn_send=True)
+                send_message(match_user,request.path,request.method,
+                             value=match.dict_repr(),apn_send=True)
 
             return Response(status=201,message="Match created.",
                             value=match.dict_repr()).__dict__,201
@@ -166,9 +163,7 @@ class MatchAPI(Resource):
             db.session.commit()
 
             #send websocket update
-            send_message(user.dict_repr(show_online_status=True),
-                        [d.token for d in user.devices.all()],
-                        request.path, request.method)
+            send_message(user,request.path,request.method)
 
             return Response(status=200,message="Match deleted.").__dict__, 200
         except Exception as e:

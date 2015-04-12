@@ -334,9 +334,7 @@ class UserAPI(Resource):
             db.session.commit()
 
             #reflect update in user's other clients
-            send_message(user.dict_repr(show_online_status=True),
-                        [d.token for d in user.devices.all()],
-                        request.path,request.method,user.dict_repr())
+            send_message(user,request.path,request.method,value=user.dict_repr())
 
             return Response(status=202,message="User updated",
                             value=user.dict_repr()).__dict__,202
