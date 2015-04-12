@@ -131,7 +131,7 @@ class User(db.Model):
     @hybrid_property
     def primary_picture(self):
         pic = self.pictures.order_by(Picture.ui_index).first()
-        return pic.uri if pic else None
+        return pic.dict_repr() if pic else None
         
     @validates("gender")
     def validate_gender(self, key, gender):
