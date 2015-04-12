@@ -20,6 +20,9 @@ log_handler = RotatingFileHandler("fitpals_api.log",maxBytes=10000,backupCount=1
 log_handler.setLevel(logging.INFO)
 app.logger.addHandler(log_handler)
 
+config = ConfigParser()
+config.read([dirname(__file__) + "/fitpals_api.cfg"])
+
 #determines if an exception is from entering invalid data into database
 def exception_is_validation_error(e):
     return type(e) == IntegrityError or\
@@ -42,8 +45,6 @@ if basename(os.environ.get("_", "")) == "foreman":
 elif os.environ.get("DATABASE_URL", None) is not None:
     conn_str = os.environ["DATABASE_URL"]
 else:
-    config = ConfigParser()
-    config.read([dirname(__file__) + "/fitpals_api.cfg"])
 
     conn_str += config.get("postgres","username")
     conn_str += ":" + config.get("postgres","password")

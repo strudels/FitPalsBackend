@@ -4,11 +4,18 @@ import base64
 from apns import APNs, Payload
 from threading import Thread
 from Queue import Queue
+from ConfigParser import ConfigParser
+import os.path
+from os.path import basename,dirname
 
+config = ConfigParser()
+config.read([dirname(__file__) + "/../fitpals_api.cfg"])
+
+if not os.path.isfile(config.get("certs","apns_cert")):
+    raise Exception("Certificate file not found.")
 apns = APNs(use_sandbox=True,
-            cert_file='/home/strudels/Desktop/sand.pem',
-            key_file='/home/strudels/Desktop/sand.pem')
-
+            cert_file=config.get("certs","apns_cert"),
+            key_file=config.get("certs","apns_cert"))
 
 thread_q = Queue()
 manager_thread_should_be_alive = True
