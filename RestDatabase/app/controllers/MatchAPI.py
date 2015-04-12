@@ -113,12 +113,12 @@ class MatchesAPI(Resource):
 
             #if the person being matched with has also matched with the user, let the user know
             mutual_match = match_user.matches.filter(Match.matched_user_id==user.id).first()
-            if mutual_match:
+            if mutual_match and match.liked and mutual_match.liked:
                 send_message(user.dict_repr(show_online_status=True),
                             [d.token for d in user.devices.all()],
                             request.path, request.method,mutual_match.dict_repr())
                 send_message(match_user.dict_repr(show_online_status=True),
-                            [d.token for d in user.devices.all()],
+                            [d.token for d in match_user.devices.all()],
                             request.path, request.method ,match.dict_repr())
 
             return Response(status=201,message="Match created.",
