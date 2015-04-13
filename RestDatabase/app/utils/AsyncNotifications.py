@@ -40,7 +40,10 @@ def send_message(user,path,http_method,value=None,apn_send=False):
     if apn_send and user.online == False:
         for d in user.devices.all():
             token_hex = base64.b64decode(d.token).encode('hex')
-            payload = Payload(alert="Match found!", custom=info)
+            if path=="/matches":
+                payload = Payload(alert="New Match!", custom=info)
+            else: #path=="/messages"
+                payload = Payload(alert="New Message!", custom=info)
             apns.gateway_server.send_notification(token_hex,payload)
     else:
         global thread_q
