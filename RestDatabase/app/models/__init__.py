@@ -279,9 +279,9 @@ class Picture(db.Model):
 class Match(db.Model):
     __tablename__ = "matches"
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, ForeignKey("users.id"))
+    user_id = db.Column(db.Integer, ForeignKey("users.id"),nullable=False)
     user = relationship("User",foreign_keys=[user_id])
-    matched_user_id = db.Column(db.Integer, ForeignKey("users.id"))
+    matched_user_id = db.Column(db.Integer, ForeignKey("users.id"),nullable=False)
     matched_user = relationship("User",foreign_keys=[matched_user_id])
     liked = db.Column(db.Boolean, index=True, nullable=False)
     time =\

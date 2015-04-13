@@ -162,7 +162,7 @@ class MatchAPI(Resource):
                     message="Not Authorized.").__dict__, 401
 
             #delete all match decisions
-            user.matches.remove(match)
+            db.session.delete(match)
             db.session.commit()
 
             #send websocket update
