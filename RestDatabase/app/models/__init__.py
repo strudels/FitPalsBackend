@@ -1,4 +1,4 @@
-from sqlalchemy import ForeignKey, DateTime, UniqueConstraint, CheckConstraint, event
+from sqlalchemy import ForeignKey, DateTime, UniqueConstraint, CheckConstraint, event, desc
 import geoalchemy2
 from geoalchemy2.types import Geography
 from geoalchemy2.elements import WKTElement
@@ -541,13 +541,19 @@ class MessageThread(db.Model):
         self.user1 = user1
         self.user2 = user2
         
+    @hybrid_property
+    def last_message(self):
+        message = self.messages.order_by(desc(Message.time)).first()
+        return message.dict_repr() if message else None
+        
     def dict_repr(self):
         return {
             "id":self.id,
             "user1_id":self.user1_id,
             "user1":self.user1.dict_repr(),
             "user2_id":self.user2_id,
-            "user2":self.user2.dict_repr()
+            "user2":self.user2.dict_repr(),
+            "last_message":self.last_message
         }
 
 #These 2 events ensure that a MessageThread gets deleted if both it's
