@@ -53,6 +53,22 @@ class MessagesApiTestCase(FitPalsTestCase):
         assert received[-1]["args"][0]["http_method"] == "POST"
         assert received[-1]["args"][0]["value"] == received_thread
         
+    def test_create_message_thread_blocked(self):
+        #have user2 block user1
+        resp = self.app.post("/user_blocks",
+                             headers={"Authorization":self.test_user2["fitpals_secret"]},
+                             data={"blocked_user_id":self.test_user1["id"]})
+
+        #create new thread
+        resp = self.app.post("/message_threads",
+                             headers={"Authorization":self.test_user1["fitpals_secret"]},
+                             data={"user2_id":self.test_user2["id"]})
+        received_thread = json.loads(resp.data)["value"]
+        
+        #ensure request worked correctly
+        assert resp.status_code==403
+        value = json.loads(resp.data)["message"] == "Blocked from creating message thread."
+ 
     def test_create_message_thread_invalid_fitpals_secret(self):
         resp = self.app.post("/message_threads",
                              headers={"Authorization":self.test_user1["fitpals_secret"] + "junk"},

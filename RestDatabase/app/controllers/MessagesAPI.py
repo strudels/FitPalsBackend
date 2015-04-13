@@ -236,12 +236,13 @@ class MessageThreadsAPI(Resource):
         """
         Create new message thread between 2 users.
         
-        :reqheader Authorization: facebook secret
+        :reqheader Authorization: fitpals_secret
         
         :form int user2_id: Id of user2 for new message thread.
         
         :status 400: Message thread data invalid.
         :status 401: Not Authorized.
+        :status 403: Blocked from creating message thread.
         :status 404: user2_id not found.
         :status 201: Message thread created.
         """
@@ -264,6 +265,18 @@ class MessageThreadsAPI(Resource):
             if not user2:
                 return Response(status=404,
                                 message="user2_id not found.").__dict__,404
+
+            #determine if user creating message thread is currently blocked by receiver
+            is_blocked = user2.blocks\
+                              .filter(and_(UserBlock.blocked_user_id==user1.id,
+                                           UserBlock.unblock_time==None)).first()
+            
+            #if user was blocked, return 403
+            if is_blocked:
+                return Response(status=403,
+                                message="Blocked from creating message thread.")\
+                    .__dict__,403
+
 
             new_thread = MessageThread(user1, user2)
             db.session.add(new_thread)

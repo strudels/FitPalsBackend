@@ -143,7 +143,7 @@ Contents:
    Create new message thread between 2 users.
 
    :Request Headers:
-      * Authorization -- facebook secret
+      * Authorization -- fitpals_secret
 
    :Form Parameters:
       * **int user2_id** -- Id of user2 for new message thread.
@@ -152,6 +152,8 @@ Contents:
       * 400 Bad Request -- Message thread data invalid.
 
       * 401 Unauthorized -- Not Authorized.
+
+      * 403 Forbidden -- Blocked from creating message thread.
 
       * 404 Not Found -- user2_id not found.
 
