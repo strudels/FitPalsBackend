@@ -52,6 +52,14 @@ class MessagesApiTestCase(FitPalsTestCase):
         assert received[-1]["args"][0]["path"] == "/message_threads"
         assert received[-1]["args"][0]["http_method"] == "POST"
         assert received[-1]["args"][0]["value"] == received_thread
+
+        #ensure that test_user2 websocket client got update
+        received = self.websocket_client2.get_received()
+        assert len(received) != 0
+        assert received[-1]["name"] == "update"
+        assert received[-1]["args"][0]["path"] == "/message_threads"
+        assert received[-1]["args"][0]["http_method"] == "POST"
+        assert received[-1]["args"][0]["value"] == received_thread
         
     def test_create_message_thread_blocked(self):
         #have user2 block user1

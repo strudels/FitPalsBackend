@@ -286,6 +286,8 @@ class MessageThreadsAPI(Resource):
 
             send_message(new_thread.user1,request.path,request.method,
                          value=new_thread.dict_repr())
+            send_message(new_thread.user2,request.path,request.method,
+                         value=new_thread.dict_repr())
 
             #return create success!
             return Response(status=201, message="Message thread created.",
