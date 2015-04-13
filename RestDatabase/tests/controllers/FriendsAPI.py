@@ -13,6 +13,14 @@ class APNTokensApiTestCase(FitPalsTestCase):
         self.test_user2["online"] = True
         assert self.test_user2 == received_friend
 
+        sleep(0.1)
+        received = self.websocket_client1.get_received()
+        assert len(received) != 0
+        assert received[-1]["name"] == "update"
+        assert received[-1]["args"][0]["path"] == "/friends"
+        assert received[-1]["args"][0]["http_method"] == "POST"
+        assert received[-1]["args"][0]["value"] == received_friend
+
     def test_add_friend_user_not_found(self):
         fitpals_secret = self.test_user1["fitpals_secret"]
         friend = {"id":0}
@@ -69,6 +77,13 @@ class APNTokensApiTestCase(FitPalsTestCase):
         resp = self.app.get("/friends",headers={"Authorization":fitpals_secret})
         friends = json.loads(resp.data)["value"]
         assert len(friends) == 0
+
+        sleep(0.1)
+        received = self.websocket_client1.get_received()
+        assert len(received) != 0
+        assert received[-1]["name"] == "update"
+        assert received[-1]["args"][0]["path"] == "/friends/%d" % friend["id"]
+        assert received[-1]["args"][0]["http_method"] == "DELETE"
         
     def test_delete_friend_not_found(self):
         #delete friend

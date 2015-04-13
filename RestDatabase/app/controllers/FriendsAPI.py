@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, request
 from flask.ext.restful import Resource, reqparse, Api
 import simplejson as json
 from datetime import datetime
@@ -11,6 +11,7 @@ from sqlalchemy import and_
 from app import db, api, app, exception_is_validation_error
 from app.models import *
 from app.utils.Response import Response
+from app.utils.AsyncNotifications import send_message
 
 @api.resource("/friends")
 class FriendsAPI(Resource):
@@ -76,6 +77,9 @@ class FriendsAPI(Resource):
             new_friend = Friend(user,friend_user)
             user.friends.append(new_friend)
             db.session.commit()
+            
+            send_message(user,request.path,request.method,
+                value=new_friend.friend_user.dict_repr(show_online_status=True))
 
             return Response(status=201, message="Friend added.",
                             value=new_friend.friend_user\
@@ -130,6 +134,8 @@ class FriendAPI(Resource):
             user.friends.remove(friend)
             db.session.delete(friend)
             db.session.commit()
+
+            send_message(user,request.path,request.method)
 
             return Response(status=200, message="Friend deleted.").__dict__,200
         except Exception as e:
