@@ -207,6 +207,40 @@ class UserReport(db.Model):
             "reason":self.reason,
             "reviewed":self.reviewed
         }
+        
+class UserBlock(db.Model):
+    __tablename__ = "user_blocks"
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, ForeignKey("users.id"))
+    user = relationship("User",foreign_keys=[user_id])
+    blocked_user_id = db.Column(db.Integer, ForeignKey("users.id"))
+    blocked_user = relationship("User",foreign_keys=[blocked_user_id])
+    block_time =\
+        db.Column(db.DateTime, default=db.func.now(), nullable=False)
+    #unblock_time will be enforced to be >= block_time via controller
+    unblock_time = db.Column(db.DateTime, default=None)
+
+    @hybrid_property
+    def block_time_epoch(self):
+        return int((self.block_time - datetime(1970,1,1)).total_seconds())
+
+    @hybrid_property
+    def unblock_time_epoch(self):
+        return int((self.unblock_time - datetime(1970,1,1)).total_seconds())
+    
+    def __init__(self, user, blocked_user):
+        self.user = user
+        self.blocked_user = blocked_user
+        
+    def dict_repr(self):
+        return {
+            "id":self.id,
+            "user_id":self.user_id,
+            "blocked_user_id":self.blocked_user_id,
+            "block_time":self.block_time_epoch,
+            "unblock_time":self.unblock_time_epoch
+        }
+    
     
 class Friend(db.Model):
     __tablename__ = "friends"
