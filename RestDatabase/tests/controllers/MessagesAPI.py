@@ -317,6 +317,64 @@ class MessagesApiTestCase(FitPalsTestCase):
         assert received[-1]["args"][0]["http_method"] == "POST"
         assert received[-1]["args"][0]["value"] == message_received
         
+    def test_create_message_thread_user1_blocked(self):
+        #create thread
+        resp = self.app.post("/message_threads",
+                             headers={"Authorization":self.test_user1["fitpals_secret"]},
+                             data={"user2_id":self.test_user2["id"]})
+        thread_id = json.loads(resp.data)["value"]["id"]
+        
+        #have user2 block user1
+        resp = self.app.post("/user_blocks",
+                             headers={"Authorization":self.test_user2["fitpals_secret"]},
+                             data={"blocked_user_id":self.test_user1["id"]})
+
+        #clear user2's websocket receive queue
+        sleep(0.1)
+        received = self.websocket_client2.get_received()
+
+        #create message
+        message = {"message_thread_id":thread_id,
+                   "direction":0,
+                   "body":"yo dawg"}
+        resp = self.app.post("/messages",
+                             headers={"Authorization":self.test_user1["fitpals_secret"]},
+                             data=message)
+        
+        #ensure that user2 did not receive a message over websocket
+        sleep(0.1)
+        received = self.websocket_client2.get_received()
+        assert len(received) == 0
+        
+    def test_create_message_thread_user2_blocked(self):
+        #create thread
+        resp = self.app.post("/message_threads",
+                             headers={"Authorization":self.test_user1["fitpals_secret"]},
+                             data={"user2_id":self.test_user2["id"]})
+        thread_id = json.loads(resp.data)["value"]["id"]
+        
+        #have user2 block user1
+        resp = self.app.post("/user_blocks",
+                             headers={"Authorization":self.test_user1["fitpals_secret"]},
+                             data={"blocked_user_id":self.test_user2["id"]})
+
+        #clear user2's websocket receive queue
+        sleep(0.1)
+        received = self.websocket_client1.get_received()
+
+        #create message
+        message = {"message_thread_id":thread_id,
+                   "direction":1,
+                   "body":"yo dawg"}
+        resp = self.app.post("/messages",
+                             headers={"Authorization":self.test_user2["fitpals_secret"]},
+                             data=message)
+        
+        #ensure that user2 did not receive a message over websocket
+        sleep(0.1)
+        received = self.websocket_client1.get_received()
+        assert len(received) == 0
+ 
     def test_create_message_invalid_auth_token(self):
         #create thread
         resp = self.app.post("/message_threads",

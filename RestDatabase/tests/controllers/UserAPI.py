@@ -83,7 +83,6 @@ class UsersApiTestCase(FitPalsTestCase):
         assert resp.status_code==400
         assert json.loads(resp.data)["message"] == "Coordinates invalid."
         
-      
     def test_get_users(self):
         fitpals_secret = self.test_user1["fitpals_secret"]
         setting_id = self.test_user1["search_settings_id"]

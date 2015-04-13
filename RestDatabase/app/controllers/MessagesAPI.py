@@ -131,13 +131,26 @@ class NewMessagesAPI(Resource):
             #commit changes to the db
             db.session.commit()
 
-            #send async update
+            #determine if user sending message has been blocked by receiver
+            if user == thread.user1:
+                is_blocked = thread.user2.blocks\
+                              .filter(and_(UserBlock.blocked_user_id==user.id,
+                                           UserBlock.unblock_time==None)).first()
+            elif user == thread.user2:
+                is_blocked = thread.user1.blocks\
+                              .filter(and_(UserBlock.blocked_user_id==user.id,
+                                           UserBlock.unblock_time==None)).first()
+                
+            #send sync update
             send_message(thread.user1 if user==thread.user1 else thread.user2,
-                         request.path,request.method,
-                         value=new_message.dict_repr())
-            send_message(thread.user2 if user==thread.user1 else thread.user1,
-                         request.path,request.method,
-                         value=new_message.dict_repr(),apn_send=True)
+                        request.path,request.method,
+                        value=new_message.dict_repr())
+            #ensure that if user has been blocked, the new message won't be sent
+            #to the intended user
+            if not is_blocked:
+                send_message(thread.user2 if user==thread.user1 else thread.user1,
+                            request.path,request.method,
+                            value=new_message.dict_repr(),apn_send=True)
 
             #return success
             return Response(status=201,message="Message created.",
