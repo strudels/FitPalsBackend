@@ -8,7 +8,7 @@ from app.utils.AsyncNotifications import send_message
 from sqlalchemy import or_, and_
 
 @api.resource("/user_blocks")
-class NewUserBlocksAPI(Resource):
+class UserBlocksAPI(Resource):
     def get(self):
         """
         Get a user's UserBlocks.
@@ -33,7 +33,7 @@ class NewUserBlocksAPI(Resource):
 
             blocks = user.blocks.all()
             return Response(status=200,message="User blocks found.",
-                            value=[b.dict_repr() for b in blocks])
+                            value=[b.dict_repr() for b in blocks]).__dict__,200
         except Exception as e:
             app.logger.error(e)
             return Response(status=500, message="Internal server error.").__dict__,500
@@ -54,7 +54,7 @@ class NewUserBlocksAPI(Resource):
         parser.add_argument("Authorization",
             type=str, location="headers", required=True)
         parser.add_argument("blocked_user_id",
-            type=int, location="headers", required=True)
+            type=int, location="form", required=True)
         args = parser.parse_args()
 
         try:
@@ -70,14 +70,15 @@ class NewUserBlocksAPI(Resource):
             db.session.add(block)
             db.session.commit()
 
-            return Response(status=201,message="User block created.").__dict__,201
+            return Response(status=201,message="User block created.",
+                            value=block.dict_repr()).__dict__,201
         except Exception as e:
             db.session.rollback()
             app.logger.error(e)
             return Response(status=500, message="Internal server error.").__dict__,500
 
 @api.resource("/user_blocks/<int:block_id>")
-class NewUserBlocksAPI(Resource):
+class UserBlockAPI(Resource):
     def delete(self,block_id):
         """
         Remove a UserBlock.

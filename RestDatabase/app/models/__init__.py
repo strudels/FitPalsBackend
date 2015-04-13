@@ -221,7 +221,7 @@ class UserBlock(db.Model):
     block_time =\
         db.Column(db.DateTime, default=db.func.now(), nullable=False)
     #unblock_time will be enforced to be >= block_time via controller
-    unblock_time = db.Column(db.DateTime, default=None)
+    unblock_time = db.Column(db.DateTime, default=None, nullable=True)
 
     @hybrid_property
     def block_time_epoch(self):
@@ -229,7 +229,9 @@ class UserBlock(db.Model):
 
     @hybrid_property
     def unblock_time_epoch(self):
-        return int((self.unblock_time - datetime(1970,1,1)).total_seconds())
+        if self.unblock_time:
+            return int((self.unblock_time - datetime(1970,1,1)).total_seconds())
+        else: return None
     
     def __init__(self, user, blocked_user):
         self.user = user

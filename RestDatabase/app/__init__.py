@@ -80,6 +80,7 @@ from controllers.SearchSettingsAPI import *
 from controllers.FriendsAPI import *
 from controllers.FacebookFriendsAPI import *
 from controllers.UserReportsAPI import *
+from controllers.UserBlockAPI import *
 
 #class for overriding ModelView methods to make ModelView Work
 class ActivityView(ModelView):
