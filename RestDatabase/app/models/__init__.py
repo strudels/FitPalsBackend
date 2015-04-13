@@ -130,7 +130,7 @@ class User(db.Model):
     @hybrid_property
     def online(self):
         return str(self.id) in socketio.rooms[""] if socketio.rooms!={} else False
-    
+        
     @hybrid_property
     def primary_picture(self):
         pic = self.pictures.order_by(Picture.ui_index).first()

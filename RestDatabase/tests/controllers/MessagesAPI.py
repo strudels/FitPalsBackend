@@ -8,9 +8,18 @@ class MessagesApiTestCase(FitPalsTestCase):
                              data={"user2_id":self.test_user2["id"]})
 
         #get threads
-        resp = self.app.get("/message_threads?user2_id=%s"\
-                             % self.test_user1["fitpals_secret"],
+        resp = self.app.get("/message_threads",
                              headers={"Authorization":self.test_user1["fitpals_secret"]})
+        assert resp.status_code==200
+        assert json.loads(resp.data)["message"] == "Message threads found."
+        received_thread = json.loads(resp.data)["value"]
+        assert type(received_thread[0]["id"]) == type(int())
+        assert received_thread[0]["user1_id"] == self.test_user1["id"]
+        assert received_thread[0]["user2_id"] == self.test_user2["id"]
+
+        #get threads for user2
+        resp = self.app.get("/message_threads",
+                             headers={"Authorization":self.test_user2["fitpals_secret"]})
         assert resp.status_code==200
         assert json.loads(resp.data)["message"] == "Message threads found."
         received_thread = json.loads(resp.data)["value"]

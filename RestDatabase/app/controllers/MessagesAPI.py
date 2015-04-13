@@ -224,6 +224,8 @@ class MessageThreadsAPI(Resource):
                                     MessageThread.user1_deleted==False),
                             and_(MessageThread.user2==user,
                                     MessageThread.user2_deleted==False))).all()
+            for t in threads:
+                t = t.dict_repr()
 
             return Response(status=200, message="Message threads found.",
                             value=[t.dict_repr() for t in threads]).__dict__,200
