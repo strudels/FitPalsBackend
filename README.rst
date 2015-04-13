@@ -217,10 +217,10 @@ Contents:
 
    :Query Parameters:
       * **message_thread_id** (*int*) -- Id of specific thread to get
-        messages from.
+        messages from(Optional).
 
       * **since** (*int*) -- Optional time to get messages 'since'
-        then.
+        then(epoch).
 
    :Status Codes:
       * 401 Unauthorized -- Not Authorized.

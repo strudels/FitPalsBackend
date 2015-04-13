@@ -15,8 +15,8 @@ class NewMessagesAPI(Resource):
         
         :reqheader Authorization: facebook secret
 
-        :query int message_thread_id: Id of specific thread to get messages from.
-        :query int since: Optional time to get messages 'since' then.
+        :query int message_thread_id: Id of specific thread to get messages from(Optional).
+        :query int since: Optional time to get messages 'since' then(epoch).
 
         :status 401: Not Authorized.
         :status 404: Message thread not found.
@@ -26,7 +26,7 @@ class NewMessagesAPI(Resource):
         parser.add_argument("Authorization",
             type=str, location="headers", required=True)
         parser.add_argument("message_thread_id",
-            type=int, location="args", required=True)
+            type=int, location="args", required=False)
         parser.add_argument("since",
             type=int, location="args", required=False)
         args = parser.parse_args()
@@ -39,21 +39,28 @@ class NewMessagesAPI(Resource):
                     .__dict__, 401
 
             #get thread from database
-            thread = MessageThread.query.get(args.message_thread_id)
-            if not thread or\
-            (thread.user1==user and thread.user1_deleted==True) or\
-            (thread.user2==user and thread.user2_deleted==True):
-                return Response(status=404,
-                    message="Message thread not found.")\
-                    .__dict__, 404
+            if args.message_thread_id:
+                thread = MessageThread.query.get(args.message_thread_id)
+                if not thread or\
+                (thread.user1==user and thread.user1_deleted==True) or\
+                (thread.user2==user and thread.user2_deleted==True):
+                    return Response(status=404,
+                        message="Message thread not found.")\
+                        .__dict__, 404
 
-            #ensure user is authorized to read thread
-            if thread.user1 != user and thread.user2 != user:
-                return Response(status=401,message="Not Authorized.").__dict__,401
+                #ensure user is authorized to read thread
+                if thread.user1 != user and thread.user2 != user:
+                    return Response(status=401,message="Not Authorized.").__dict__,401
+                messages_query = thread.messages
+            else:
+                messages_query = Message.query.join(Message.message_thread)\
+                                 .filter(or_(MessageThread.user1_id==user.id,
+                                             MessageThread.user2_id==user.id))
 
             if args.since != None:
-                messages = thread.messages.filter(Message.time>=args.since).all()
-            else: messages = thread.messages.all()
+                messages = messages_query.filter(Message.time>=\
+                    datetime.utcfromtimestamp(args.since)).all()
+            else: messages = messages_query.all()
 
             #return thread
             return Response(status=200, message="Messages found.",
