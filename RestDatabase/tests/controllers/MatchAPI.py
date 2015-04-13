@@ -5,7 +5,7 @@ class MatchApiTestCase(FitPalsTestCase):
         fitpals_secret = self.test_user1["fitpals_secret"]
         resp = self.app.post("/matches",
                              data={"user_id":self.test_user1["id"],
-                                   "match_user_id":self.test_user2["id"],
+                                   "matched_user_id":self.test_user2["id"],
                                    "liked":1},
                              headers={"Authorization":fitpals_secret})
         assert resp.status_code == 201
@@ -23,7 +23,7 @@ class MatchApiTestCase(FitPalsTestCase):
         fitpals_secret = self.test_user1["fitpals_secret"]
         resp = self.app.post("/matches",
                              data={"user_id":self.test_user1["id"],
-                                   "match_user_id":self.test_user2["id"],
+                                   "matched_user_id":self.test_user2["id"],
                                    "liked":1},
                              headers={"Authorization":fitpals_secret})
         first_match = json.loads(resp.data)["value"]
@@ -32,7 +32,7 @@ class MatchApiTestCase(FitPalsTestCase):
         fitpals_secret2 = self.test_user2["fitpals_secret"]
         resp = self.app.post("/matches",
                              data={"user_id":self.test_user2["id"],
-                                   "match_user_id":self.test_user1["id"],
+                                   "matched_user_id":self.test_user1["id"],
                                    "liked":1},
                              headers={"Authorization":fitpals_secret2})
         second_match = json.loads(resp.data)["value"]
@@ -66,7 +66,7 @@ class MatchApiTestCase(FitPalsTestCase):
         fitpals_secret = self.test_user1["fitpals_secret"]
         resp = self.app.post("/matches",
                              data={"user_id":0,
-                                   "match_user_id":self.test_user2["id"],
+                                   "matched_user_id":self.test_user2["id"],
                                    "liked":1},
                              headers={"Authorization":fitpals_secret})
         assert resp.status_code == 404
@@ -77,7 +77,7 @@ class MatchApiTestCase(FitPalsTestCase):
         fitpals_secret = self.test_user1["fitpals_secret"]
         resp = self.app.post("/matches",
                              data={"user_id":self.test_user1["id"],
-                                   "match_user_id":0,
+                                   "matched_user_id":0,
                                    "liked":1},
                              headers={"Authorization":fitpals_secret})
         assert resp.status_code == 404
@@ -87,7 +87,7 @@ class MatchApiTestCase(FitPalsTestCase):
         fitpals_secret = self.test_user1["fitpals_secret"]
         resp = self.app.post("/matches",
                              data={"user_id":self.test_user1["id"],
-                                   "match_user_id":self.test_user2["id"],
+                                   "matched_user_id":self.test_user2["id"],
                                    "liked":1},
                              headers={"Authorization":fitpals_secret + "junk"})
         assert resp.status_code == 401
@@ -97,7 +97,7 @@ class MatchApiTestCase(FitPalsTestCase):
         fitpals_secret = self.test_user1["fitpals_secret"]
         resp = self.app.post("/matches",
                              data={"user_id":self.test_user1["id"],
-                                   "match_user_id":self.test_user1["id"],
+                                   "matched_user_id":self.test_user1["id"],
                                    "liked":1},
                              headers={"Authorization":fitpals_secret})
         assert resp.status_code == 400
@@ -108,7 +108,7 @@ class MatchApiTestCase(FitPalsTestCase):
         fitpals_secret = self.test_user1["fitpals_secret"]
         resp = self.app.post("/matches",
                              data={"user_id":self.test_user1["id"],
-                                   "match_user_id":self.test_user2["id"],
+                                   "matched_user_id":self.test_user2["id"],
                                    "liked":1},
                              headers={"Authorization":fitpals_secret})
         assert resp.status_code == 201
@@ -126,7 +126,7 @@ class MatchApiTestCase(FitPalsTestCase):
         fitpals_secret = self.test_user1["fitpals_secret"]
         resp = self.app.post("/matches",
                              data={"user_id":self.test_user1["id"],
-                                   "match_user_id":self.test_user2["id"],
+                                   "matched_user_id":self.test_user2["id"],
                                    "liked":1},
                              headers={"Authorization":fitpals_secret})
         assert resp.status_code == 201
@@ -134,7 +134,7 @@ class MatchApiTestCase(FitPalsTestCase):
         fitpals_secret = self.test_user2["fitpals_secret"]
         resp = self.app.post("/matches",
                              data={"user_id":self.test_user2["id"],
-                                   "match_user_id":self.test_user1["id"],
+                                   "matched_user_id":self.test_user1["id"],
                                    "liked":1},
                              headers={"Authorization":fitpals_secret})
         assert resp.status_code == 201
@@ -158,7 +158,7 @@ class MatchApiTestCase(FitPalsTestCase):
         fitpals_secret = self.test_user1["fitpals_secret"]
         resp = self.app.post("/matches",
                              data={"user_id":self.test_user1["id"],
-                                   "match_user_id":self.test_user2["id"],
+                                   "matched_user_id":self.test_user2["id"],
                                    "liked":1},
                              headers={"Authorization":fitpals_secret})
         match_id = json.loads(resp.data)["value"]["id"]
@@ -196,7 +196,7 @@ class MatchApiTestCase(FitPalsTestCase):
         fitpals_secret = self.test_user1["fitpals_secret"]
         resp = self.app.post("/matches",
                              data={"user_id":self.test_user1["id"],
-                                   "match_user_id":self.test_user2["id"],
+                                   "matched_user_id":self.test_user2["id"],
                                    "liked":1},
                              headers={"Authorization":fitpals_secret})
         match_id = json.loads(resp.data)["value"]["id"]

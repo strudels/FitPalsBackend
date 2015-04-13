@@ -81,7 +81,7 @@ class MatchesAPI(Resource):
         parser = reqparse.RequestParser()
         parser.add_argument("user_id",
             type=int, location="form", required=True)
-        parser.add_argument("match_user_id",
+        parser.add_argument("matched_user_id",
             type=int, location="form", required=True)
         parser.add_argument("liked",
             type=int, location="form", required=True)
@@ -94,7 +94,7 @@ class MatchesAPI(Resource):
             user = User.query.get(args.user_id)
             if not user:
                 return Response(status=404, message="User not found.").__dict__,404
-            match_user = User.query.get(args.match_user_id)
+            match_user = User.query.get(args.matched_user_id)
             if not match_user:
                 return Response(status=404, message="Match user not found.")\
                     .__dict__,404
