@@ -103,6 +103,9 @@ class User(db.Model):
         cascade="save-update, merge, delete")
     activity_settings = relationship("ActivitySetting", lazy="dynamic",
         cascade="save-update, merge, delete")
+    blocks = relationship("UserBlock",
+        primaryjoin="User.id==UserBlock.user_id", lazy="dynamic",
+        cascade="save-update, merge, delete")
     
     @hybrid_property
     def longitude(self):
