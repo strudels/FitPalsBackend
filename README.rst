@@ -194,6 +194,42 @@ Contents:
 
       * 201 Created -- User report created.
 
+``GET /user_blocks``
+
+   Get a user's UserBlocks.
+
+   :Request Headers:
+      * Authorization -- fitpals_secret
+
+   :Query Parameters:
+      * **message_thread_id** (*int*) -- Id of specific thread to get
+        messages from(Optional).
+
+      * **since** (*int*) -- Optional time to get messages 'since'
+        then(epoch).
+
+   :Status Codes:
+      * 401 Unauthorized -- Not Authorized.
+
+      * 200 OK -- User blocks found.
+
+``POST /user_blocks``
+
+   Post a new UserBlock.
+
+   :Request Headers:
+      * Authorization -- fitpals_secret
+
+   :Form Parameters:
+      * **int blocked_user_id** -- ID of user to be blocked.
+
+   :Status Codes:
+      * 401 Unauthorized -- Not Authorized.
+
+      * 404 Not Found -- User not found.
+
+      * 201 Created -- User block created.
+
 ``GET /activities``
 
    Get all possible activities.
@@ -604,6 +640,23 @@ Contents:
       * 404 Not Found -- Search settings not found.
 
       * 202 Accepted -- Search settings updated.
+
+``DELETE /user_blocks/(int: block_id)``
+
+   Remove a UserBlock.
+
+   :Request Headers:
+      * Authorization -- fitpals_secret
+
+   :Parameters:
+      * **block_id** (*int*) -- ID of UserBlock.
+
+   :Status Codes:
+      * 401 Unauthorized -- Not Authorized.
+
+      * 404 Not Found -- User block not found.
+
+      * 200 OK -- User block removed.
 
 ``PUT /pictures/(int: pic_id)``
 
