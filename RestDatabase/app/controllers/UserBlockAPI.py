@@ -69,6 +69,9 @@ class UserBlocksAPI(Resource):
             block = UserBlock(user,blocked_user)
             db.session.add(block)
             db.session.commit()
+            
+            send_message(user,request.path,request.method,
+                         value=block.dict_repr())
 
             return Response(status=201,message="User block created.",
                             value=block.dict_repr()).__dict__,201
@@ -111,6 +114,9 @@ class UserBlockAPI(Resource):
                 
             block.unblock_time = db.func.now()
             db.session.commit()
+            
+            send_message(user,request.path,request.method,
+                         value=block.dict_repr())
             
             return Response(status=200,message="User block removed.",
                             value=block.dict_repr()).__dict__,200
