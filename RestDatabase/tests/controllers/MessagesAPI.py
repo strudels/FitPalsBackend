@@ -249,6 +249,62 @@ class MessagesApiTestCase(FitPalsTestCase):
         for message in messages_received:
             assert type(message["id"]) == type(int())
             assert type(datetime.fromtimestamp(message["time"])) == datetime
+            
+    def test_get_messages_from_currently_blocked_user(self):
+        #create thread
+        resp = self.app.post("/message_threads",
+                             headers={"Authorization":self.test_user1["fitpals_secret"]},
+                             data={"user2_id":self.test_user2["id"]})
+        thread1_id = json.loads(resp.data)["value"]["id"]
+        
+        #have user2 block user1
+        resp = self.app.post("/user_blocks",
+                             headers={"Authorization":self.test_user2["fitpals_secret"]},
+                             data={"blocked_user_id":self.test_user1["id"]})
+        
+        #have user1 send a message to user2
+        message = {"message_thread_id":thread1_id,
+                "body":"sup",
+                "direction":0}
+        resp = self.app.post("/messages",
+                            data=message,
+                            headers={"Authorization":self.test_user1["fitpals_secret"]})
+        
+        #ensure that user2 did not receive message
+        resp = self.app.get("/messages",
+                            headers={"Authorization":self.test_user2["fitpals_secret"]})
+        assert len(json.loads(resp.data)["value"]) == 0
+        
+    def test_get_messages_from_previously_blocked_user(self):
+        #create thread
+        resp = self.app.post("/message_threads",
+                             headers={"Authorization":self.test_user1["fitpals_secret"]},
+                             data={"user2_id":self.test_user2["id"]})
+        thread1_id = json.loads(resp.data)["value"]["id"]
+        
+        #have user2 block user1
+        resp = self.app.post("/user_blocks",
+                             headers={"Authorization":self.test_user2["fitpals_secret"]},
+                             data={"blocked_user_id":self.test_user1["id"]})
+        block = json.loads(resp.data)["value"]
+        #have user2 unblock user1
+        resp = self.app.delete("/user_blocks/%d" % block["id"],
+                             headers={"Authorization":self.test_user2["fitpals_secret"]})
+        unblock = json.loads(resp.data)["value"]
+        
+        sleep(1) #make sure that time on server has progressed past blocking timespan
+        #have user1 send a message to user2
+        message = {"message_thread_id":thread1_id,
+                "body":"sup",
+                "direction":0}
+        resp = self.app.post("/messages",
+                            data=message,
+                            headers={"Authorization":self.test_user1["fitpals_secret"]})
+        
+        #ensure that user2 did received message
+        resp = self.app.get("/messages",
+                            headers={"Authorization":self.test_user2["fitpals_secret"]})
+        assert len(json.loads(resp.data)["value"]) == 1
            
     def test_get_messages_thread_not_found(self):
         #get messages for user

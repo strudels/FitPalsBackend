@@ -73,11 +73,15 @@ class NewMessagesAPI(Resource):
                     and_(
                         MessageThread.user1_id==user.id,
                         ~MessageThread.user2_id.in_(sub_query),
-                        Message.direction==False
+                        Message.direction==True
                     ), and_(
                         MessageThread.user2_id==user.id,
                         ~MessageThread.user1_id.in_(sub_query),
-                        Message.direction==True
+                        Message.direction==False
+                    ), and_(MessageThread.user1_id==user.id,
+                            Message.direction==False
+                    ), and_(MessageThread.user2_id==user.id,
+                            Message.direction==True
                     )
                 )
             )
