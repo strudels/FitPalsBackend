@@ -51,16 +51,39 @@ class NewMessagesAPI(Resource):
                 #ensure user is authorized to read thread
                 if thread.user1 != user and thread.user2 != user:
                     return Response(status=401,message="Not Authorized.").__dict__,401
-                messages_query = thread.messages
+                messages_query = thread.messages.join(Message.message_thread)
             else:
                 messages_query = Message.query.join(Message.message_thread)\
                                  .filter(or_(MessageThread.user1_id==user.id,
                                              MessageThread.user2_id==user.id))
+                
+            #filter out messages sent by blocked user
+            sub_query = UserBlock.query.filter(
+                and_(
+                    UserBlock.user_id==user.id,
+                    UserBlock.block_time<=db.func.now(),
+                    or_(
+                        UserBlock.unblock_time==None,
+                        UserBlock.unblock_time>=db.func.now()
+                    )
+                )
+            ).with_entities(UserBlock.blocked_user_id)
+            messages_query = messages_query.filter(
+                or_(
+                    and_(
+                        MessageThread.user1_id==user.id,
+                        ~MessageThread.user1_id.in_(sub_query)
+                    ), and_(
+                        MessageThread.user2_id==user.id,
+                        ~MessageThread.user2_id.in_(sub_query)
+                    )
+                )
+            )
 
             if args.since != None:
-                messages = messages_query.filter(Message.time>=\
-                    datetime.utcfromtimestamp(args.since)).all()
-            else: messages = messages_query.all()
+                messages_query = messages_query.filter(Message.time>=\
+                    datetime.utcfromtimestamp(args.since))
+            messages = messages_query.all()
 
             #return thread
             return Response(status=200, message="Messages found.",
