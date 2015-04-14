@@ -508,6 +508,8 @@ class Message(db.Model):
     message_thread_id = db.Column(db.Integer, ForeignKey("message_threads.id"))
     message_thread =\
         relationship("MessageThread",foreign_keys=[message_thread_id])
+    user1_read = db.Column(db.Boolean, nullable=False, default=False)
+    user2_read = db.Column(db.Boolean, nullable=False, default=False)
     
     @hybrid_property
     def epoch(self):
@@ -524,7 +526,9 @@ class Message(db.Model):
             "direction":self.direction,
             "body":self.body,
             "time":self.epoch,
-            "message_thread_id":self.message_thread_id
+            "message_thread_id":self.message_thread_id,
+            "user1_read":self.user1_read,
+            "user2_read":self.user2_read
         }
 
 class MessageThread(db.Model):
