@@ -28,8 +28,7 @@ class MessagesApiTestCase(FitPalsTestCase):
         assert received_thread[0]["user2_id"] == self.test_user2["id"]
 
     def test_get_message_threads_invalid_auth_token(self):
-        resp = self.app.get("/message_threads?user2_id=%s"\
-                             % self.test_user1["fitpals_secret"],
+        resp = self.app.get("/message_threads",
                              headers={"Authorization":
                                       self.test_user1["fitpals_secret"] + "junk"})
         assert resp.status_code==401

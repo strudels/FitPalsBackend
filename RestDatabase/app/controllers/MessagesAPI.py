@@ -42,14 +42,29 @@ class NewMessagesAPI(Resource):
             #get thread from database
             if args.message_thread_id:
                 thread = MessageThread.query.get(args.message_thread_id)
+                #404 if specified thread is not found
                 if not thread:
                     return Response(status=404,
                         message="Message thread not found.")\
                         .__dict__, 404
-
-                #ensure user is authorized to read thread
-                if thread.user1 != user and thread.user2 != user:
+                #401 if user is not the specified thread's user
+                if not thread.user1==user or not thread.user2==user:
                     return Response(status=401,message="Not Authorized.").__dict__,401
+
+                #if thread has been "deleted" by user, return 404
+                thread_exists = True
+                if user==thread.user1 and thread.user1_delete_time != None:
+                    messages_since_delete = thread.messages.filter(
+                        Message.time>=thread.user1_delete_time).first()
+                    thread_exists = True if messages_since_delete else False
+                elif user==thread.user2 and thread.user2_delete_time != None:
+                    messages_since_delete = thread.messages.filter(
+                        Message.time>=thread.user2_delete_time).first()
+                    thread_exists = True if messages_since_delete else False
+                if not thread_exists:
+                    return Response(status=404,
+                        message="Message thread not found.")\
+                        .__dict__, 404
                 messages_query = thread.messages.join(Message.message_thread)
             else:
                 messages_query = Message.query.join(Message.message_thread)\
