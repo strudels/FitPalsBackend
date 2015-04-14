@@ -48,7 +48,7 @@ class NewMessagesAPI(Resource):
                         message="Message thread not found.")\
                         .__dict__, 404
                 #401 if user is not the specified thread's user
-                if not thread.user1==user or not thread.user2==user:
+                if not thread.user1==user and not thread.user2==user:
                     return Response(status=401,message="Not Authorized.").__dict__,401
 
                 #if thread has been "deleted" by user, return 404
@@ -245,21 +245,19 @@ class MessageThreadsAPI(Resource):
 
             #get threads for user that are either empty, or have any messages
             # that have not been deleted
-            threads = MessageThread.query
+            threads = MessageThread.query\
                 .filter(
                     or_(
                         and_(MessageThread.user1==user,
                              or_(MessageThread.user1_delete_time==None,
-                                 MessageThread.messages.join(Message.message_thread).filter(
-                                     MessageThread.user1_delete_time<=Message.time
-                                 ).any()
+                                 MessageThread.messages.any(
+                                     Message.time>=MessageThread.user1_delete_time)
                              )
                         ),
                         and_(MessageThread.user2==user,
                              or_(MessageThread.user2_delete_time==None,
-                                 MessageThread.messages.join(Message.message_thread).filter(
-                                     MessageThread.user2_delete_time<=Message.time
-                                 ).any()
+                                 MessageThread.messages.any(
+                                     Message.time>=MessageThread.user2_delete_time)
                              )
                         )
                     )
@@ -318,7 +316,7 @@ class MessageThreadsAPI(Resource):
 
             if not thread:
                 thread = MessageThread(user1, user2)
-                db.session.add(new_thread)
+                db.session.add(thread)
                 db.session.commit()
                 send_message(thread.user1,request.path,request.method,
                             value=thread.dict_repr())
@@ -326,12 +324,12 @@ class MessageThreadsAPI(Resource):
                             value=thread.dict_repr())
                 
             else: #only send_message to user making request
-                send_message(user,request.path,request.method,
-                             value=thread.dict_repr()
+                send_message(user1,request.path,request.method,
+                             value=thread.dict_repr())
 
             #return create success!
             return Response(status=201, message="Message thread created.",
-                            value=new_thread.dict_repr()).__dict__,201
+                            value=thread.dict_repr()).__dict__,201
         except Exception as e:
             if exception_is_validation_error(e):
                 return Response(status=400,
@@ -376,9 +374,9 @@ class MessageThreadAPI(Resource):
 
             #delete thread for user if user is authorized
             if user == thread.user1:
-                thread.user1_delete_time = datetime.utcnow()
+                thread.user1_delete_time = datetime.now()
             elif user == thread.user2:
-                thread.user2_delete_time = datetime.utcnow()
+                thread.user2_delete_time = datetime.now()
             else:
                 return Response(status=401,message="Not Authorized.").__dict__,401
 

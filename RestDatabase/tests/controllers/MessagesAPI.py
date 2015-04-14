@@ -69,22 +69,6 @@ class MessagesApiTestCase(FitPalsTestCase):
         assert received[-1]["args"][0]["http_method"] == "POST"
         assert received[-1]["args"][0]["value"] == received_thread
         
-    def test_create_message_thread_blocked(self):
-        #have user2 block user1
-        resp = self.app.post("/user_blocks",
-                             headers={"Authorization":self.test_user2["fitpals_secret"]},
-                             data={"blocked_user_id":self.test_user1["id"]})
-
-        #create new thread
-        resp = self.app.post("/message_threads",
-                             headers={"Authorization":self.test_user1["fitpals_secret"]},
-                             data={"user2_id":self.test_user2["id"]})
-        received_thread = json.loads(resp.data)["value"]
-        
-        #ensure request worked correctly
-        assert resp.status_code==403
-        value = json.loads(resp.data)["message"] == "Blocked from creating message thread."
- 
     def test_create_message_thread_invalid_fitpals_secret(self):
         resp = self.app.post("/message_threads",
                              headers={"Authorization":self.test_user1["fitpals_secret"] + "junk"},
@@ -105,6 +89,13 @@ class MessagesApiTestCase(FitPalsTestCase):
                              headers={"Authorization":self.test_user1["fitpals_secret"]},
                              data={"user2_id":self.test_user2["id"]})
         thread_id = json.loads(resp.data)["value"]["id"]
+        
+        #post message to thread
+        resp = self.app.post("/messages",
+                             data={"message_thread_id":thread_id,
+                                   "direction":0,
+                                   "body":"wat up"},
+                             headers={"Authorization":self.test_user1["fitpals_secret"]})
 
         #delete thread for user 1
         resp = self.app.delete("/message_threads/%d" % thread_id,
@@ -120,36 +111,61 @@ class MessagesApiTestCase(FitPalsTestCase):
         assert received[-1]["args"][0]["path"] == "/message_threads/%d" % thread_id
         assert received[-1]["args"][0]["http_method"] == "DELETE"
         assert received[-1]["args"][0]["value"] == None
+        
+        #ensure that GET /message_threads returns nothing for user1
+        resp = self.app.get("/message_threads",
+                             headers={"Authorization":self.test_user1["fitpals_secret"]})
+        assert len(json.loads(resp.data)["value"]) == 0
+        
+        #ensure that GET /messages returns nothing for user1
+        resp = self.app.get("/messages",
+                             headers={"Authorization":self.test_user1["fitpals_secret"]})
+        assert len(json.loads(resp.data)["value"]) == 0
 
-        #ensure test_user2 cannot create new messages for thread
+        #ensure that GET /message_threads still returns thread for user2
+        resp = self.app.get("/message_threads",
+                             headers={"Authorization":self.test_user2["fitpals_secret"]})
+        assert len(json.loads(resp.data)["value"]) == 1
+
+        #ensure that GET /messages returns 1 message for user2
+        resp = self.app.get("/messages",
+                             headers={"Authorization":self.test_user2["fitpals_secret"]})
+        assert len(json.loads(resp.data)["value"]) == 1
+
+        #recreate deleted thread to see if it still works
+        resp = self.app.post("/message_threads",
+                             headers={"Authorization":self.test_user1["fitpals_secret"]},
+                             data={"user2_id":self.test_user2["id"]})
+        assert thread_id == json.loads(resp.data)["value"]["id"]
+        
+        #send a second message to the thread
         message = {"message_thread_id":thread_id,
                    "direction":1,
                    "body":"yo dawg"}
         resp = self.app.post("/messages",
                              headers={"Authorization":self.test_user2["fitpals_secret"]},
                              data=message)
-        assert resp.status_code==403
-        assert json.loads(resp.data)["message"]=="Message thread has been closed."
 
-
-        #ensure thread is still present for user 2
-        resp = self.app.get("/messages?message_thread_id=%d" % thread_id,
-                            headers={"Authorization":self.test_user2["fitpals_secret"]})
-        assert resp.status_code==200
-        assert json.loads(resp.data)["message"]=="Messages found."
-
-        #delete thread for user 2
-        resp = self.app.delete("/message_threads/%d" % thread_id,
-                             headers={"Authorization":self.test_user2["fitpals_secret"]})
-        assert resp.status_code==200
-        assert json.loads(resp.data)["message"]=="Message thread deleted."
-                            
-        #ensure thread is deleted
-        resp = self.app.get("/messages?message_thread_id=%d" % thread_id,
-                            headers={"Authorization":self.test_user2["fitpals_secret"]})
-        assert resp.status_code==404
-        assert json.loads(resp.data)["message"]=="Message thread not found."
+        #ensure that GET /message_threads returns the thread for user1 again
+        resp = self.app.get("/message_threads",
+                             headers={"Authorization":self.test_user1["fitpals_secret"]})
+        assert len(json.loads(resp.data)["value"]) == 1
         
+        #ensure that GET /messages returns 1 message for user1
+        resp = self.app.get("/messages",
+                             headers={"Authorization":self.test_user1["fitpals_secret"]})
+        assert len(json.loads(resp.data)["value"]) == 1
+
+        #ensure that GET /message_threads still returns thread for user2
+        resp = self.app.get("/message_threads",
+                             headers={"Authorization":self.test_user2["fitpals_secret"]})
+        assert len(json.loads(resp.data)["value"]) == 1
+
+        #ensure that GET /messages returns 2 message for user2
+        resp = self.app.get("/messages",
+                             headers={"Authorization":self.test_user2["fitpals_secret"]})
+        assert len(json.loads(resp.data)["value"]) == 2
+
     def test_delete_message_thread_invalid_auth_token(self):
         #create thread
         resp = self.app.post("/message_threads",
@@ -259,7 +275,7 @@ class MessagesApiTestCase(FitPalsTestCase):
 
         resp = self.app.post("/message_threads",
                              headers={"Authorization":self.test_user1["fitpals_secret"]},
-                             data={"user2_id":self.test_user2["id"]})
+                             data={"user2_id":self.test_user3["id"]})
         thread2_id = json.loads(resp.data)["value"]["id"]
         
         for thread_id in [thread1_id,thread2_id]:
@@ -509,22 +525,3 @@ class MessagesApiTestCase(FitPalsTestCase):
                                    "body":"yo dawg"})
         assert resp.status_code==401
         assert json.loads(resp.data)["message"]=="Not Authorized."
-        
-    def test_create_message_for_closed_thread(self):
-        #create thread
-        resp = self.app.post("/message_threads",
-                             headers={"Authorization":self.test_user1["fitpals_secret"]},
-                             data={"user2_id":self.test_user2["id"]})
-        thread_id = json.loads(resp.data)["value"]["id"]
-        thread = MessageThread.query.get(thread_id)
-        thread.user2_deleted = True
-        db.session.commit()
-        
-        #create message
-        resp = self.app.post("/messages",
-                             headers={"Authorization":self.test_user1["fitpals_secret"]},
-                             data={"message_thread_id":thread_id,
-                                   "direction":0,
-                                   "body":"yo dawg"})
-        assert resp.status_code==403
-        assert json.loads(resp.data)["message"]=="Message thread has been closed."

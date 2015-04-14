@@ -532,13 +532,11 @@ class MessageThread(db.Model):
         cascade="save-update, merge, delete")
     user1_id = db.Column(db.Integer, ForeignKey("users.id"))
     user1 = relationship("User",foreign_keys=[user1_id])
-    user1_deleted = db.Column(db.Boolean, default=False)
-    user1_delete_time =
+    user1_delete_time =\
         db.Column(db.DateTime, default=None, nullable=True)
     user2_id = db.Column(db.Integer, ForeignKey("users.id"))
     user2 = relationship("User",foreign_keys=[user2_id])
-    user2_deleted = db.Column(db.Boolean, default=False)
-    user2_delete_time =
+    user2_delete_time =\
         db.Column(db.DateTime, default=None, nullable=True)
 
     #POST /message_threads will have to enforce that user2 cannot make a new
@@ -564,6 +562,7 @@ class MessageThread(db.Model):
             "last_message":self.last_message
         }
 
+"""
 #These 2 events ensure that a MessageThread gets deleted if both it's
 # user1_deleted and user2_deleted fields are True
 @event.listens_for(MessageThread.user1_deleted, "set")
@@ -577,3 +576,4 @@ def message_threads_user2_delete(thread, value, old_value, initiator):
     if thread.user1_deleted:
         db.session.delete(thread)
         db.session.commit()
+"""
