@@ -53,6 +53,12 @@ class NewMessagesAPI(Resource):
                 if not thread.user1==user and not thread.user2==user:
                     return Response(status=401,message="Not Authorized.").__dict__,401
 
+                #update all messages for the thread to be read
+                if user==thread.user1:
+                    for m in thread.messages: m.user1_read = True
+                else: #if user==thread.user2
+                    for m in thread.messages: m.user2_read = True
+
                 #if thread has been "deleted" by user, return 404
                 thread_exists = True
                 if user==thread.user1 and thread.user1_delete_time != None:
@@ -67,6 +73,7 @@ class NewMessagesAPI(Resource):
                     return Response(status=404,
                         message="Message thread not found.")\
                         .__dict__, 404
+                    
                 messages_query = thread.messages.join(Message.message_thread)
             else:
                 messages_query = Message.query.join(Message.message_thread)\
