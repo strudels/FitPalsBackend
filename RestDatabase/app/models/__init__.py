@@ -325,6 +325,7 @@ class Match(db.Model):
     liked = db.Column(db.Boolean, index=True, nullable=False)
     time =\
         db.Column(db.DateTime, default=db.func.now(), nullable=False)
+    read = db.Column(db.Boolean, nullable=False, default=False)
 
     __table_args__ = (CheckConstraint("user_id != matched_user_id"),)
 
@@ -344,7 +345,8 @@ class Match(db.Model):
             "matched_user_id":self.matched_user_id,
             "matched_user":self.matched_user.dict_repr(),
             "liked":self.liked,
-            "time":self.epoch
+            "time":self.epoch,
+            "read":self.read
         }
 
 class Device(db.Model):

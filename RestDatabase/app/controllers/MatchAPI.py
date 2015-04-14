@@ -133,6 +133,44 @@ class MatchesAPI(Resource):
 
 @api.resource("/matches/<int:match_id>")
 class MatchAPI(Resource):
+    def put(self, match_id):
+        """
+        Update match read field to true.
+
+        :reqheader Authorization: facebook secret
+
+        :param bool read: I might get rid of this.
+
+        :status 401: Not Authorized.
+        :status 404: Match not found.
+        :status 202: Match updated.
+        """
+        parser = reqparse.RequestParser()
+        parser.add_argument("Authorization",
+            type=str, location="headers", required=True)
+        args = parser.parse_args()
+        
+        try:
+            match = Match.query.get(match_id)
+            if not match:
+                return Response(status=404,message="Match not found.").__dict__,404
+                
+            user = User.query.filter(User.fitpals_secret==args.Authorization).first()
+            if not user or user != match.user:
+                return Response(status=401,message="Not Authorized.").__dict__,401
+
+            match.read = True
+            db.session.commit()
+            
+            send_message(user,request.path,request.method,value=match.dict_repr())
+
+            return Response(status=202,message="Match updated.",
+                            value=match.dict_repr()).__dict__,202
+        except Exception as e:
+            db.session.rollback()
+            app.logger.error(e)
+            return Response(status=500, message="Internal server error.").__dict__,500
+
     def delete(self, match_id):
         """
         Delete match

@@ -153,6 +153,79 @@ class MatchApiTestCase(FitPalsTestCase):
         assert resp.status_code == 401
         assert json.loads(resp.data)["message"]=="Not Authorized."
         
+    def test_update_match(self):
+        #create match
+        fitpals_secret = self.test_user1["fitpals_secret"]
+        resp = self.app.post("/matches",
+                             data={"user_id":self.test_user1["id"],
+                                   "matched_user_id":self.test_user2["id"],
+                                   "liked":1},
+                             headers={"Authorization":fitpals_secret})
+        match = json.loads(resp.data)["value"]
+        
+        #update match
+        resp = self.app.put("/matches/%d" % match["id"],
+                            headers={"Authorization":fitpals_secret})
+        received_match = json.loads(resp.data)["value"]
+        assert resp.status_code == 202
+        assert json.loads(resp.data)["message"] == "Match updated."
+        match["read"] = True
+        assert match == received_match
+        
+        #get match, to see if update persisted
+        resp = self.app.get("/matches",
+                            headers={"Authorization":fitpals_secret})
+        matches = json.loads(resp.data)["value"]
+        assert len(matches) == 1
+        assert matches[0] == received_match
+        
+        #ensure that test_user1 websocket self.websocket_client1 got update
+        sleep(0.01) #so that the async thread has time to send the message
+        received = self.websocket_client1.get_received()
+        assert len(received) != 0
+        assert received[-1]["args"][0]["path"] == "/matches/%d" % match["id"]
+        assert received[-1]["args"][0]["http_method"] == "PUT"
+        assert received[-1]["args"][0]["value"] == received_match
+        
+    def test_update_match_not_found(self):
+        fitpals_secret = self.test_user1["fitpals_secret"]
+        resp = self.app.put("/matches/0",
+                            headers={"Authorization":fitpals_secret})
+        assert resp.status_code == 404
+        assert json.loads(resp.data)["message"] == "Match not found."
+        
+    def test_update_match_not_authorized_bad_secret(self):
+        #create match
+        fitpals_secret = self.test_user1["fitpals_secret"]
+        resp = self.app.post("/matches",
+                             data={"user_id":self.test_user1["id"],
+                                   "matched_user_id":self.test_user2["id"],
+                                   "liked":1},
+                             headers={"Authorization":fitpals_secret})
+        match = json.loads(resp.data)["value"]
+
+        #attempt to update match
+        resp = self.app.put("/matches/%d" % match["id"],
+                            headers={"Authorization":fitpals_secret + "junk"})
+        assert resp.status_code == 401
+        assert json.loads(resp.data)["message"] == "Not Authorized."
+
+    def test_update_match_not_authorized_wrong_user(self):
+        #create match
+        fitpals_secret = self.test_user1["fitpals_secret"]
+        resp = self.app.post("/matches",
+                             data={"user_id":self.test_user1["id"],
+                                   "matched_user_id":self.test_user2["id"],
+                                   "liked":1},
+                             headers={"Authorization":fitpals_secret})
+        match = json.loads(resp.data)["value"]
+        
+        #attempt to update match
+        resp = self.app.put("/matches/%d" % match["id"],
+                            headers={"Authorization":self.test_user2["fitpals_secret"]})
+        assert resp.status_code == 401
+        assert json.loads(resp.data)["message"] == "Not Authorized."
+        
     def test_delete_match(self):
         #create match
         fitpals_secret = self.test_user1["fitpals_secret"]
