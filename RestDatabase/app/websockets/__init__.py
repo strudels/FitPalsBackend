@@ -11,7 +11,7 @@ def connect():
 @socketio.on("join")
 def on_join(json):
     user = User.query.get(json["id"])
-    if user.fb_id != json["fb_id"]:
+    if user.fitpals_secret != json["fitpals_secret"]:
         emit("unauthorized", user.dict_repr())
     room = str(user.id)
     join_room(room)
