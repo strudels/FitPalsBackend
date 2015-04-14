@@ -137,9 +137,7 @@ class MatchAPI(Resource):
         """
         Update match read field to true.
 
-        :reqheader Authorization: facebook secret
-
-        :param bool read: I might get rid of this.
+        :reqheader Authorization: fitpals_secret
 
         :status 401: Not Authorized.
         :status 404: Match not found.

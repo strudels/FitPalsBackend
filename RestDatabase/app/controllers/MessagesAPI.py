@@ -236,11 +236,9 @@ class NewMessagesAPI(Resource):
 class MessagesAPI(Resource):
     def put(self, message_id):
         """
-        Update match read field to true.
+        Update message read field to true for the user retrieving the message.
 
         :reqheader Authorization: facebook secret
-
-        :param bool read: I might get rid of this.
 
         :status 401: Not Authorized.
         :status 404: Message not found.

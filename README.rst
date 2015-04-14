@@ -677,6 +677,21 @@ Contents:
 
       * 200 OK -- User block removed.
 
+``PUT /messages/(int: message_id)``
+
+   Update message read field to true for the user retrieving the
+   message.
+
+   :Request Headers:
+      * Authorization -- facebook secret
+
+   :Status Codes:
+      * 401 Unauthorized -- Not Authorized.
+
+      * 404 Not Found -- Message not found.
+
+      * 202 Accepted -- Message updated.
+
 ``PUT /pictures/(int: pic_id)``
 
    Delete picture.
@@ -744,6 +759,20 @@ Contents:
       * 404 Not Found -- Device not found.
 
       * 200 OK -- Device deleted.
+
+``PUT /matches/(int: match_id)``
+
+   Update match read field to true.
+
+   :Request Headers:
+      * Authorization -- fitpals_secret
+
+   :Status Codes:
+      * 401 Unauthorized -- Not Authorized.
+
+      * 404 Not Found -- Match not found.
+
+      * 202 Accepted -- Match updated.
 
 ``DELETE /matches/(int: match_id)``
 
