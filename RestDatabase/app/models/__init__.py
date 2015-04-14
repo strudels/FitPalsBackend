@@ -540,10 +540,14 @@ class MessageThread(db.Model):
     user1 = relationship("User",foreign_keys=[user1_id])
     user1_delete_time =\
         db.Column(db.DateTime, default=None, nullable=True)
+    user1_has_unread =\
+        db.Column(db.Boolean, nullable=False, default=False)
     user2_id = db.Column(db.Integer, ForeignKey("users.id"))
     user2 = relationship("User",foreign_keys=[user2_id])
     user2_delete_time =\
         db.Column(db.DateTime, default=None, nullable=True)
+    user2_has_unread =\
+        db.Column(db.Boolean, nullable=False, default=False)
 
     #POST /message_threads will have to enforce that user2 cannot make a new
     # thread in which user1 and user2 are swapped.

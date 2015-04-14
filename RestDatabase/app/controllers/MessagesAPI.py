@@ -191,9 +191,9 @@ class NewMessagesAPI(Resource):
             #add message to thread
             new_message = Message(thread, bool(args.direction), args.body)
             if user == thread.user1:
-                new_message.user1_read = True
+                new_message.thread.user2_has_unread = True
             else: #user == thread.user2
-                new_message.user2_read = True
+                new_message.thread.user1_has_unread = True
             thread.messages.append(new_message)
 
             #commit changes to the db
@@ -403,6 +403,55 @@ class MessageThreadsAPI(Resource):
         
 @api.resource("/message_threads/<int:thread_id>")
 class MessageThreadAPI(Resource):
+    def put(self, thread_id):
+        """
+        Update a message_thread's user<1/2>_has_unread field to False.
+        
+        :reqheader Authorization: fitpals_secret
+        
+        :status 401: Not Authorized.
+        :status 404: Message thread not found.
+        :status 202: Message thread updated.
+        """
+        parser = reqparse.RequestParser()
+        parser.add_argument("Authorization",
+            type=str, location="headers", required=True)
+        args = parser.parse_args()
+
+        try:
+            user = User.query.filter(User.fitpals_secret==args.Authorization).first()
+            if not user:
+                return Response(status=401, message="Not Authorized.")\
+                    .__dict__, 401
+                
+            thread = MessageThread.query.get(thread_id)
+            if not thread:
+                return Response(status=404, message="Message thread not found.")\
+                    .__dict__,404
+                
+            if user == thread.user1:
+                thread.user1_has_unread = False
+            elif user == thread.user2:
+                thread.user2_has_unread = False
+            else:
+                return Response(status=401, message="Not Authorized.")\
+                    .__dict__, 401
+            
+            db.session.commit()
+            
+            send_message(user,request.path,request.method,
+                         value=thread.dict_repr())
+                
+            return Response(status=202,message="Message thread updated.",
+                            value=thread.dict_repr())
+        except Exception as e:
+            db.session.rollback()
+            app.logger.error(e)
+            return Response(status=500, message="Internal server error.").__dict__,500
+        
+
+
+        
     #delete whole thread
     def delete(self, thread_id):
         """
