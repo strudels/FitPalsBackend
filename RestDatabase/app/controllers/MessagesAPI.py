@@ -6,6 +6,7 @@ from app.models import *
 from app.utils.Response import Response
 from app.utils.AsyncNotifications import send_message
 from sqlalchemy import or_, and_
+from datetime import datetime
 
 @api.resource("/messages")
 class NewMessagesAPI(Resource):
@@ -41,9 +42,7 @@ class NewMessagesAPI(Resource):
             #get thread from database
             if args.message_thread_id:
                 thread = MessageThread.query.get(args.message_thread_id)
-                if not thread or\
-                (thread.user1==user and thread.user1_deleted==True) or\
-                (thread.user2==user and thread.user2_deleted==True):
+                if not thread:
                     return Response(status=404,
                         message="Message thread not found.")\
                         .__dict__, 404
@@ -56,8 +55,28 @@ class NewMessagesAPI(Resource):
                 messages_query = Message.query.join(Message.message_thread)\
                                  .filter(or_(MessageThread.user1_id==user.id,
                                              MessageThread.user2_id==user.id))
+
+            if args.since != None:
+                messages_query = messages_query.filter(Message.time>=\
+                    datetime.utcfromtimestamp(args.since))
                 
-            #filter out messages sent by blocked user
+            #filter out messages that were deleted via DELETE /message_threads/<id>
+            messages_query = messages_query.filter(
+                or_(
+                    and_(MessageThread.user1==user,
+                            or_(MessageThread.user1_delete_time==None,
+                                MessageThread.user1_delete_time<=Message.time
+                            )
+                    ),
+                    and_(MessageThread.user2==user,
+                            or_(MessageThread.user2_delete_time==None,
+                                MessageThread.user2_delete_time<=Message.time
+                            )
+                    )
+                )
+            )
+                
+            #filter out messages received from a user while they were blocked
             sub_query = UserBlock.query.filter(
                 and_(
                     UserBlock.user_id==user.id,
@@ -73,7 +92,7 @@ class NewMessagesAPI(Resource):
                     and_(
                         MessageThread.user1_id==user.id,
                         ~MessageThread.user2_id.in_(sub_query),
-                        Message.direction==True
+                        Message.direction==True,
                     ), and_(
                         MessageThread.user2_id==user.id,
                         ~MessageThread.user1_id.in_(sub_query),
@@ -86,9 +105,6 @@ class NewMessagesAPI(Resource):
                 )
             )
 
-            if args.since != None:
-                messages_query = messages_query.filter(Message.time>=\
-                    datetime.utcfromtimestamp(args.since))
             messages = messages_query.all()
 
             #return thread
@@ -148,11 +164,6 @@ class NewMessagesAPI(Resource):
             (user == thread.user2 and args.direction==1)):
                 return Response(status=401,message="Not Authorized.").__dict__,401
 
-            #Don't allow a user to send messages to a thread deleted by another user
-            if thread.user1_deleted or thread.user2_deleted:
-                return Response(status=403,
-                    message="Message thread has been closed.").__dict__, 403
-
             #add message to thread
             new_message = Message(thread, bool(args.direction), args.body)
             thread.messages.append(new_message)
@@ -174,6 +185,7 @@ class NewMessagesAPI(Resource):
             send_message(thread.user1 if user==thread.user1 else thread.user2,
                         request.path,request.method,
                         value=new_message.dict_repr())
+
             #ensure that if user has been blocked, the new message won't be sent
             #to the intended user
             if not is_blocked:
@@ -216,16 +228,27 @@ class MessageThreadsAPI(Resource):
                 return Response(status=401, message="Not Authorized.")\
                     .__dict__, 401
 
-            #get threads for user
-            threads = MessageThread.query\
+            #get threads for user that are either empty, or have any messages
+            # that have not been deleted
+            threads = MessageThread.query
                 .filter(
-                        or_(
-                            and_(MessageThread.user1==user,
-                                    MessageThread.user1_deleted==False),
-                            and_(MessageThread.user2==user,
-                                    MessageThread.user2_deleted==False))).all()
-            for t in threads:
-                t = t.dict_repr()
+                    or_(
+                        and_(MessageThread.user1==user,
+                             or_(MessageThread.user1_delete_time==None,
+                                 MessageThread.messages.join(Message.message_thread).filter(
+                                     MessageThread.user1_delete_time<=Message.time
+                                 ).any()
+                             )
+                        ),
+                        and_(MessageThread.user2==user,
+                             or_(MessageThread.user2_delete_time==None,
+                                 MessageThread.messages.join(Message.message_thread).filter(
+                                     MessageThread.user2_delete_time<=Message.time
+                                 ).any()
+                             )
+                        )
+                    )
+                ).all()
 
             return Response(status=200, message="Message threads found.",
                             value=[t.dict_repr() for t in threads]).__dict__,200
@@ -268,28 +291,28 @@ class MessageThreadsAPI(Resource):
                 return Response(status=404,
                                 message="user2_id not found.").__dict__,404
 
-            #determine if user creating message thread is currently blocked by receiver
-            is_blocked = user2.blocks\
-                              .filter(and_(UserBlock.blocked_user_id==user1.id,
-                                           UserBlock.unblock_time==None)).first()
-            
-            #if user was blocked, return 403
-            if is_blocked:
-                return Response(status=403,
-                                message="Blocked from creating message thread.")\
-                    .__dict__,403
+            #determine if another thread already exists between the 2 users
+            thread = MessageThread.query.filter(
+                or_(
+                    and_(MessageThread.user1==user2,
+                         MessageThread.user2==user1),
+                    and_(MessageThread.user2==user2,
+                         MessageThread.user1==user1)
+                )
+            ).first()
 
-
-            new_thread = MessageThread(user1, user2)
-            db.session.add(new_thread)
-
-            #commit changes to the db
-            db.session.commit()
-
-            send_message(new_thread.user1,request.path,request.method,
-                         value=new_thread.dict_repr())
-            send_message(new_thread.user2,request.path,request.method,
-                         value=new_thread.dict_repr())
+            if not thread:
+                thread = MessageThread(user1, user2)
+                db.session.add(new_thread)
+                db.session.commit()
+                send_message(thread.user1,request.path,request.method,
+                            value=thread.dict_repr())
+                send_message(thread.user2,request.path,request.method,
+                            value=thread.dict_repr())
+                
+            else: #only send_message to user making request
+                send_message(user,request.path,request.method,
+                             value=thread.dict_repr()
 
             #return create success!
             return Response(status=201, message="Message thread created.",
@@ -338,9 +361,9 @@ class MessageThreadAPI(Resource):
 
             #delete thread for user if user is authorized
             if user == thread.user1:
-                thread.user1_deleted = True
+                thread.user1_delete_time = datetime.utcnow()
             elif user == thread.user2:
-                thread.user2_deleted = True
+                thread.user2_delete_time = datetime.utcnow()
             else:
                 return Response(status=401,message="Not Authorized.").__dict__,401
 
