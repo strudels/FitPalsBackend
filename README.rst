@@ -130,6 +130,8 @@ Contents:
 
    Get all message threads for a user, specified by Authorization
 
+   Will not return any message threads that have been "deleted".
+
    :Request Headers:
       * Authorization -- facebook secret
 
@@ -141,6 +143,10 @@ Contents:
 ``POST /message_threads``
 
    Create new message thread between 2 users.
+
+   If a message thread already exists between 2 users, that message
+   thread is returned. Even if that message thread was previously
+   deleted by the POSTing user.
 
    :Request Headers:
       * Authorization -- fitpals_secret
@@ -249,6 +255,8 @@ Contents:
 ``GET /messages``
 
    Get owner's messages from a thread
+
+   Does not return messages from threads that have been "deleted."
 
    :Request Headers:
       * Authorization -- facebook secret
@@ -570,6 +578,15 @@ Contents:
 ``DELETE /message_threads/(int: thread_id)``
 
    Delete a message thread
+
+   NOTE: does not actually delete the message thread. Instead, calling
+   this route causes all messages within the thread to appear to have
+   been deleted. In reality, these messages are still available to the
+   other user(assuming they have not deleted the thread). After
+   deleting a thread, the thread will no longer show up in GET
+   /message_threads until a new message is POST'd to it. Messages
+   before a delete will become unavailable from GET /messages after
+   the delete, but messages after the delete will be available.
 
    :Request Headers:
       * Authorization -- facebook secret

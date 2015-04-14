@@ -14,6 +14,8 @@ class NewMessagesAPI(Resource):
         """
         Get owner's messages from a thread
         
+        Does not return messages from threads that have been "deleted."
+        
         :reqheader Authorization: facebook secret
 
         :query int message_thread_id: Id of specific thread to get messages from(Optional).
@@ -226,6 +228,8 @@ class MessageThreadsAPI(Resource):
         """
         Get all message threads for a user, specified by Authorization
         
+        Will not return any message threads that have been "deleted".
+        
         :reqheader Authorization: facebook secret
 
         :status 401: Not Authorized.
@@ -273,6 +277,10 @@ class MessageThreadsAPI(Resource):
     def post(self):
         """
         Create new message thread between 2 users.
+        
+        If a message thread already exists between 2 users, that message thread is
+        returned. Even if that message thread was previously deleted by the POSTing
+        user.
         
         :reqheader Authorization: fitpals_secret
         
@@ -344,6 +352,14 @@ class MessageThreadAPI(Resource):
     def delete(self, thread_id):
         """
         Delete a message thread
+        
+        NOTE: does not actually delete the message thread. Instead, calling this
+        route causes all messages within the thread to appear to have been deleted.
+        In reality, these messages are still available to the other user(assuming
+        they have not deleted the thread). After deleting a thread, the thread will
+        no longer show up in GET /message_threads until a new message is POST'd to
+        it. Messages before a delete will become unavailable from GET /messages
+        after the delete, but messages after the delete will be available.
         
         :reqheader Authorization: facebook secret
 
