@@ -83,6 +83,52 @@ class MessagesApiTestCase(FitPalsTestCase):
         assert resp.status_code==404
         assert json.loads(resp.data)["message"]=="user2_id not found."
         
+    def test_update_message_thread(self):
+        #create thread
+        resp = self.app.post("/message_threads",
+                             headers={"Authorization":self.test_user1["fitpals_secret"]},
+                             data={"user2_id":self.test_user2["id"]})
+        received_thread = json.loads(resp.data)["value"]
+        
+        assert received_thread["user1_has_unread"] == False
+        assert received_thread["user2_has_unread"] == False
+        
+        #have user1 send message to user2
+        resp = self.app.post("/messages",
+                             data={"message_thread_id":received_thread["id"],
+                                   "direction":0,
+                                   "body":"sup"},
+                             headers={"Authorization":self.test_user1["fitpals_secret"]})
+        unread_message = json.loads(resp.data)["value"]
+        
+        #get thread to ensure that user2_has_unread has been set to True
+        resp = self.app.get("/message_threads",
+                             headers={"Authorization":self.test_user1["fitpals_secret"]})
+        threads = json.loads(resp.data)["value"]
+        
+        assert len(threads) == 1
+        received_thread["user2_has_unread"] == True
+        assert threads[0] == received_thread
+        
+        #update message_thread to set thread.user2_has_unread back to false
+        resp = self.app.put("/message_threads/%d" % threads[0]["id"],
+                             headers={"Authorization":self.test_user1["fitpals_secret"]})
+        updated_thread = json.loads(resp.data)["value"]
+        
+        received_thread["user2_has_unread"] == False
+        assert updated_thread == received_thread
+        assert resp.status_code == 202
+        assert json.loads(resp.data)["message"] == "Message thread updated."
+        
+        #get thread to ensure all changes have persisted
+        resp = self.app.get("/message_threads",
+                             headers={"Authorization":self.test_user1["fitpals_secret"]})
+        threads = json.loads(resp.data)["value"]
+        
+        assert len(threads) == 1
+        assert threads[0] == updated_thread
+        
+        
     def test_delete_message_thread(self):
         #create thread
         resp = self.app.post("/message_threads",

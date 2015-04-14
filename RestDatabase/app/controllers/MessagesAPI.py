@@ -443,7 +443,7 @@ class MessageThreadAPI(Resource):
                          value=thread.dict_repr())
                 
             return Response(status=202,message="Message thread updated.",
-                            value=thread.dict_repr())
+                            value=thread.dict_repr()).__dict__,202
         except Exception as e:
             db.session.rollback()
             app.logger.error(e)

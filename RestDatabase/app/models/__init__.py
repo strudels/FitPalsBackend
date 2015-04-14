@@ -569,7 +569,9 @@ class MessageThread(db.Model):
             "user1":self.user1.dict_repr(),
             "user2_id":self.user2_id,
             "user2":self.user2.dict_repr(),
-            "last_message":self.last_message
+            "last_message":self.last_message,
+            "user1_has_unread":self.user1_has_unread,
+            "user2_has_unread":self.user2_has_unread
         }
 
 """
