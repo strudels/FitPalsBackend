@@ -85,17 +85,20 @@ from controllers.UserBlockAPI import *
 #import websocket events
 from websockets import *
 
-#import admin panel
-from admin import *
+#init login manager for admin panel
+from admin import init_login
+init_login()
 
 #reset app and database to fresh install
 def reset_app():
     from app import db
+    from admin import AdminUser
     db.drop_all()
     db.create_all()
 
-    from app.models import *
+    from app.models import Activity, Question
 
+    #add default activities
     activity_info_list = {
         "Walking" : [
             "IcnWalking.png", 
@@ -121,5 +124,9 @@ def reset_app():
             question = Question(activity, q_value[0], q_value[1], q_value[2], q_value[3])
             activity.questions.append(question)
         db.session.add(activity)
+        
+    #add admin user, so that admin access panel can be accessed
+    admin_user = AdminUser("admin","password")
+    db.session.add(admin_user)
     
     db.session.commit()

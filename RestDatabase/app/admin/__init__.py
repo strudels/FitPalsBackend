@@ -1,19 +1,24 @@
 from flask.ext.admin.contrib.sqla import ModelView
 from flask.ext.admin import Admin
 from flask import Flask, url_for, redirect, render_template, request
-from app.models import *
-from app import app,db
 from wtforms import form, fields, validators
+from app import db, app
+from app.models import *
 import flask_admin as admin
 import flask_login as login
 from flask_admin.contrib import sqla
 from flask_admin import helpers, expose
+from sqlalchemy import ForeignKey, DateTime, UniqueConstraint, CheckConstraint, event, desc
+import hashlib
+import os
 
 #class for overriding ModelView methods to make ModelView Work
 class ActivityView(ModelView):
     def create_model(self,form):
         try:
-            activity = Activity(name=form.data['name'])
+            activity = Activity(name=form.data['name'],
+                                active_image=form.data["active_image"],
+                                inactive_image=form.data["inactive_image"])
             self.session.add(activity)
             self.session.commit()
         except:
@@ -24,6 +29,8 @@ class ActivityView(ModelView):
     def update_model(self, form, model):
         try:
             model.name = form.data['name']
+            model.active_image = form.data["active_image"]
+            model.inactive_image = form.data["inactive_image"]
             self.session.commit()
         except:
             self.session.rollback()
@@ -65,7 +72,7 @@ class QuestionView(ModelView):
             self.session.commit()
         except:
             self.session.rollback()
-            return Flase
+            return False
         return True
         
     def delete_model(self,model):
@@ -82,15 +89,27 @@ class QuestionView(ModelView):
     def is_accessible(self):
         return login.current_user.is_authenticated()
         
+class UserReportView(ModelView):
+    action_disallowed_list = ["create","delete"]
+    column_editable_list = ("reviewed",)
+    def update_model(self,form,model):
+        try:
+            model.reviewed = form.data["reviewed"]
+            self.session.commit()
+        except:
+            self.session.rollback()
+            return False
+        return True
+
+    def is_accessible(self):
+        return login.current_user.is_authenticated()
+        
 class MyAdminIndexView(admin.AdminIndexView):
     @expose("/")
     def index(self):
-        """
         if not login.current_user.is_authenticated():
             return redirect(url_for(".login_view"))
-        return super(IndexView, self).index()
-        """
-        return "wow"
+        return super(MyAdminIndexView, self).index()
         
     @expose("/login", methods=("GET","POST"))
     def login_view(self):
@@ -99,33 +118,43 @@ class MyAdminIndexView(admin.AdminIndexView):
             user = form.get_user()
             login.login_user(user)
             
+        if login.current_user.is_authenticated():
+            return redirect(url_for('.index'))
+        self._template_args['form'] = form
+        return super(MyAdminIndexView, self).index()
+            
     @expose("/logout")
     def logout_view(self):
         login.logout_user()
         return redirect(url_for(".index"))
+        
+# Flask views
+@app.route('/')
+def index():
+    return render_template('index.html')
         
 class AdminUser(db.Model):
     __tablename__ = "admin_users"
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String, nullable=False)
     password = db.Column(db.String, nullable=False)
-    salt = db.Column(db.String(32), nullable=False)
+    salt = db.Column(db.String, nullable=False)
 
     __table_args__ = (UniqueConstraint("username"),)
     
     def __init__(self,username,password):
         sha256 = hashlib.sha256()
         self.username = username
-        self.salt = os.urandom(32)
+        self.salt = os.urandom(32).encode("hex")
         sha256.update(self.salt)
         sha256.update(password)
-        self.password = sha256.digest()
+        self.password = sha256.digest().encode("hex")
         
     def check_pass(self, password):
         sha256 = hashlib.sha256()
         sha256.update(self.salt)
         sha256.update(password)
-        return self.password == sha256.digest()
+        return self.password == sha256.digest().encode("hex")
     
     def is_authenticated(self):
         return True
@@ -163,7 +192,7 @@ class LoginForm(form.Form):
         
 def init_login():
     login_manager = login.LoginManager()
-    login_manager.init_app()
+    login_manager.init_app(app)
     
     @login_manager.user_loader
     def load_user(user_id):
@@ -172,3 +201,4 @@ def init_login():
 admin = Admin(app, index_view=MyAdminIndexView(), base_template="my_master.html")
 admin.add_view(ActivityView(Activity, db.session))
 admin.add_view(QuestionView(Question, db.session))
+admin.add_view(UserReportView(UserReport, db.session))
