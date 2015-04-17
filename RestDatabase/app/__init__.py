@@ -9,6 +9,7 @@ from os.path import basename, dirname
 import os
 import sys
 import logging
+from logging import Formatter
 from logging.handlers import RotatingFileHandler
 
 app = Flask(__name__)
@@ -16,6 +17,10 @@ app = Flask(__name__)
 #setup log handler
 log_handler = RotatingFileHandler("fitpals_api.log",maxBytes=10000,backupCount=1)
 log_handler.setLevel(logging.INFO)
+log_handler.setFormatter(Formatter(
+    '%(asctime)s %(levelname)s: %(message)s '
+    '[in %(pathname)s:%(lineno)d]'
+))
 app.logger.addHandler(log_handler)
 
 config = ConfigParser()

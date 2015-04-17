@@ -29,6 +29,7 @@ class FacebookFriendsAPI(Resource):
         parser.add_argument("Authorization",
             type=str, location="headers", required=True)
         args = parser.parse_args()
+        
 
         try:
             user = User.query.filter(User.fitpals_secret==args.Authorization).first()
