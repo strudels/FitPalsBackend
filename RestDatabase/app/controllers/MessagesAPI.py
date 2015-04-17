@@ -191,9 +191,9 @@ class NewMessagesAPI(Resource):
             #add message to thread
             new_message = Message(thread, bool(args.direction), args.body)
             if user == thread.user1:
-                new_message.thread.user2_has_unread = True
+                new_message.message_thread.user2_has_unread = True
             else: #user == thread.user2
-                new_message.thread.user1_has_unread = True
+                new_message.message_thread.user1_has_unread = True
             thread.messages.append(new_message)
 
             #commit changes to the db
