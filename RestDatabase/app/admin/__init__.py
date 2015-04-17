@@ -128,11 +128,6 @@ class MyAdminIndexView(admin.AdminIndexView):
         login.logout_user()
         return redirect(url_for(".index"))
         
-# Flask views
-@app.route('/')
-def index():
-    return render_template('index.html')
-        
 class AdminUser(db.Model):
     __tablename__ = "admin_users"
     id = db.Column(db.Integer, primary_key=True)
