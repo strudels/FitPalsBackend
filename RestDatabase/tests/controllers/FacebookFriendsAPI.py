@@ -9,7 +9,7 @@ class FacebookFreindsApiTestCase(FitPalsTestCase):
         assert resp.status_code==200
         assert json.loads(resp.data)["message"] == "Friends found."
         friends = json.loads(resp.data)["value"]
-        assert len(friends) == 1
+        assert len(friends) == 2
         assert friends[0]["name"]=="Ricky"
 
     def test_get_user_facebook_friends_not_authorized(self):

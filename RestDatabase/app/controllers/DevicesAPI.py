@@ -5,7 +5,7 @@ from datetime import datetime
 from dateutil.relativedelta import relativedelta
 import time
 
-from app import db, api
+from app import db, api, app, exception_is_validation_error
 from app.models import *
 from app.utils.Response import Response
 
@@ -21,7 +21,7 @@ class DevicesAPI(Resource):
         :form int user_id: Id of user.
         :form str token: device token to be posted
 
-        :status 400: Could not register device.
+        :status 400: Device data invalid.
         :status 401: Not Authorized.
         :status 404: User not found.
         :status 200: Device already registered.
@@ -37,30 +37,35 @@ class DevicesAPI(Resource):
             type=str, location="headers", required=True)
         args = parser.parse_args()
 
-        #get user from database
-        user = User.query.get(args.user_id)
-        if not user:
-            return Response(status=404,
-                message="User not found.").__dict__,404
-            
-        if user.fitpals_secret != args.Authorization:
-            return Response(status=401,
-                message="Not Authorized.").__dict__, 401
-            
-        device = Device.query.filter(Device.token==args.token).first()
-        if device:
-            return Response(status=200, message="Device already registered.",
-                            value=device.dict_repr()).__dict__, 200
-
         try:
+            #get user from database
+            user = User.query.get(args.user_id)
+            if not user:
+                return Response(status=404,
+                    message="User not found.").__dict__,404
+
+            if user.fitpals_secret != args.Authorization:
+                return Response(status=401,
+                    message="Not Authorized.").__dict__, 401
+
+            device = Device.query.filter(Device.token==args.token).first()
+            if device:
+                return Response(status=200, message="Device already registered.",
+                                value=device.dict_repr()).__dict__, 200
+
             new_device = Device(user, args.token)
             user.devices.append(new_device)
             db.session.commit()
-        except: return Response(status=400, message="Could not register device.")\
-            .__dict__,400
 
-        return Response(status=201, message="Device registered.",
-                        value=new_device.dict_repr()).__dict__,201
+            return Response(status=201, message="Device registered.",
+                            value=new_device.dict_repr()).__dict__,201
+        except Exception as e:
+            if exception_is_validation_error(e):
+                return Response(status=400,
+                    message="Device data invalid.").__dict__,400
+            db.session.rollback()
+            app.logger.error(e)
+            return Response(status=500, message="Internal server error.").__dict__,500
 
 @api.resource("/devices/<int:device_id>")
 class DeviceAPI(Resource):
@@ -71,7 +76,6 @@ class DeviceAPI(Resource):
 
         :reqheader Authorization: facebook secret
 
-        :status 400: Could not delete device.
         :status 401: Not Authorized.
         :status 404: Device not found.
         :status 200: Device deleted.
@@ -82,24 +86,25 @@ class DeviceAPI(Resource):
             type=str, location="headers", required=True)
         args = parser.parse_args()
 
-        #get specific token to delete
-        device = Device.query.get(device_id)
-        if not device:
-            return Response(status=404,
-                message="Device not found.").__dict__,404
-
-        #get user from database
-        if not device.user.fitpals_secret == args.Authorization:
-            return Response(status=401,
-                message="Not Authorized.").__dict__,401
-            
         try:
+            #get specific token to delete
+            device = Device.query.get(device_id)
+            if not device:
+                return Response(status=404,
+                    message="Device not found.").__dict__,404
+
+            #get user from database
+            if not device.user.fitpals_secret == args.Authorization:
+                return Response(status=401,
+                    message="Not Authorized.").__dict__,401
+
             device.user.devices.remove(device)
             db.session.delete(device)
             db.session.commit()
-        except:
-            return Response(status=400, 
-                message="Could not delete device.").__dict__,400
 
-        return Response(status=200,
-            message="Device deleted.").__dict__,200
+            return Response(status=200,
+                message="Device deleted.").__dict__,200
+        except Exception as e:
+            db.session.rollback()
+            app.logger.error(e)
+            return Response(status=500, message="Internal server error.").__dict__,500

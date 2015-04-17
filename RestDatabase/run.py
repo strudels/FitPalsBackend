@@ -5,8 +5,8 @@ import signal
 from app import socketio, app
 from app.utils import AsyncNotifications
 
+#kill thread responsible for cleaning up async call threads
 def sigint_handler(signal, frame):
-    #kill thread responsible for cleaning up async call threads
     AsyncNotifications.manager_thread._Thread__stop()
     sys.exit()
 signal.signal(signal.SIGINT, sigint_handler)
@@ -24,5 +24,3 @@ elif sys.argv[1] == "setup":
     reset_app()
     print "Setup complete."
     AsyncNotifications.manager_thread._Thread__stop()
-    
-    

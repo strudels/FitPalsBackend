@@ -3,6 +3,7 @@ RestDatabase/certs/
 RestDatabase/docs/build
 RestDatabase/twistd.log
 RestDatabase/twistd.pid
+RestDatabase/fitpals_api.log*
 tigase_scripts/apns/venv
 tigase_scripts/apns/certs
 *.swp

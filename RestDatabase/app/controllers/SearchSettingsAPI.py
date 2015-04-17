@@ -7,7 +7,7 @@ from dateutil.relativedelta import relativedelta
 import time
 from sqlalchemy import func,or_, and_
 
-from app import db, api
+from app import db, api, app, exception_is_validation_error
 from app.models import *
 from app.utils.Response import Response
 from app.utils.AsyncNotifications import send_message
@@ -30,12 +30,16 @@ class SearchSettingsGetAPI(Resource):
             type=int, location="args", required=True)
         args = parser.parse_args()
         
-        user = User.query.get(args.user_id)
-        if not user:
-            return Response(status=404, message="User not found.").__dict__,404
-            
-        return Response(status=200, message="Search settings found.",
-                        value=user.search_settings.dict_repr()).__dict__, 200
+        try:
+            user = User.query.get(args.user_id)
+            if not user:
+                return Response(status=404, message="User not found.").__dict__,404
+
+            return Response(status=200, message="Search settings found.",
+                            value=user.search_settings.dict_repr()).__dict__, 200
+        except Exception as e:
+            app.logger.error(e)
+            return Response(status=500, message="Internal server error.").__dict__,500
 
 @api.resource("/search_settings/<int:settings_id>")
 class SearchSettingsAPI(Resource):
@@ -56,19 +60,23 @@ class SearchSettingsAPI(Resource):
             type=str, location="headers", required=True)
         args = parser.parse_args()
 
-        #get search_settings
-        settings = SearchSettings.query.get(settings_id)
-        if not settings:
-            return Response(status=404, message="Search settings not found.")\
-                .__dict__,404
-        
-        #Ensure user is authorized to make change to settings
-        user = settings.user
-        if user.fitpals_secret != args.Authorization:
-            return Response(status=401, message="Not Authorized.").__dict__,401
-            
-        return Response(status=200, message="Search settings found.",
-                        value=settings.dict_repr()).__dict__, 200
+        try:
+            #get search_settings
+            settings = SearchSettings.query.get(settings_id)
+            if not settings:
+                return Response(status=404, message="Search settings not found.")\
+                    .__dict__,404
+
+            #Ensure user is authorized to make change to settings
+            user = settings.user
+            if user.fitpals_secret != args.Authorization:
+                return Response(status=401, message="Not Authorized.").__dict__,401
+
+            return Response(status=200, message="Search settings found.",
+                            value=settings.dict_repr()).__dict__, 200
+        except Exception as e:
+            app.logger.error(e)
+            return Response(status=500, message="Internal server error.").__dict__,500
 
     def put(self, settings_id):
         """
@@ -89,7 +97,7 @@ class SearchSettingsAPI(Resource):
         :form int age_upper_limit: Set if user want upper age limit. Default is 130.
         http://en.wikipedia.org/wiki/Oldest_people
         
-        :status 400: Search settings could not be updated.
+        :status 400: Search settings data invalid.
         :status 401: Not Authorized.
         :status 404: Search settings not found.
         :status 202: Search settings updated.
@@ -123,33 +131,34 @@ class SearchSettingsAPI(Resource):
         if type(args.available)==int:
             args.available = bool(args.available)
         
-        #get search_settings
-        settings = SearchSettings.query.get(settings_id)
-        if not settings:
-            return Response(status=404, message="Search settings not found.")\
-                .__dict__,404
-            
-        #Ensure user is authorized to make change to settings
-        user = settings.user
-        if user.fitpals_secret != args.Authorization:
-            return Response(status=401, message="Not Authorized.").__dict__,401
-            
-        #update search_settings
         try:
+            #get search_settings
+            settings = SearchSettings.query.get(settings_id)
+            if not settings:
+                return Response(status=404, message="Search settings not found.")\
+                    .__dict__,404
+
+            #Ensure user is authorized to make change to settings
+            user = settings.user
+            if user.fitpals_secret != args.Authorization:
+                return Response(status=401, message="Not Authorized.").__dict__,401
+
+            #update search_settings
             for arg in args.keys():
                 if args[arg] != None:
                     setattr(settings,arg,args[arg])
             db.session.commit()
-        except:
-            return Response(status=400,
-                message="Search settings could not be updated.")\
-                .__dict__,400
-            db.session.rollback()
-            
-        #send update to user's other devices
-        send_message(user.dict_repr(show_online_status=True),
-                     [d.token for d in user.devices.all()],
-                     request.path,request.method,settings.dict_repr())
 
-        return Response(status=202,message="Search settings updated.",
-                        value=settings.dict_repr()).__dict__,202
+            #send update to user's other devices
+            send_message(user,request.path,request.method,
+                         value=settings.dict_repr())
+
+            return Response(status=202,message="Search settings updated.",
+                            value=settings.dict_repr()).__dict__,202
+        except Exception as e:
+            if exception_is_validation_error(e):
+                return Response(status=400,
+                    message="Search settings data invalid.").__dict__,400
+            db.session.rollback()
+            app.logger.error(e)
+            return Response(status=500, message="Internal server error.").__dict__,500

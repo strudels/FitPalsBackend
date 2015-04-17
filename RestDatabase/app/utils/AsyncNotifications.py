@@ -2,35 +2,57 @@ from app import socketio
 import simplejson as json
 import base64
 from apns import APNs, Payload
+from ConfigParser import ConfigParser
 from threading import Thread
 from Queue import Queue
+import os.path
+from os.path import basename,dirname
 
+config = ConfigParser()
+config.read([dirname(__file__) + "/../fitpals_api.cfg"])
+
+if not os.path.isfile(config.get("certs","apns_cert")):
+    raise Exception("Certificate file not found.")
 apns = APNs(use_sandbox=True,
-            cert_file='/home/strudels/Desktop/sand.pem',
-            key_file='/home/strudels/Desktop/sand.pem')
-
+            cert_file=config.get("certs","apns_cert"),
+            key_file=config.get("certs","apns_cert"),
+            enhanced=True)
 
 thread_q = Queue()
-manager_thread_should_be_alive = True
 def async_notification_thread_manager():
-    global manager_thread_should_be_alive
     global thread_q
-    while manager_thread_should_be_alive:
+    while True:
         thread = thread_q.get()
         thread.start()
         thread.join()
 manager_thread = Thread(target=async_notification_thread_manager)
 manager_thread.start()
 
-def get_thread_q():
-    return thread_q
+def emit_wrapper(name,value,room):
+    socketio.emit(name,value,room=room)
 
-def send_message_thread_function(user,tokens,path,http_method,value):
+def send_message(user,path,http_method,value=None,apn_send=False):
     info = {
         "path":path,
         "http_method":http_method,
         "value":value
     }
+    if apn_send and user.online == False:
+        for d in user.devices.all():
+            token_hex = base64.b64decode(d.token).encode('hex')
+            if path=="/matches":
+                payload = Payload(alert="New Match!", custom=info)
+            else: #path=="/messages"
+                payload = Payload(alert="New Message!", custom=info)
+            apns.gateway_server.send_notification(token_hex,payload)
+    else:
+        global thread_q
+        thread = Thread(target=emit_wrapper,
+                        args=("update",info,str(user.id)))
+        thread_q.put(thread)
+            
+    #keeping this code commented out for now
+    """
     if user["online"]:
         #send websocket notification
         socketio.emit("update",info,room=str(user["id"]))
@@ -46,9 +68,4 @@ def send_message_thread_function(user,tokens,path,http_method,value):
             token_hex = base64.b64decode(d.token).encode('hex')
             payload = Payload(alert="Message Received!", custom=info)
             apns.gateway_server.send_notification(token_hex,payload)
-
-def send_message(user,tokens,path,http_method,value=None):
-    global thread_q
-    thread = Thread(target=send_message_thread_function,
-                      args=(user,tokens,path,http_method,value,))
-    thread_q.put(thread)
+    """

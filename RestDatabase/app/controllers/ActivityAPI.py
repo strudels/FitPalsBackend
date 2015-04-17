@@ -5,7 +5,7 @@ from datetime import datetime
 from dateutil.relativedelta import relativedelta
 import time
 
-from app import db, api
+from app import db, api, app, exception_is_validation_error
 from app.models import *
 from app.utils.Response import Response
 from app.utils.AsyncNotifications import send_message
@@ -19,8 +19,12 @@ class ActivitiesAPI(Resource):
 
         :status 200: Activities found.
         """
-        return Response(status=200,message="Activites found.",
-            value=[a.dict_repr() for a in Activity.query.all()]).__dict__, 200
+        try:
+            return Response(status=200,message="Activites found.",
+                value=[a.dict_repr() for a in Activity.query.all()]).__dict__, 200
+        except Exception as e:
+            app.logger.error(e)
+            return Response(status=500, message="Internal server error.").__dict__,500
         
 @api.resource("/activities/<int:activity_id>/questions")
 class ActivityQuestionsAPI(Resource):
@@ -36,9 +40,13 @@ class ActivityQuestionsAPI(Resource):
             return Response(status=404, message="Activity not found.").__dict__,\
                 404
 
-        return Response(status=200, message="Questions found.",
-                        value=[q.dict_repr() for q in activity.questions.all()])\
-                        .__dict__, 200
+        try:
+            return Response(status=200, message="Questions found.",
+                            value=[q.dict_repr() for q in activity.questions.all()])\
+                            .__dict__, 200
+        except Exception as e:
+            app.logger.error(e)
+            return Response(status=500, message="Internal server error.").__dict__,500
         
 @api.resource("/questions")
 class QuestionsAPI(Resource):
@@ -48,8 +56,12 @@ class QuestionsAPI(Resource):
         
         :status 200: Questions found.
         """
-        return Response(status=200,message="Questions found.",
-            value=[q.dict_repr() for q in Question.query.all()]).__dict__,200
+        try:
+            return Response(status=200,message="Questions found.",
+                value=[q.dict_repr() for q in Question.query.all()]).__dict__,200
+        except Exception as e:
+            app.logger.error(e)
+            return Response(status=500, message="Internal server error.").__dict__,500
 
 @api.resource('/activity_settings')
 class UserActivitySettingsAPI(Resource):
@@ -69,7 +81,11 @@ class UserActivitySettingsAPI(Resource):
         args = parser.parse_args()
 
         #get user via user_id
-        user = User.query.filter(User.fitpals_secret == args.Authorization).first()
+        try:
+            user = User.query.filter(User.fitpals_secret == args.Authorization).first()
+        except Exception as e:
+            app.logger.error(e)
+            return Response(status=500, message="Internal server error.").__dict__,500
         if not user:
             return Response(status=401,message="Not Authorized.").__dict__,401
 
@@ -89,10 +105,10 @@ class UserActivitySettingsAPI(Resource):
         :form float upper_value: Upper value answer for question.
         :form str unit_type: Name of type of unit; i.e. meter
 
+        :status 400: Activity setting data invalid.
         :status 401: Not Authorized.
         :status 404: Question not found.
         :status 404: User not found.
-        :status 500: Could not create activity setting.
         :status 201: Activity setting created.
         """
 
@@ -112,38 +128,39 @@ class UserActivitySettingsAPI(Resource):
         args = parser.parse_args()
 
         #get question
-        question = Question.query.get(args.question_id)
-        if not question:
-            return Response(status=404,message="Question not found.")\
-                .__dict__, 404
+        try:
+            question = Question.query.get(args.question_id)
+            if not question:
+                return Response(status=404,message="Question not found.")\
+                    .__dict__, 404
 
         #get user
-        user = User.query.get(args.user_id)
-        if not user:
-            return Response(status=404,message="User not found.").__dict__,404
+            user = User.query.get(args.user_id)
+            if not user:
+                return Response(status=404,message="User not found.").__dict__,404
 
-        #ensure user is authorized by checking if fb_id is correct
-        if user.fitpals_secret != args.Authorization:
-            return Response(status=401,message="Not Authorized.").__dict__,401
+            #ensure user is authorized by checking if fb_id is correct
+            if user.fitpals_secret != args.Authorization:
+                return Response(status=401,message="Not Authorized.").__dict__,401
 
-        # add setting to user's activity settings
-        try: 
+            # add setting to user's activity settings
             activity_setting = ActivitySetting(user,question,args.unit_type,
-                                               args.lower_value,args.upper_value)
+                                            args.lower_value,args.upper_value)
             user.activity_settings.append(activity_setting)
             db.session.commit()
-        except: 
+
+            send_message(activity_setting.user,request.path,request.method,
+                         value=activity_setting.dict_repr())
+
+            return Response(status=201,message="Activity setting created.",
+                            value=activity_setting.dict_repr()).__dict__,201
+        except Exception as e:
+            if exception_is_validation_error(e):
+                return Response(status=400,
+                    message="Activity setting data invalid.").__dict__,400
             db.session.rollback()
-            return Response(status=400,
-                message="Could not create activity setting.").__dict__,400
-            
-        send_message(activity_setting.user.dict_repr(show_online_status=True),
-                     [d.token for d in activity_setting.user.devices.all()],
-                     request.path,request.method,
-                     activity_setting.dict_repr())
-        
-        return Response(status=201,message="Activity setting created.",
-                        value=activity_setting.dict_repr()).__dict__,201
+            app.logger.error(e)
+            return Response(status=500, message="Internal server error.").__dict__,500
 
 #activity_id maps to an ActivitySetting id
 @api.resource("/activity_settings/<int:setting_id>")
@@ -165,10 +182,14 @@ class ActivitySettingAPI(Resource):
         args = parser.parse_args()
         
         #get setting
-        setting = ActivitySetting.query.get(setting_id)
-        if not setting:
-            return Response(status=404,message="Activity setting not found.")\
-                .__dict__, 404
+        try:
+            setting = ActivitySetting.query.get(setting_id)
+            if not setting:
+                return Response(status=404,message="Activity setting not found.")\
+                    .__dict__, 404
+        except Exception as e:
+            app.logger.error(e)
+            return Response(status=500, message="Internal server error.").__dict__,500
             
         #Ensure that user is authorized
         if setting.user.fitpals_secret != args.Authorization:
@@ -187,7 +208,7 @@ class ActivitySettingAPI(Resource):
         :form float upper_value: Upper value answer to question.
         :form str unit_type: Name of type of unit; i.e. meter
 
-        :status 400: Could not update activity setting.
+        :status 400: Activity settings data invalid.
         :status 401: Not Authorized.
         :status 404: Activity setting not found.
         :status 202: Activity setting updated.
@@ -203,33 +224,35 @@ class ActivitySettingAPI(Resource):
             type=str,location="form",required=False)
         args = parser.parse_args()
         
-        #get setting
-        setting = ActivitySetting.query.get(setting_id)
-        if not setting:
-            return Response(status=404,message="Activity setting not found.")\
-                .__dict__, 404
-
-        #ensure user is valid by checking if fb_id is correct
-        if setting.user.fitpals_secret != args.Authorization:
-            return Response(status=401,message="Not Authorized.").__dict__,401
-            
         try:
+            #get setting
+            setting = ActivitySetting.query.get(setting_id)
+            if not setting:
+                return Response(status=404,message="Activity setting not found.")\
+                    .__dict__, 404
+
+            #ensure user is valid by checking if fb_id is correct
+            if setting.user.fitpals_secret != args.Authorization:
+                return Response(status=401,message="Not Authorized.").__dict__,401
+
             if args.unit_type != None: setting.unit_type = args.unit_type
             if args.lower_value != None: setting.lower_value = args.lower_value
             if args.upper_value != None: setting.upper_value = args.upper_value
             db.session.commit()
-        except:
-            db.session.rollback()
-            return Response(status=400,
-                message="Could not update activity setting.").__dict__,400
-            
-        send_message(setting.user.dict_repr(show_online_status=True),
-                     [d.token for d in setting.user.devices.all()],
-                     request.path,request.method,setting.dict_repr())
 
-        return Response(status=202,
-                        message="Activity setting updated.",
-                        value=setting.dict_repr()).__dict__,202
+            send_message(setting.user,request.path,request.method,
+                         value=setting.dict_repr())
+
+            return Response(status=202,
+                            message="Activity setting updated.",
+                            value=setting.dict_repr()).__dict__,202
+        except Exception as e:
+            if exception_is_validation_error(e):
+                return Response(status=400,
+                    message="Activity setting data invalid.").__dict__,400
+            db.session.rollback()
+            app.logger.error(e)
+            return Response(status=500, message="Internal server error.").__dict__,500
 
     #delete user's specific activity
     def delete(self, setting_id):
@@ -251,29 +274,27 @@ class ActivitySettingAPI(Resource):
             type=str, location='headers', required=True)
         args = parser.parse_args()
 
-        #get setting
-        setting = ActivitySetting.query.get(setting_id)
-        if not setting:
-            return Response(status=404,message="Activity setting not found.")\
-                .__dict__, 404
-        user = setting.user
-
-        #ensure user is valid by checking if fb_id is correct
-        if setting.user.fitpals_secret != args.Authorization:
-            return Response(status=401,message="Not Authorized.").__dict__,401
-            
         try:
+            #get setting
+            setting = ActivitySetting.query.get(setting_id)
+            if not setting:
+                return Response(status=404,message="Activity setting not found.")\
+                    .__dict__, 404
+            user = setting.user
+
+            #ensure user is valid by checking if fb_id is correct
+            if setting.user.fitpals_secret != args.Authorization:
+                return Response(status=401,message="Not Authorized.").__dict__,401
+
             setting.user.activity_settings.remove(setting)
             db.session.delete(setting)
             db.session.commit()
-        except:
+
+            send_message(user,request.path,request.method)
+
+            return Response(status=200,
+                message="Activity setting deleted.").__dict__, 200
+        except Exception as e:
             db.session.rollback()
-            return Response(status=500,
-                message="Internal error. Changes not committed.").__dict__,500
-
-        send_message(user.dict_repr(show_online_status=True),
-                     [d.token for d in user.devices.all()],
-                     request.path,request.method)
-
-        return Response(status=200,
-            message="Activity setting deleted.").__dict__, 200
+            app.logger.error(e)
+            return Response(status=500, message="Internal server error.").__dict__,500

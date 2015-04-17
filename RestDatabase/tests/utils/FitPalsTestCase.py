@@ -3,9 +3,8 @@ import simplejson as json
 from app import app,db,socketio,reset_app
 from app.models import *
 from datetime import date
-from app.utils import Facebook
+from app.utils import Facebook, AsyncNotifications
 import requests
-from app.utils import AsyncNotifications
 from time import sleep
 
 def _get_access_tokens(fb_id, password):
