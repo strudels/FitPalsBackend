@@ -1,8 +1,5 @@
 from __future__ import print_function
 from flask import Flask
-from flask.ext.admin import Admin
-from flask_admin import LoginManager
-from flask.ext.admin.contrib.sqla import ModelView
 from flask.ext.sqlalchemy import SQLAlchemy
 from sqlalchemy.exc import IntegrityError, DataError
 from flask.ext.restful import Api
@@ -54,6 +51,8 @@ else:
     conn_str += "/" + config.get("postgres","dbname")
 app.config["SQLALCHEMY_DATABASE_URI"] = conn_str
 
+app.config["SECRET_KEY"] = "091afb3da7dfc6ef76b6d384b1a21e7790c89e79f2558ee04e7d6ed69f33f2b1"
+
 socketio = SocketIO(app)
 
 api = Api(app)
@@ -88,9 +87,6 @@ from websockets import *
 
 #import admin panel
 from admin import *
-
-login_manager = LoginManager()
-login_manager.init_app(app)
 
 #reset app and database to fresh install
 def reset_app():

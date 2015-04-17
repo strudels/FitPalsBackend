@@ -1,5 +1,13 @@
 from flask.ext.admin.contrib.sqla import ModelView
-from controllers.ActivityAPI import *
+from flask.ext.admin import Admin
+from flask import Flask, url_for, redirect, render_template, request
+from app.models import *
+from app import app,db
+from wtforms import form, fields, validators
+import flask_admin as admin
+import flask_login as login
+from flask_admin.contrib import sqla
+from flask_admin import helpers, expose
 
 #class for overriding ModelView methods to make ModelView Work
 class ActivityView(ModelView):
@@ -32,6 +40,8 @@ class ActivityView(ModelView):
             self.session.rollback()
             return False
         return True
+    def is_accessible(self):
+        return login.current_user.is_authenticated()
         
 class QuestionView(ModelView):
     def create_model(self, form):
@@ -69,6 +79,31 @@ class QuestionView(ModelView):
             return False
         return True
         
+    def is_accessible(self):
+        return login.current_user.is_authenticated()
+        
+class MyAdminIndexView(admin.AdminIndexView):
+    @expose("/")
+    def index(self):
+        """
+        if not login.current_user.is_authenticated():
+            return redirect(url_for(".login_view"))
+        return super(IndexView, self).index()
+        """
+        return "wow"
+        
+    @expose("/login", methods=("GET","POST"))
+    def login_view(self):
+        form = LoginForm(request.form)
+        if helpers.validate_form_on_submit(form):
+            user = form.get_user()
+            login.login_user(user)
+            
+    @expose("/logout")
+    def logout_view(self):
+        login.logout_user()
+        return redirect(url_for(".index"))
+        
 class AdminUser(db.Model):
     __tablename__ = "admin_users"
     id = db.Column(db.Integer, primary_key=True)
@@ -95,6 +130,18 @@ class AdminUser(db.Model):
     def is_authenticated(self):
         return True
         
+    def is_active(self):
+        return True
+        
+    def is_anonymous(self):
+        return False
+        
+    def get_id(self):
+        return self.id
+        
+    def __unicode__(self):
+        return self.username
+        
 # Define login and registration forms (for flask-login)
 class LoginForm(form.Form):
     login = fields.TextField(validators=[validators.required()])
@@ -114,20 +161,14 @@ class LoginForm(form.Form):
     def get_user(self):
         return AdminUser.query.filter(AdminUser.username==self.login.data).first()
         
-@login_manager.init_app(app)
-def load_user(userid):
-    return AdminUser.get(userid)
+def init_login():
+    login_manager = login.LoginManager()
+    login_manager.init_app()
+    
+    @login_manager.user_loader
+    def load_user(user_id):
+        return AdminUser.query.get(user_id)
         
-@app.route("/login", methods=["GET", "POST"])
-def login():
-    form = LoginForm()
-    if form.validate_on_submit():
-        # login and validate the user...
-        login_user(user)
-        flash("Logged in successfully.")
-        return redirect(request.args.get("next") or url_for("index"))
-    return render_template("login.html", form=form)
-
-admin = Admin(app)
+admin = Admin(app, index_view=MyAdminIndexView(), base_template="my_master.html")
 admin.add_view(ActivityView(Activity, db.session))
 admin.add_view(QuestionView(Question, db.session))
