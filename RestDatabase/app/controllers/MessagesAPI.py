@@ -55,9 +55,9 @@ class NewMessagesAPI(Resource):
 
                 #update all messages for the thread to be read
                 if user==thread.user1:
-                    for m in thread.messages: m.user1_read = True
+                    thread.user1_has_unread = False
                 else: #if user==thread.user2
-                    for m in thread.messages: m.user2_read = True
+                    thread.user2_has_unread = False
 
                 #if thread has been "deleted" by user, return 404
                 thread_exists = True
@@ -142,6 +142,8 @@ class NewMessagesAPI(Resource):
     def post(self):
         """
         Post new message to thread
+        The receiving user of the message's corresponding
+        MessageThread.user<1/2>_has_unread field will be set to True
         
         :reqheader Authorization: facebook secret
 
@@ -232,50 +234,6 @@ class NewMessagesAPI(Resource):
             app.logger.error(e)
             return Response(status=500, message="Internal server error.").__dict__,500
         
-@api.resource("/messages/<int:message_id>")
-class MessagesAPI(Resource):
-    def put(self, message_id):
-        """
-        Update message read field to true for the user retrieving the message.
-
-        :reqheader Authorization: facebook secret
-
-        :status 401: Not Authorized.
-        :status 404: Message not found.
-        :status 202: Message updated.
-        """
-        parser = reqparse.RequestParser()
-        parser.add_argument("Authorization",
-            type=str, location="headers", required=True)
-        args = parser.parse_args()
-        
-        try:
-            message = Message.query.get(message_id)
-            if not message:
-                return Response(status=404,message="Message not found.").__dict__,404
-                
-            user = User.query.filter(User.fitpals_secret==args.Authorization).first()
-            if not user:
-                return Response(status=401,message="Not Authorized.").__dict__,401
-                
-            if user == message.message_thread.user1:
-                message.user1_read = True
-            elif user == message.message_thread.user2:
-                message.user2_read = True
-            else:
-                return Response(status=401,message="Not Authorized.").__dict__,401
-
-            db.session.commit()
-            
-            send_message(user,request.path,request.method,value=message.dict_repr())
-
-            return Response(status=202,message="Message updated.",
-                            value=message.dict_repr()).__dict__,202
-        except Exception as e:
-            db.session.rollback()
-            app.logger.error(e)
-            return Response(status=500, message="Internal server error.").__dict__,500
-
 @api.resource("/message_threads")
 class MessageThreadsAPI(Resource):
     #return all message threads for a user

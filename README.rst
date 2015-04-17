@@ -277,7 +277,9 @@ Contents:
 
 ``POST /messages``
 
-   Post new message to thread
+   Post new message to thread The receiving user of the message's
+   corresponding MessageThread.user<1/2>_has_unread field will be set
+   to True
 
    :Request Headers:
       * Authorization -- facebook secret
@@ -575,6 +577,20 @@ Contents:
 
       * 202 Accepted -- Activity setting deleted.
 
+``PUT /message_threads/(int: thread_id)``
+
+   Update a message_thread's user<1/2>_has_unread field to False.
+
+   :Request Headers:
+      * Authorization -- fitpals_secret
+
+   :Status Codes:
+      * 401 Unauthorized -- Not Authorized.
+
+      * 404 Not Found -- Message thread not found.
+
+      * 202 Accepted -- Message thread updated.
+
 ``DELETE /message_threads/(int: thread_id)``
 
    Delete a message thread
@@ -676,21 +692,6 @@ Contents:
       * 404 Not Found -- User block not found.
 
       * 200 OK -- User block removed.
-
-``PUT /messages/(int: message_id)``
-
-   Update message read field to true for the user retrieving the
-   message.
-
-   :Request Headers:
-      * Authorization -- facebook secret
-
-   :Status Codes:
-      * 401 Unauthorized -- Not Authorized.
-
-      * 404 Not Found -- Message not found.
-
-      * 202 Accepted -- Message updated.
 
 ``PUT /pictures/(int: pic_id)``
 
