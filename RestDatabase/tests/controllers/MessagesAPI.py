@@ -50,6 +50,49 @@ class MessagesApiTestCase(FitPalsTestCase):
                                       self.test_user1["fitpals_secret"] + "junk"})
         assert resp.status_code==401
         assert json.loads(resp.data)["message"] == "Not Authorized."
+        
+    def test_get_message_thread(self):
+        #create thread to get
+        resp = self.app.post("/message_threads",
+                             headers={"Authorization":self.test_user1["fitpals_secret"]},
+                             data={"user2_id":self.test_user2["id"]})
+        thread = json.loads(resp.data)["value"]
+        
+        resp = self.app.get("/message_threads/%d" % thread["id"],
+                             headers={"Authorization":self.test_user1["fitpals_secret"]})
+        assert resp.status_code==200
+        assert json.loads(resp.data)["message"] == "Message thread found."
+        assert json.loads(resp.data)["value"] == thread
+        
+    def test_get_message_thread_not_auth_invalid_secret(self):
+        #create thread to get
+        resp = self.app.post("/message_threads",
+                             headers={"Authorization":self.test_user1["fitpals_secret"]},
+                             data={"user2_id":self.test_user2["id"]})
+        thread = json.loads(resp.data)["value"]
+
+        resp = self.app.get("/message_threads/%d" % thread["id"],
+                             headers={"Authorization":"junk"})
+        assert resp.status_code==401
+        assert json.loads(resp.data)["message"] == "Not Authorized."
+        
+    def test_get_message_thread_not_auth_to_thread(self):
+        #create thread to get
+        resp = self.app.post("/message_threads",
+                             headers={"Authorization":self.test_user1["fitpals_secret"]},
+                             data={"user2_id":self.test_user2["id"]})
+        thread = json.loads(resp.data)["value"]
+        
+        resp = self.app.get("/message_threads/%d" % thread["id"],
+                             headers={"Authorization":self.test_user3["fitpals_secret"]})
+        assert resp.status_code==401
+        assert json.loads(resp.data)["message"] == "Not Authorized."
+        
+    def test_get_message_thread_not_found(self):
+        resp = self.app.get("/message_threads/%d" % 0,
+                             headers={"Authorization":self.test_user3["fitpals_secret"]})
+        assert resp.status_code==404
+        assert json.loads(resp.data)["message"] == "Message thread not found."
 
     def test_create_message_thread(self):
         #log in test_user1 to chat web socket

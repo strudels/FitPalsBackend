@@ -621,6 +621,20 @@ Contents:
 
       * 202 Accepted -- Activity setting deleted.
 
+``GET /message_threads/(int: thread_id)``
+
+   Get a message_thread by it's ID.
+
+   :Request Headers:
+      * Authorization -- fitpals_secret
+
+   :Status Codes:
+      * 401 Unauthorized -- Not Authorized.
+
+      * 404 Not Found -- Message thread not found.
+
+      * 200 OK -- Message thread found.
+
 ``PUT /message_threads/(int: thread_id)``
 
    Update a message_thread's user<1/2>_has_unread field to False.

@@ -387,6 +387,41 @@ class MessageThreadsAPI(Resource):
         
 @api.resource("/message_threads/<int:thread_id>")
 class MessageThreadAPI(Resource):
+    def get(self, thread_id):
+        """
+        Get a message_thread by it's ID.
+        
+        :reqheader Authorization: fitpals_secret
+
+        :status 401: Not Authorized.
+        :status 404: Message thread not found.
+        :status 200: Message thread found.
+        """
+        parser = reqparse.RequestParser()
+        parser.add_argument("Authorization",
+            type=str, location="headers", required=True)
+        args = parser.parse_args()
+        try:
+            user = User.query.filter(User.fitpals_secret==args.Authorization).first()
+            if not user:
+                return Response(status=401, message="Not Authorized.")\
+                    .__dict__, 401
+                
+            thread = MessageThread.query.get(thread_id)
+            if not thread:
+                return Response(status=404, message="Message thread not found.")\
+                    .__dict__,404
+                
+            if thread.user1 != user and thread.user2 != user:
+                return Response(status=401, message="Not Authorized.")\
+                    .__dict__, 401
+            return Response(status=200,message="Message thread found.",
+                            value=thread.dict_repr()).__dict__,200
+        except Exception as e:
+            app.logger.error(e)
+            return Response(status=500, message="Internal server error.").__dict__,500
+                
+        
     def put(self, thread_id):
         """
         Update a message_thread's user<1/2>_has_unread field to False.
