@@ -14,16 +14,18 @@ class UserBlocksAPI(Resource):
         Get a user's UserBlocks.
         
         :reqheader Authorization: fitpals_secret
+        
+        :query int blocked_user_id: Id of blocked_user
 
-        :query int message_thread_id: Id of specific thread to get messages from(Optional).
-        :query int since: Optional time to get messages 'since' then(epoch).
-
+        :status 404: User not found
         :status 401: Not Authorized.
         :status 200: User blocks found.
         """
         parser = reqparse.RequestParser()
         parser.add_argument("Authorization",
             type=str, location="headers", required=True)
+        parser.add_argument("blocked_user_id",
+            type=int, location="args", required=False)
         args = parser.parse_args()
         
         try:
@@ -31,7 +33,11 @@ class UserBlocksAPI(Resource):
             if not user:
                 return Response(status=401,message="Not Authorized.").__dict__,401
 
-            blocks = user.blocks.all()
+            if args.blocked_user_id:
+                blocks = user.blocks.filter(
+                    UserBlock.blocked_user_id==args.blocked_user_id).all()
+            else:
+                blocks = user.blocks.all()
             return Response(status=200,message="User blocks found.",
                             value=[b.dict_repr() for b in blocks]).__dict__,200
         except Exception as e:
@@ -47,6 +53,7 @@ class UserBlocksAPI(Resource):
         :form int blocked_user_id: ID of user to be blocked.
 
         :status 401: Not Authorized.
+        :status 403: User already blocked.
         :status 404: User not found.
         :status 201: User block created.
         """
@@ -65,6 +72,16 @@ class UserBlocksAPI(Resource):
             blocked_user = User.query.get(args.blocked_user_id)
             if not blocked_user:
                 return Response(status=404,message="User not found.").__dict__,404
+                
+            already_blocked = UserBlock.query.filter(and_(
+                UserBlock.user_id==user.id,
+                UserBlock.blocked_user_id==blocked_user.id,
+                UserBlock.unblock_time==None
+            )).first()
+
+            if already_blocked:
+                return Response(status=403,message="User already blocked.")\
+                    .__dict__,403
 
             block = UserBlock(user,blocked_user)
             db.session.add(block)

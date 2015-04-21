@@ -21,6 +21,28 @@ class UserBlockTestCase(FitPalsTestCase):
         assert received[-1]["args"][0]["http_method"] == "POST"
         assert received[-1]["args"][0]["value"] == block
         
+    def test_add_block_user_already_blocked(self):
+        #block first time
+        fitpals_secret = self.test_user1["fitpals_secret"]
+        resp = self.app.post("/user_blocks",
+                             data={"blocked_user_id":self.test_user2["id"]},
+                             headers={"Authorization":fitpals_secret})
+        assert resp.status_code==201
+        assert json.loads(resp.data)["message"]=="User block created."
+        block = json.loads(resp.data)["value"]
+        assert type(block["id"]) == int
+        assert block["user_id"] == self.test_user1["id"]
+        assert block["blocked_user_id"] == self.test_user2["id"]
+
+        #block again without unblocking
+        fitpals_secret = self.test_user1["fitpals_secret"]
+        resp = self.app.post("/user_blocks",
+                             data={"blocked_user_id":self.test_user2["id"]},
+                             headers={"Authorization":fitpals_secret})
+        assert resp.status_code==403
+        assert json.loads(resp.data)["message"]=="User already blocked."
+       
+        
     def test_add_block_not_authorized(self):
         fitpals_secret = self.test_user1["fitpals_secret"] + "junk"
         resp = self.app.post("/user_blocks",
@@ -44,6 +66,21 @@ class UserBlockTestCase(FitPalsTestCase):
                              headers={"Authorization":fitpals_secret})
         
         resp = self.app.get("/user_blocks",
+                             headers={"Authorization":fitpals_secret})
+        blocks = json.loads(resp.data)["value"]
+        assert resp.status_code == 200
+        assert json.loads(resp.data)["message"] == "User blocks found."
+        assert len(blocks) == 1
+        assert blocks[0]["user_id"] == self.test_user1["id"]
+        assert blocks[0]["blocked_user_id"] == self.test_user2["id"]
+
+    def test_get_blocks_blocked_user_id(self):
+        fitpals_secret = self.test_user1["fitpals_secret"]
+        resp = self.app.post("/user_blocks",
+                             data={"blocked_user_id":self.test_user2["id"]},
+                             headers={"Authorization":fitpals_secret})
+        
+        resp = self.app.get("/user_blocks?blocked_user_id=%d" % self.test_user2["id"],
                              headers={"Authorization":fitpals_secret})
         blocks = json.loads(resp.data)["value"]
         assert resp.status_code == 200

@@ -41,9 +41,9 @@ def send_message(user,path,http_method,value=None,apn_send=False):
         for d in user.devices.all():
             token_hex = base64.b64decode(d.token).encode('hex')
             if path=="/matches":
-                payload = Payload(alert="New Match!", custom=info)
+                payload = Payload(alert="%s thinks you're a match!" % user.name, custom=info)
             else: #path=="/messages"
-                payload = Payload(alert="New Message!", custom=info)
+                payload = Payload(alert="%s sent you a message!" % user.name, custom=info)
             apns.gateway_server.send_notification(token_hex,payload)
     else:
         global thread_q

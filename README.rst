@@ -250,13 +250,11 @@ Contents:
       * Authorization -- fitpals_secret
 
    :Query Parameters:
-      * **message_thread_id** (*int*) -- Id of specific thread to get
-        messages from(Optional).
-
-      * **since** (*int*) -- Optional time to get messages 'since'
-        then(epoch).
+      * **blocked_user_id** (*int*) -- Id of blocked_user
 
    :Status Codes:
+      * 404 Not Found -- User not found
+
       * 401 Unauthorized -- Not Authorized.
 
       * 200 OK -- User blocks found.
@@ -273,6 +271,8 @@ Contents:
 
    :Status Codes:
       * 401 Unauthorized -- Not Authorized.
+
+      * 403 Forbidden -- User already blocked.
 
       * 404 Not Found -- User not found.
 
