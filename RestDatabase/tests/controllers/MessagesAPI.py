@@ -26,6 +26,23 @@ class MessagesApiTestCase(FitPalsTestCase):
         assert type(received_thread[0]["id"]) == type(int())
         assert received_thread[0]["user1_id"] == self.test_user1["id"]
         assert received_thread[0]["user2_id"] == self.test_user2["id"]
+        
+    def test_get_message_threads_other_user_id(self):
+        #create thread to get
+        resp = self.app.post("/message_threads",
+                             headers={"Authorization":self.test_user1["fitpals_secret"]},
+                             data={"user2_id":self.test_user2["id"]})
+        #create thread to not get
+        resp = self.app.post("/message_threads",
+                             headers={"Authorization":self.test_user1["fitpals_secret"]},
+                             data={"user2_id":self.test_user3["id"]})
+
+        #get threads
+        resp = self.app.get("/message_threads?other_user_id=%d" % self.test_user2["id"],
+                             headers={"Authorization":self.test_user1["fitpals_secret"]})
+        assert resp.status_code==200
+        assert json.loads(resp.data)["message"] == "Message threads found."
+        assert len(json.loads(resp.data)["value"]) == 1
 
     def test_get_message_threads_invalid_auth_token(self):
         resp = self.app.get("/message_threads",

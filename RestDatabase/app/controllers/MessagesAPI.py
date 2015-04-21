@@ -246,6 +246,8 @@ class MessageThreadsAPI(Resource):
         Will not return any message threads that have been "deleted".
         
         :reqheader Authorization: facebook secret
+        
+        :query int other_user_id: Get message thread between requester and other_user
 
         :status 401: Not Authorized.
         :status 200: Message threads found.
@@ -253,6 +255,8 @@ class MessageThreadsAPI(Resource):
         parser = reqparse.RequestParser()
         parser.add_argument("Authorization",
             type=str, location="headers", required=True)
+        parser.add_argument("other_user_id",
+            type=int, location="args", required=False)
         args = parser.parse_args()
         
         try:
@@ -262,25 +266,45 @@ class MessageThreadsAPI(Resource):
                 return Response(status=401, message="Not Authorized.")\
                     .__dict__, 401
 
-            #get threads for user that are either empty, or have any messages
-            # that have not been deleted
-            threads = MessageThread.query\
-                .filter(
-                    or_(
-                        and_(MessageThread.user1==user,
-                             or_(MessageThread.user1_delete_time==None,
-                                 MessageThread.messages.any(
-                                     Message.time>=MessageThread.user1_delete_time)
-                             )
-                        ),
-                        and_(MessageThread.user2==user,
-                             or_(MessageThread.user2_delete_time==None,
-                                 MessageThread.messages.any(
-                                     Message.time>=MessageThread.user2_delete_time)
-                             )
+            if args.other_user_id:
+                threads = MessageThread.query\
+                    .filter(
+                        or_(
+                            and_(MessageThread.user1==user,
+                                 MessageThread.user2_id==args.other_user_id,
+                                 or_(MessageThread.user1_delete_time==None,
+                                     MessageThread.messages.any(
+                                         Message.time>=MessageThread.user1_delete_time)
+                                 )
+                            ),and_(MessageThread.user2==user,
+                                   MessageThread.user1_id==args.other_user_id,
+                                   or_(MessageThread.user2_delete_time==None,
+                                       MessageThread.messages.any(
+                                           Message.time>=MessageThread.user2_delete_time)
+                                   )
+                            )
                         )
-                    )
-                ).all()
+                    ).all()
+            else:
+                #get threads for user that are either empty, or have any messages
+                # that have not been deleted
+                threads = MessageThread.query\
+                    .filter(
+                        or_(
+                            and_(MessageThread.user1==user,
+                                or_(MessageThread.user1_delete_time==None,
+                                    MessageThread.messages.any(
+                                        Message.time>=MessageThread.user1_delete_time)
+                                )
+                            ),
+                            and_(MessageThread.user2==user,
+                                or_(MessageThread.user2_delete_time==None,
+                                    MessageThread.messages.any(
+                                        Message.time>=MessageThread.user2_delete_time)
+                                )
+                            )
+                        )
+                    ).all()
 
             return Response(status=200, message="Message threads found.",
                             value=[t.dict_repr() for t in threads]).__dict__,200

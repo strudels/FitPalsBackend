@@ -175,6 +175,10 @@ Contents:
    :Request Headers:
       * Authorization -- facebook secret
 
+   :Query Parameters:
+      * **other_user_id** (*int*) -- Get message thread between
+        requester and other_user
+
    :Status Codes:
       * 401 Unauthorized -- Not Authorized.
 
