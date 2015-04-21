@@ -4,6 +4,12 @@ Welcome to Fitpals Web API's documentation!
 
 Contents:
 
+``GET /admin/userreport/ajax/lookup/``
+
+``POST /admin/userreport/ajax/update/``
+
+   Edits a single column of a record in list view.
+
 ``GET /admin/activity/ajax/lookup/``
 
 ``POST /admin/activity/ajax/update/``
@@ -15,6 +21,30 @@ Contents:
 ``POST /admin/question/ajax/update/``
 
    Edits a single column of a record in list view.
+
+``POST /admin/userreport/action/``
+
+   Mass-model action view.
+
+``POST /admin/userreport/delete/``
+
+   Delete model view. Only POST method is allowed.
+
+``GET /admin/userreport/edit/``
+
+   Edit model view
+
+``POST /admin/userreport/edit/``
+
+   Edit model view
+
+``GET /admin/userreport/new/``
+
+   Create model view
+
+``POST /admin/userreport/new/``
+
+   Create model view
 
 ``POST /admin/activity/action/``
 
@@ -64,6 +94,10 @@ Contents:
 
    Create model view
 
+``GET /admin/userreport/``
+
+   List view
+
 ``GET /admin/activity/``
 
    List view
@@ -71,6 +105,12 @@ Contents:
 ``GET /admin/question/``
 
    List view
+
+``GET /admin/logout``
+
+``GET /admin/login``
+
+``POST /admin/login``
 
 ``GET /activity_settings``
 
@@ -198,7 +238,7 @@ Contents:
    :Status Codes:
       * 401 Unauthorized -- Not Authorized.
 
-      * 404 Not Found -- fb_id not found.
+      * 404 Not Found -- User not found.
 
       * 201 Created -- User report created.
 

@@ -192,21 +192,23 @@ def user_message_thread_cascade_delete(mapper, connection, user):
 class UserReport(db.Model):
     __tablename__ = "user_reports"
     id = db.Column(db.Integer, primary_key=True)
-    owner_fb_id = db.Column(db.String)
-    reported_fb_id = db.Column(db.String)
+    owner_user_id = db.Column(db.Integer, ForeignKey("users.id"))
+    owner_user = relationship("User",foreign_keys=[owner_user_id])
+    reported_user_id = db.Column(db.Integer, ForeignKey("users.id"))
+    reported_user = relationship("User",foreign_keys=[reported_user_id])
     reason = db.Column(db.String)
     reviewed = db.Column(db.Boolean, default=False, nullable=False)
     
-    def __init__(self,owner_fb_id,reported_fb_id,reason):
-        self.owner_fb_id = owner_fb_id
-        self.reported_fb_id = reported_fb_id
+    def __init__(self,owner_user,reported_user,reason):
+        self.owner_user = owner_user
+        self.reported_user = reported_user
         self.reason = reason
         
     def dict_repr(self):
         return {
             "id":self.id,
-            "owner_fb_id":self.owner_fb_id,
-            "reported_fb_id":self.reported_fb_id,
+            "owner_user_id":self.owner_user_id,
+            "reported_user_id":self.reported_user_id,
             "reason":self.reason,
             "reviewed":self.reviewed
         }

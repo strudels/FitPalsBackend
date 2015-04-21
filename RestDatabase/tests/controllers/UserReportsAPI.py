@@ -3,8 +3,9 @@ from tests.utils.FitPalsTestCase import *
 class UserReportsAPITestCase(FitPalsTestCase):
     def test_create_user_report(self):
         report = {
-            "owner_fb_id":self.test_user1["fb_id"],
-            "reported_fb_id":self.test_user2["fb_id"],
+            #place owner line in for convience later in test
+            "owner_user_id":self.test_user1["id"],
+            "reported_user_id":self.test_user2["id"],
             "reason":"Test user 1 was mean!"
         }
         resp = self.app.post("/user_reports",
@@ -18,22 +19,9 @@ class UserReportsAPITestCase(FitPalsTestCase):
         report["reviewed"] = False
         assert report == report_received
         
-    def test_create_user_report_owner_not_found(self):
-        report = {
-            "owner_fb_id":0,
-            "reported_fb_id":self.test_user2["fb_id"],
-            "reason":"Test user 1 was mean!"
-        }
-        resp = self.app.post("/user_reports",
-                             data=report,
-                             headers={"Authorization":self.test_user1["fitpals_secret"]})
-        assert resp.status_code == 404
-        assert json.loads(resp.data)["message"] == "fb_id not found."
-
     def test_create_user_report_owner_not_authorized(self):
         report = {
-            "owner_fb_id":self.test_user1["fb_id"],
-            "reported_fb_id":self.test_user2["fb_id"],
+            "reported_user_id":self.test_user2["id"],
             "reason":"Test user 1 was mean!"
         }
         resp = self.app.post("/user_reports",
@@ -44,12 +32,11 @@ class UserReportsAPITestCase(FitPalsTestCase):
         
     def test_create_user_report_reportee_not_found(self):
         report = {
-            "owner_fb_id":self.test_user1["fb_id"],
-            "reported_fb_id":0,
+            "reported_user_id":0,
             "reason":"Test user 1 was mean!"
         }
         resp = self.app.post("/user_reports",
                              data=report,
                              headers={"Authorization":self.test_user1["fitpals_secret"]})
         assert resp.status_code == 404
-        assert json.loads(resp.data)["message"] == "fb_id not found."
+        assert json.loads(resp.data)["message"] == "User not found."
