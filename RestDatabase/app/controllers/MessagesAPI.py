@@ -192,10 +192,6 @@ class NewMessagesAPI(Resource):
 
             #add message to thread
             new_message = Message(thread, bool(args.direction), args.body)
-            if user == thread.user1:
-                new_message.message_thread.user2_has_unread = True
-            else: #user == thread.user2
-                new_message.message_thread.user1_has_unread = True
             thread.messages.append(new_message)
 
             #commit changes to the db
@@ -219,9 +215,15 @@ class NewMessagesAPI(Resource):
             #ensure that if user has been blocked, the new message won't be sent
             #to the intended user
             if not is_blocked:
+                if user == thread.user1:
+                    new_message.message_thread.user2_has_unread = True
+                else: #user == thread.user2
+                    new_message.message_thread.user1_has_unread = True
+                db.session.commit()
                 send_message(thread.user2 if user==thread.user1 else thread.user1,
                             request.path,request.method,
                             value=new_message.dict_repr(),apn_send=True)
+
 
             #return success
             return Response(status=201,message="Message created.",
