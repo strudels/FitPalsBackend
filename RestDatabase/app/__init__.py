@@ -108,7 +108,7 @@ def reset_app():
         "Walking" : [
             "IcnWalking.png", 
             "IcnWalkingInactive.png", [
-                [ "Pace", "minutes", 15, 60 ]]
+                [ "Time", "minutes", 15, 60 ]]
         ],
         "Running" : [
             "IcnRunning.png", 
