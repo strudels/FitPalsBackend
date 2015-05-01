@@ -129,7 +129,17 @@ class User(db.Model):
     
     @hybrid_property
     def online(self):
-        return str(self.id) in socketio.rooms[""] if socketio.rooms!={} else False
+        if socketio.rooms=={} or not str(self.id) in socketio.rooms[""]:
+            is_online = False
+        else:
+            room = socketio.rooms[""][str(self.id)]
+            is_online = reduce(
+                (lambda x,ns:
+                 x if x else ns in [s.active_ns[""] for s in socketio.server.sockets.values()]),
+                [ns for ns in room],
+                False
+            )
+        return is_online
         
     @hybrid_property
     def primary_picture(self):
