@@ -3,7 +3,7 @@ apns==2.0.1
 backports.ssl-match-hostname==3.4.0.2
 cffi==0.8.6
 characteristic==14.3.0
-cryptography==0.7.2
+cryptography==3.2
 docutils==0.12
 enum34==1.0.4
 facebook-sdk==0.4.0
