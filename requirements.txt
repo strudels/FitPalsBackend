@@ -29,7 +29,7 @@ psycopg2==2.5.4
 pyasn1==0.1.7
 pyasn1-modules==0.0.5
 pycparser==2.10
-Pygments==2.0.2
+Pygments==2.7.4
 pymongo==2.7.2
 pyOpenSSL==0.14
 python-dateutil==2.4.0
