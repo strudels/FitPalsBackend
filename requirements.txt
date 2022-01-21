@@ -18,7 +18,7 @@ gevent-socketio==0.3.6
 gevent-websocket==0.9.3
 greenlet==0.4.5
 gunicorn==19.3.0
-ipython==2.4.1
+ipython==7.16.3
 itsdangerous==0.24
 Jinja2==2.7.3
 MarkupSafe==0.23
